@@ -1,5 +1,5 @@
 /* Offline cache for the Walkthrough Kit. Caches code only; session data stays in the page's IndexedDB. */
-const CACHE = 'wt-kit-8cf06fee12';
+const CACHE = 'wt-kit-8110cb7ccd';
 const CORE = ['./', 'index.html', 'pilot.html', 'walkthrough.html', 'manifest.webmanifest', 'icon-180.png', 'icon-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k.startsWith('wt-kit-') && k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });

@@ -4982,6 +4982,14 @@ function save() { $('#saved').textContent = 'saving…'; clearTimeout(saveT); sa
 const seg = (name, opts, val) => `<div class="seg" data-seg="${name}">${opts.map(o => { const [v, l] = Array.isArray(o) ? o : [o, o]; return `<button data-v="${esc(v)}" class="${v === val ? 'on' : ''}">${esc(l)}</button>`; }).join('')}</div>`;
 
 /* ---------- in-page dialogs (artifact viewers block prompt / confirm / alert) ---------- */
+/* iPad: after a finger lifts, Safari sends a late "click" at that spot. A dialog opened from a pointer
+   handler (plan delete, card tap) is already under the finger, so that click would hit the backdrop and
+   close it at once. Track pointers and swallow that one stray click. */
+const ptr = { down: 0, up: 0, click: 0 };
+addEventListener('pointerdown', () => { ptr.down++; }, true);
+addEventListener('pointerup', () => { ptr.down = Math.max(0, ptr.down - 1); ptr.up = performance.now(); }, true);
+addEventListener('pointercancel', () => { ptr.down = Math.max(0, ptr.down - 1); }, true);
+addEventListener('click', () => { ptr.click = performance.now(); }, true);
 function uiAsk({ text, input = false, value = '', ok = 'OK', danger = false, choices = null }) {
   return new Promise(res => {
     document.querySelectorAll('.dlg-bg').forEach(x => x._done ? x._done(null) : x.remove());   // never stack dialogs (double tap)
@@ -4990,6 +4998,12 @@ function uiAsk({ text, input = false, value = '', ok = 'OK', danger = false, cho
     document.body.appendChild(bg);
     const inp = bg.querySelector('#dlg-in'); setTimeout(() => (inp || bg.querySelector('[data-c="1"]') || bg.querySelector('[data-v]')).focus(), 30);
     const done = v => { bg.remove(); res(v); }; bg._done = done;
+    /* armed only when this dialog opened mid-gesture (finger down, or lifted but its click not sent yet) */
+    if (ptr.down > 0 || (ptr.up > ptr.click && performance.now() - ptr.up < 200)) {
+      const eat = e => { document.removeEventListener('click', eat, true); clearTimeout(tm); if (e.isTrusted && bg.contains(e.target)) { e.stopPropagation(); e.preventDefault(); } };
+      const tm = setTimeout(() => document.removeEventListener('click', eat, true), 800);
+      document.addEventListener('click', eat, true);
+    }
     bg.addEventListener('click', e => { e.stopPropagation(); const b = e.target.closest('button'); if (e.target === bg) return done(null); if (!b) return;
       if (b.dataset.v !== undefined) return done(b.dataset.v); if (b.dataset.c === '0') return done(null); done(input ? (inp.value.trim() || null) : true); });
     bg.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Escape') done(null); if (e.key === 'Enter' && !choices) { e.preventDefault(); done(input ? (inp.value.trim() || null) : true); } });
