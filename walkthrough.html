@@ -151,6 +151,50 @@ html, body { height: 100%; }
   .irb { margin-bottom: 10px; } .irb-ok { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; } .irb-ok input { width: 20px; height: 20px; margin-top: 1px; flex: none; }
   .btn[disabled] { opacity: .45; cursor: not-allowed; }
   .tscroll { overflow-x: auto; } #tp td input, #tp td select { width: 100%; min-width: 110px; min-height: 34px; }
+  /* pilot v3.1: digital-system trees */
+  .trees { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 12px; align-items: start; margin-top: 6px; }
+  @media (max-width: 760px) { .trees { grid-template-columns: 1fr; } }
+  .tree { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 12px; }
+  .tree.lost { margin-top: 12px; background: #fffbef; border-color: #f0dfa8; }
+  .tree-new { border: 2px dashed var(--line); background: transparent; min-height: 120px; display: grid; place-items: center; font: 500 14px Inter, sans-serif; color: var(--ink-2); cursor: pointer; }
+  .tree-new b { display: block; font: 600 30px Jost; color: var(--teal); }
+  .tn { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; gap: 6px; align-items: center; background: var(--soft); border-radius: 10px; padding: 5px 6px 5px 8px; }
+  .tn.sys { background: #e3f1f1; border: 1.5px solid var(--teal); }
+  .tn.virt { background: #f2f0fb; border: 1.2px dashed #7b6fc7; }
+  .tn.gone { opacity: .55; }
+  .tn input[type=text] { width: 100%; min-height: 34px; border: 0; background: transparent; font-size: 14px; padding: 2px 4px; }
+  .tn.sys input[type=text] { font: 600 15px Jost, sans-serif; }
+  .tn .st button { width: 34px; min-height: 32px; font-size: 13px; }
+  .tk { font: 600 9px Jost; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+  .tn.sys .tk { color: var(--teal); } .tn.virt .tk { color: #6b5fc0; }
+  .btn.tm { min-height: 32px; width: 34px; padding: 0; font-size: 16px; }
+  ul.tb { list-style: none; margin: 0 0 0 16px; padding: 4px 0 0 16px; border-left: 2px solid #c6d4d4; }
+  ul.tb li { position: relative; margin: 6px 0; }
+  ul.tb li::before { content: ''; position: absolute; left: -16px; top: 21px; width: 14px; border-top: 2px solid #c6d4d4; }
+  ul.tb li:last-child::after { content: ''; position: absolute; left: -18px; top: 23px; bottom: -6px; border-left: 2px solid #fff; }
+  .tree.lost ul.tb li:last-child::after { border-color: #fffbef; }
+  .tadd { margin-top: 10px; } .tadd .btn { min-height: 36px; font-size: 12.5px; }
+  /* pilot v3.1: information cards board */
+  .board { display: grid; grid-template-columns: minmax(260px, 340px) minmax(0, 1fr); gap: 14px; align-items: start; margin-top: 6px; }
+  @media (max-width: 860px) { .board { grid-template-columns: 1fr; } }
+  .pool { background: var(--soft); border: 2px dashed var(--line); border-radius: 14px; padding: 12px; position: sticky; top: 0; }
+  .pool-h, .cat-h { display: flex; align-items: center; gap: 8px; }
+  .pool-h h3 { margin: 0; flex: 1; } .n { font: 600 12px Jost; background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 1px 9px; }
+  .cards { display: flex; flex-wrap: wrap; gap: 7px; margin: 10px 0; }
+  .acard { position: relative; display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 1px solid #cfd6dc; border-left: 4px solid var(--orange, #e8843c); border-radius: 9px; padding: 8px 10px; min-height: 40px; font-size: 13px; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+  .acard .aid { font: 600 10px Jost; color: var(--muted); }
+  .acard.unsure { border-color: #c9971a; background: #fffbef; }
+  .acard .aq { font-style: normal; font: 700 11px Inter; background: #c9971a; color: #fff; border-radius: 50%; width: 18px; height: 18px; display: grid; place-items: center; }
+  .acard .adel { border: 0; background: #f3f4f6; border-radius: 6px; width: 28px; height: 28px; font-size: 16px; color: #8a2b2b; cursor: pointer; margin-left: 2px; }
+  .acard.dragging { opacity: .3; }
+  .acard.ghost { position: fixed; left: 0; top: 0; z-index: 60; pointer-events: none; opacity: .95; box-shadow: 0 10px 28px rgba(0,0,0,.25); }
+  .cats { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; align-items: start; }
+  .cat { background: #fff; border: 1.5px solid var(--line); border-radius: 14px; padding: 10px 12px; min-height: 92px; }
+  .cat.open { grid-column: 1 / -1; }
+  .cat-h { cursor: pointer; min-height: 36px; } .cat-h b { flex: 1; font: 600 15px Jost; } .car { color: var(--muted); width: 14px; }
+  .peek { font-size: 12px; color: var(--ink-2); margin-top: 6px; line-height: 1.5; }
+  .over { border-color: var(--teal) !important; background: #e3f1f1 !important; box-shadow: 0 0 0 3px rgba(15,107,107,.18); }
+  .cat-new { border: 2px dashed var(--line); background: transparent; font: 500 14px Inter, sans-serif; color: var(--ink-2); cursor: pointer; display: grid; place-items: center; }
 
 </style>
 <style>
@@ -445,6 +489,12 @@ window.WT_CODEBOOK = {
    "same (new state)",
    "external",
    "unknown"
+  ],
+  "info_category": [
+   "Expression of symptoms",
+   "Digital document",
+   "Item",
+   "Decision / prescription"
   ]
  },
  "vocab_help": {
@@ -903,31 +953,38 @@ window.WT_CODEBOOK = {
   "virtual": [
    {
     "id": "V01",
-    "label": "EHR chart / notes"
+    "label": "EHR chart / notes",
+    "system": "D01"
    },
    {
     "id": "V02",
-    "label": "Order entry"
+    "label": "Order entry",
+    "system": "D01.1"
    },
    {
     "id": "V03",
-    "label": "Central verification queue"
+    "label": "Central verification queue",
+    "system": "D06"
    },
    {
     "id": "V04",
-    "label": "Secure messaging thread"
+    "label": "Secure messaging thread",
+    "system": "D03"
    },
    {
     "id": "V05",
-    "label": "Tele-stroke video session"
+    "label": "Tele-stroke video session",
+    "system": "D05"
    },
    {
     "id": "V06",
-    "label": "PACS worklist"
+    "label": "PACS worklist",
+    "system": "D02"
    },
    {
     "id": "V07",
-    "label": "Phone / paging"
+    "label": "Phone / paging",
+    "system": "D04"
    }
   ],
   "conditions": [
@@ -4961,7 +5018,7 @@ function freshState() {
   const s = CB.seed, today = new Date().toISOString().slice(2, 10).replace(/-/g, '');
   return {
     meta: { mock: false, version: '2.0', app: 'walkthrough-recorder 2.0', created: new Date().toISOString() },
-    site: { id: 'S01', label: '' }, session: { id: `S01-${today}-${MODE === 'pilot' ? 'P1' : 'W1'}`, expert: '', recorder: '' }, libSource: null,
+    site: { id: MODE === 'pilot' ? '' : 'S01', label: '' }, session: { id: `S01-${today}-${MODE === 'pilot' ? 'P1' : 'W1'}`, expert: '', recorder: '' }, libSource: null,
     lib: {
       sub: CB.subfunctions.map(x => ({ ...x, pilot: 'seed' })),
       comp: [
@@ -4969,7 +5026,8 @@ function freshState() {
         ...s.physical.map(t => ({ id: t.id, label: t.label, kind: 'T', type: t.type, mobility: t.mobility, space: null, pos: null, pilot: 'seed', note: '' })),
         ...s.digital.map(d => ({ id: d.id, label: d.label, kind: 'D', type: d.type, parent: d.parent || null, pilot: 'seed', note: '' })),
       ],
-      art: s.artifacts.map(a => ({ ...a, pilot: 'seed' })),
+      art: s.artifacts.map(a => ({ ...a, cat: null, pilot: 'seed' })),
+      artCats: V.info_category.map((c, i) => ({ id: 'AC' + (i + 1), label: c })),
       virt: s.virtual.map(v => ({ ...v, pilot: 'seed' })),
       chan: V.channel.map((c, i) => ({ id: 'CH' + String(i + 1).padStart(2, '0'), label: c, pilot: 'seed' })),
       cond: s.conditions.map(c => ({ ...c, values: [...c.values], pilot: 'seed' })),
@@ -4980,7 +5038,7 @@ function freshState() {
   };
 }
 let S = null;
-let ui = { tab: MODE === 'pilot' ? 'library' : 'walk', lg: 'R', lfn: null, mode: 'select', sel: null, connFrom: null, pendingInstall: null, stage: 'S1', vid: null, cell: null };
+let ui = { tab: MODE === 'pilot' ? 'library' : 'walk', lg: 'R', catOpen: null, lfn: null, mode: 'select', sel: null, connFrom: null, pendingInstall: null, stage: 'S1', vid: null, cell: null };
 const nextId = (arr, prefix, pad = 2) => { let n = 1; const ids = new Set(arr.map(x => x.id)); while (ids.has(prefix + String(n).padStart(pad, '0'))) n++; return prefix + String(n).padStart(pad, '0'); };
 const byId = (arr, id) => arr.find(x => x.id === id);
 const label = id => { const x = [...S.lib.sub, ...S.lib.comp, ...S.lib.art, ...S.lib.virt, ...S.spaces].find(y => y.id === id); return x ? x.label : id; };
@@ -4994,11 +5052,12 @@ const seg = (name, opts, val) => `<div class="seg" data-seg="${name}">${opts.map
 /* ---------- in-page dialogs (artifact viewers block prompt / confirm / alert) ---------- */
 function uiAsk({ text, input = false, value = '', ok = 'OK', danger = false, choices = null }) {
   return new Promise(res => {
+    document.querySelectorAll('.dlg-bg').forEach(x => x._done ? x._done(null) : x.remove());   // never stack dialogs (double tap)
     const bg = document.createElement('div'); bg.className = 'dlg-bg';
     bg.innerHTML = `<div class="dlg" role="dialog" aria-modal="true"><p>${esc(text)}</p>${input ? `<input type="text" id="dlg-in" value="${esc(value)}">` : ''}${choices ? `<div class="dlg-ch">${choices.map(([v, l]) => `<button class="btn" data-v="${esc(v)}">${esc(l)}</button>`).join('')}</div>` : ''}<div class="dlg-act"><button class="btn" data-c="0">Cancel</button>${choices ? '' : `<button class="btn primary ${danger ? 'danger' : ''}" data-c="1">${esc(ok)}</button>`}</div></div>`;
     document.body.appendChild(bg);
     const inp = bg.querySelector('#dlg-in'); setTimeout(() => (inp || bg.querySelector('[data-c="1"]') || bg.querySelector('[data-v]')).focus(), 30);
-    const done = v => { bg.remove(); res(v); };
+    const done = v => { bg.remove(); res(v); }; bg._done = done;
     bg.addEventListener('click', e => { e.stopPropagation(); const b = e.target.closest('button'); if (e.target === bg) return done(null); if (!b) return;
       if (b.dataset.v !== undefined) return done(b.dataset.v); if (b.dataset.c === '0') return done(null); done(input ? (inp.value.trim() || null) : true); });
     bg.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Escape') done(null); if (e.key === 'Enter' && !choices) { e.preventDefault(); done(input ? (inp.value.trim() || null) : true); } });
@@ -5019,62 +5078,172 @@ $('#tabs').onclick = e => { const b = e.target.closest('[data-t]'); if (!b) retu
 /* =====================================================================
    ① LIBRARY — pre-filled checklist that becomes the hierarchies
    ===================================================================== */
-const LG = [['R', 'People / roles'], ['D', 'Digital systems'], ['chan', 'Channels'], ['virt', 'Virtual spaces'], ['art', 'Information / artifacts'], ['cond', 'Key conditions']];
+const LG = [['R', 'People / roles'], ['D', 'Digital systems + virtual spaces'], ['chan', 'Channels'], ['art', 'Information / artifacts'], ['cond', 'Key conditions']];
 const TTYPES = ['installation', 'equipment', 'touchpoint', 'tool'];
 const isOk = x => x.pilot === 'present' || x.pilot === 'added' || x.pilot === 'added-in-session';
 function libItems(g) { return g === 'R' ? comps().filter(c => c.kind === 'R') : g === 'D' ? comps().filter(c => c.kind === 'D') : g === 'T' ? comps().filter(c => c.kind === 'T') : S.lib[g] || []; }
 const stBtns = x => `<div class="st"><button class="y ${isOk(x) ? 'on' : ''}" data-st="present" title="confirmed" aria-label="confirmed">✓</button><button class="q ${x.pilot === 'unsure' ? 'on' : ''}" data-st="unsure" title="to confirm" aria-label="to confirm">?</button><button class="n ${x.pilot === 'absent' ? 'on' : ''}" data-st="absent" title="not at this site" aria-label="not at this site">✗</button></div>`;
 const setSt = (it, v) => { it.pilot = (v === 'present' ? isOk(it) : it.pilot === v) ? 'seed' : v; };
+const confirmSeed = it => { if (it.pilot === 'seed') it.pilot = 'present'; };
+/* digital systems: each top-level system is one tree; subsystems hang off it; virtual spaces hang off a system or subsystem (virt.system) */
+const dRoots = () => comps().filter(c => c.kind === 'D' && !byId(comps(), c.parent));
+const dKids = id => comps().filter(c => c.kind === 'D' && c.parent === id);
+const vKids = id => S.lib.virt.filter(v => v.system === id);
+const dRoot = id => { let x = byId(comps(), id); while (x && x.parent && byId(comps(), x.parent)) x = byId(comps(), x.parent); return x; };
+const catOf = a => (S.lib.artCats || []).find(c => c.id === a.cat);
 function rLib() {
-  const g = ui.lg = LG.some(([k]) => k === ui.lg) ? ui.lg : 'R', items = libItems(g);
-  const cnt = k => { const it = libItems(k); return `✓${it.filter(isOk).length} ?${it.filter(x => x.pilot === 'unsure').length} · ${it.length}`; };
-  const groups = [...new Set(comps().filter(c => c.kind === 'R').map(c => c.group))];
-  const dParents = comps().filter(c => c.kind === 'D' && !c.parent);
-  const opts = (arr, v) => arr.map(o => `<option ${o === v ? 'selected' : ''}>${esc(o)}</option>`).join('');
-  const meta = x => {
-    if (g === 'R') return `<select data-f="group">${opts(groups, x.group)}<option value="__new">+ new group…</option></select>`;
-    if (g === 'D') return `<select data-f="type">${opts(['system', 'subsystem', 'processor', 'channel'], x.type)}</select><select data-f="parent"><option value="">— top level</option>${dParents.filter(p => p.id !== x.id).map(p => `<option value="${p.id}" ${p.id === x.parent ? 'selected' : ''}>part of ${p.id} ${esc(p.label)}</option>`).join('')}</select>`;
-    if (g === 'art') return `<select data-f="type">${opts(V.artifact_type, x.type)}</select>`;
-    if (g === 'cond') return `<select data-f="source">${opts(['event', 'overall'], x.source)}</select><input type="text" data-f="values" value="${esc(x.values.join(', '))}" style="min-width:240px" title="values, comma separated; first = usual">`;
-    return '';
-  };
+  const g = ui.lg = LG.some(([k]) => k === ui.lg) ? ui.lg : 'R';
+  const tally = it => `✓${it.filter(isOk).length} ?${it.filter(x => x.pilot === 'unsure').length} · ${it.length}`;
+  const cnt = k => k === 'D' ? `${dRoots().length} trees` : k === 'art' ? `${S.lib.art.filter(catOf).length}/${S.lib.art.length} sorted` : tally(libItems(k));
   const HELP = {
     R: 'Roles involved in the case. Roles only, no names. The group is optional and can be fixed later.',
-    D: 'Information systems and their parts (e.g. order entry is part of the EHR). Physical equipment and touchpoints go on the Physical mapping tab.',
+    D: 'One tree per digital system: its subsystems and the virtual spaces where work happens or waits (chart, queue, message thread, video session). Physical equipment goes on the Physical mapping tab.',
     chan: 'How information is passed: in person, phone, pager, secure message, EHR, video. How channels are modelled is still open, so record what is used.',
-    virt: 'Digital places where work happens or waits: charts, queues, message threads, video sessions.',
-    art: 'Information, decisions, documents and items that are used or produced along the case.',
+    art: 'Drag each card into a category. Tap a card to rename, mark ? or delete it. Tap a category to open it and move or delete its cards.',
     cond: 'Circumstances that change who does what, how or where (time, staffing, resources, earlier events). Ask: "When would this be done by someone else, another way or somewhere else?" First value = usual.' };
+  const body = g === 'D' ? treesHtml() : g === 'art' ? boardHtml() : listHtml(g);
   $('#main').innerHTML = `<div class="card">
-    <div class="hint"><b>Virtual library.</b> Confirm what this case involves. Mark each item, add what is missing. Function is not classified on site.</div>
+    <div class="hint"><b>Virtual library.</b> Confirm what this case involves and add what is missing. Function is not classified on site.</div>
     <div class="row">${seg('lg', LG.map(([k, l]) => [k, `${l} · ${cnt(k)}`]), g)}</div>
     <p class="note">${HELP[g]}</p>
-    <div class="st-legend"><span><b class="y">✓</b> confirmed</span><span><b class="q">?</b> to confirm</span><span><b class="n">✗</b> not at this site</span><span>unmarked = not reviewed yet</span></div>
-    ${items.map(x => `<div class="ck" data-id="${esc(x.id)}"><b style="font:600 12px Jost">${esc(x.id)}</b><div><input type="text" data-f="label" value="${esc(x.label)}" class="${x.pilot === 'absent' ? 'absent' : ''}"><div class="meta">${meta(x)}<input type="text" data-f="note" value="${esc(x.note || '')}" placeholder="note" style="flex:1;min-width:140px">${x.pilot === 'added' || x.pilot === 'added-in-session' ? '<span class="chip on">added</span>' : ''}</div></div>${stBtns(x)}</div>`).join('')}
-    <div class="row" style="margin-top:10px"><button class="btn primary" data-act="add">+ Add missing item</button></div></div>`;
+    ${g === 'art' ? '' : '<div class="st-legend"><span><b class="y">✓</b> confirmed</span><span><b class="q">?</b> to confirm</span><span><b class="n">✗</b> not at this site</span><span>unmarked = not reviewed yet</span></div>'}
+    ${body}</div>`;
   const m = $('#main');
+  m.onpointerdown = m.onpointermove = m.onpointerup = m.onpointercancel = null;
   m.onclick = async e => {
     const sb = e.target.closest('[data-seg=lg] button'); if (sb) { ui.lg = sb.dataset.v; rLib(); return; }
-    const stb = e.target.closest('[data-st]'); if (stb) { setSt(libItems(g).find(x => x.id === stb.closest('[data-id]').dataset.id), stb.dataset.st); save(); rLib(); return; }
-    if (e.target.closest('[data-act=add]')) {
-      const lab = await uiPrompt('Name of the missing item'); if (!lab) return;
-      if (g === 'R') S.lib.comp.push({ id: nextId(comps(), 'R'), label: lab, kind: 'R', group: 'Other', pilot: 'added', note: '' });
-      else if (g === 'D') S.lib.comp.push({ id: nextId(comps(), 'D'), label: lab, kind: 'D', type: 'system', parent: null, pilot: 'added', note: '' });
-      else if (g === 'chan') S.lib.chan.push({ id: nextId(S.lib.chan, 'CH'), label: lab, pilot: 'added' });
-      else if (g === 'art') { const t = await uiChoose('What kind of item?', V.artifact_type.map(x => [x, x])); if (!t) return; S.lib.art.push({ id: nextId(S.lib.art, 'A'), label: lab, type: t, pilot: 'added' }); }
-      else if (g === 'virt') S.lib.virt.push({ id: nextId(S.lib.virt, 'V'), label: lab, pilot: 'added' });
-      else if (g === 'cond') S.lib.cond.push({ id: nextId(S.lib.cond, 'K', 1), label: lab, source: 'overall', values: ['usual', 'changed'], pilot: 'added' });
-      save(); rLib();
-    }
+    if (g === 'D') return treeClick(e);
+    if (g === 'art') return boardClick(e);
+    listClick(e, g);
   };
+  m.oninput = e => { const f = e.target.dataset.f; if (f !== 'label' && f !== 'note') return; const it = findLibItem(e.target.closest('[data-id]')); if (it) { it[f] = e.target.value; save(); } };
   m.onchange = async e => {
-    const row = e.target.closest('[data-id]'); if (!row) return; const it = libItems(g).find(x => x.id === row.dataset.id); const f = e.target.dataset.f; if (!f) return;
+    const row = e.target.closest('[data-id]'); const it = findLibItem(row); const f = e.target.dataset.f; if (!it || !f || f === 'label' || f === 'note') return;
     if (f === 'group' && e.target.value === '__new') { const n = await uiPrompt('Name of the new group'); if (n) it.group = n; save(); rLib(); return; }
-    if (f === 'values') it.values = e.target.value.split(',').map(x => x.trim()).filter(Boolean);
-    else if (f === 'parent') it.parent = e.target.value || null;
-    else it[f] = e.target.value;
+    if (f === 'values') it.values = e.target.value.split(',').map(x => x.trim()).filter(Boolean); else it[f] = e.target.value;
     save();
   };
+  if (g === 'art') bindBoard();
+}
+function findLibItem(row) { if (!row) return null; const id = row.dataset.id; return byId(comps(), id) || byId(S.lib.virt, id) || byId(S.lib.chan, id) || byId(S.lib.cond, id) || byId(S.lib.art, id); }
+
+/* ---- plain checklists: roles, channels, conditions ---- */
+function listHtml(g) {
+  const groups = [...new Set(comps().filter(c => c.kind === 'R').map(c => c.group))];
+  const opts = (arr, v) => arr.map(o => `<option ${o === v ? 'selected' : ''}>${esc(o)}</option>`).join('');
+  const meta = x => g === 'R' ? `<select data-f="group">${opts(groups, x.group)}<option value="__new">+ new group…</option></select>`
+    : g === 'cond' ? `<select data-f="source">${opts(['event', 'overall'], x.source)}</select><input type="text" data-f="values" value="${esc(x.values.join(', '))}" style="min-width:240px" title="values, comma separated; first = usual">` : '';
+  return `${libItems(g).map(x => `<div class="ck" data-id="${esc(x.id)}"><b style="font:600 12px Jost">${esc(x.id)}</b><div><input type="text" data-f="label" value="${esc(x.label)}" class="${x.pilot === 'absent' ? 'absent' : ''}"><div class="meta">${meta(x)}<input type="text" data-f="note" value="${esc(x.note || '')}" placeholder="note" style="flex:1;min-width:140px">${x.pilot === 'added' || x.pilot === 'added-in-session' ? '<span class="chip on">added</span>' : ''}</div></div>${stBtns(x)}</div>`).join('')}
+    <div class="row" style="margin-top:10px"><button class="btn primary" data-act="add">+ Add missing item</button></div>`;
+}
+async function listClick(e, g) {
+  const stb = e.target.closest('[data-st]'); if (stb) { setSt(findLibItem(stb.closest('[data-id]')), stb.dataset.st); save(); rLib(); return; }
+  if (!e.target.closest('[data-act=add]')) return;
+  const lab = await uiPrompt('Name of the missing item'); if (!lab) return;
+  if (g === 'R') S.lib.comp.push({ id: nextId(comps(), 'R'), label: lab, kind: 'R', group: 'Other', pilot: 'added', note: '' });
+  else if (g === 'chan') S.lib.chan.push({ id: nextId(S.lib.chan, 'CH'), label: lab, pilot: 'added' });
+  else if (g === 'cond') S.lib.cond.push({ id: nextId(S.lib.cond, 'K', 1), label: lab, source: 'overall', values: ['usual', 'changed'], pilot: 'added' });
+  save(); rLib();
+}
+
+/* ---- digital systems + virtual spaces: one tree per system ---- */
+function treesHtml() {
+  const node = (x, kind) => `<div class="tn ${kind} ${x.pilot === 'absent' ? 'gone' : ''}" data-id="${esc(x.id)}" data-kind="${kind}"><span class="tk">${kind === 'sys' ? (x.type === 'processor' ? 'processor' : 'system') : kind === 'sub' ? 'subsystem' : 'virtual space'}</span><input type="text" data-f="label" value="${esc(x.label)}" class="${x.pilot === 'absent' ? 'absent' : ''}">${stBtns(x)}<button class="btn tm" data-tmenu aria-label="more">⋯</button></div>`;
+  const kids = id => { const items = [...dKids(id).map(d => `<li>${node(d, 'sub')}${kids(d.id)}</li>`), ...vKids(id).map(v => `<li>${node(v, 'virt')}</li>`)]; return items.length ? `<ul class="tb">${items.join('')}</ul>` : ''; };
+  const lost = S.lib.virt.filter(v => !byId(comps(), v.system));
+  return `<div class="trees">${dRoots().map(r => `<div class="tree" data-root="${r.id}">${node(r, 'sys')}${kids(r.id)}
+      <div class="row tadd"><button class="btn" data-tadd="sub">+ subsystem</button><button class="btn" data-tadd="virt">+ virtual space</button></div></div>`).join('')}
+    <button class="tree tree-new" data-act="newsys"><b>+</b>New digital system</button></div>
+    ${lost.length ? `<div class="tree lost"><div class="note"><b>Virtual spaces not linked to a system</b> · tap ⋯ to link</div><ul class="tb">${lost.map(v => `<li>${node(v, 'virt')}</li>`).join('')}</ul></div>` : ''}`;
+}
+async function treeClick(e) {
+  const stb = e.target.closest('[data-st]'); if (stb) { setSt(findLibItem(stb.closest('[data-id]')), stb.dataset.st); save(); rLib(); return; }
+  if (e.target.closest('[data-act=newsys]')) { const lab = await uiPrompt('Name of the digital system'); if (!lab) return; S.lib.comp.push({ id: nextId(comps().filter(c => c.kind === 'D'), 'D'), label: lab, kind: 'D', type: 'system', parent: null, pilot: 'added', note: '' }); save(); rLib(); return; }
+  const ta = e.target.closest('[data-tadd]'); if (ta) return treeAdd(ta.closest('[data-root]').dataset.root, ta.dataset.tadd);
+  const tm = e.target.closest('[data-tmenu]'); if (!tm) return;
+  const n = tm.closest('[data-id]'), kind = n.dataset.kind, it = findLibItem(n);
+  const targets = () => comps().filter(c => c.kind === 'D').map(c => [c.id, (c.parent ? '   └ ' : '') + c.label]);
+  const ch = await uiChoose(`${it.label}`, [...(kind !== 'virt' ? [['virt', '+ Add virtual space here']] : []), ...(kind === 'sys' ? [['sub', '+ Add subsystem']] : []), ...(kind !== 'sys' ? [['move', 'Move to another system…']] : []), ['del', 'Delete']]);
+  if (ch === 'virt' || ch === 'sub') return treeAdd(it.id, ch);
+  if (ch === 'move') { const to = await uiChoose(`Move "${it.label}" under…`, targets().filter(([id]) => id !== it.id && (kind === 'virt' || !byId(comps(), id).parent))); if (!to) return; if (kind === 'virt') it.system = to; else it.parent = to; }
+  if (ch === 'del') {
+    const subs = kind === 'sys' ? dKids(it.id) : [];
+    if (!await uiConfirm(`Delete "${it.label}"${subs.length ? ` and its ${subs.length} subsystem(s)` : ''}? Its virtual spaces stay, unlinked.`)) return;
+    if (kind === 'virt') S.lib.virt = S.lib.virt.filter(v => v !== it);
+    else { const gone = new Set([it.id, ...subs.map(s => s.id)]); S.lib.comp = S.lib.comp.filter(c => !gone.has(c.id)); }
+  }
+  if (!ch) return; save(); rLib();
+}
+async function treeAdd(parentId, what) {
+  const lab = await uiPrompt(what === 'sub' ? 'Name of the subsystem' : 'Name of the virtual space (e.g. chart, queue, thread)'); if (!lab) return;
+  if (what === 'sub') { const root = dRoot(parentId); S.lib.comp.push({ id: nextId(comps(), root.id + '.', 1), label: lab, kind: 'D', type: 'subsystem', parent: root.id, pilot: 'added', note: '' }); }
+  else S.lib.virt.push({ id: nextId(S.lib.virt, 'V'), label: lab, system: parentId, pilot: 'added' });
+  confirmSeed(dRoot(parentId)); save(); rLib();
+}
+
+/* ---- information / artifacts: cards sorted into categories by dragging ---- */
+function boardHtml() {
+  const card = (a, del) => `<div class="acard ${a.pilot === 'unsure' ? 'unsure' : ''}" data-card="${esc(a.id)}"><span class="aid">${esc(a.id)}</span><span class="al">${esc(a.label)}</span>${a.pilot === 'unsure' ? '<i class="aq">?</i>' : ''}${del ? `<button class="adel" data-cdel aria-label="delete">×</button>` : ''}</div>`;
+  const pool = S.lib.art.filter(a => !catOf(a)), open = ui.catOpen;
+  return `<div class="board">
+    <div class="pool" data-drop=""><div class="pool-h"><h3>Cards to sort</h3><span class="n">${pool.length}</span></div>
+      <div class="cards">${pool.map(a => card(a, false)).join('') || '<span class="note">All cards are in a category.</span>'}</div>
+      <button class="btn primary" data-act="newcard">+ New card</button></div>
+    <div class="cats">${S.lib.artCats.map(c => { const cs = S.lib.art.filter(a => a.cat === c.id), on = open === c.id;
+      return `<div class="cat ${on ? 'open' : ''}" data-drop="${c.id}"><div class="cat-h" data-catopen="${c.id}"><span class="car">${on ? '▾' : '▸'}</span><b>${esc(c.label)}</b><span class="n">${cs.length}</span><button class="btn tm" data-catmenu="${c.id}" aria-label="category options">⋯</button></div>
+        ${on ? `<div class="cards">${cs.map(a => card(a, true)).join('') || '<span class="note">Drop cards here.</span>'}</div>` : `<div class="peek">${cs.slice(0, 3).map(a => esc(a.label)).join(' · ') || '<span class="note">drop cards here</span>'}${cs.length > 3 ? ` · +${cs.length - 3}` : ''}</div>`}</div>`; }).join('')}
+      <button class="cat cat-new" data-act="newcat">+ Category</button></div></div>`;
+}
+async function cardMenu(a) {
+  const ch = await uiChoose(a.label, [['rename', 'Rename'], ['q', a.pilot === 'unsure' ? 'Remove ? mark' : 'Mark ? to confirm'], ['move', 'Move to…'], ['del', 'Delete card']]);
+  if (ch === 'rename') { const v = await uiPrompt('Card name', a.label); if (v) a.label = v; }
+  if (ch === 'q') a.pilot = a.pilot === 'unsure' ? 'present' : 'unsure';
+  if (ch === 'move') { const to = await uiChoose(`Move "${a.label}" to…`, [...S.lib.artCats.map(c => [c.id, c.label]), ['__pool', 'Cards to sort (no category)']]); if (!to) return; a.cat = to === '__pool' ? null : to; confirmSeed(a); }
+  if (ch === 'del' && !await uiConfirm(`Delete the card "${a.label}"?`)) return;
+  if (ch === 'del') S.lib.art = S.lib.art.filter(x => x !== a);
+  if (ch) { save(); rLib(); }
+}
+async function boardClick(e) {
+  const x = e.target.closest('[data-cdel]'); if (x) { const a = byId(S.lib.art, x.closest('[data-card]').dataset.card); if (await uiConfirm(`Delete the card "${a.label}"?`)) { S.lib.art = S.lib.art.filter(y => y !== a); save(); rLib(); } return; }
+  if (e.target.closest('[data-act=newcard]')) { const lab = await uiPrompt('What is on the card? (information, document, item, decision…)'); if (!lab) return; S.lib.art.push({ id: nextId(S.lib.art, 'A'), label: lab, cat: null, pilot: 'added' }); save(); rLib(); return; }
+  if (e.target.closest('[data-act=newcat]')) { const lab = await uiPrompt('Name of the new category'); if (!lab) return; const id = nextId(S.lib.artCats, 'AC', 1); S.lib.artCats.push({ id, label: lab }); ui.catOpen = id; save(); rLib(); return; }
+  const cm = e.target.closest('[data-catmenu]'); if (cm) { const c = byId(S.lib.artCats, cm.dataset.catmenu);
+    const ch = await uiChoose(c.label, [['rename', 'Rename category'], ['del', 'Delete category (cards go back to "Cards to sort")']]);
+    if (ch === 'rename') { const v = await uiPrompt('Category name', c.label); if (v) c.label = v; }
+    if (ch === 'del') { if (!await uiConfirm(`Delete the category "${c.label}"? Its cards go back to "Cards to sort".`)) return; S.lib.artCats = S.lib.artCats.filter(x => x !== c); S.lib.art.forEach(a => { if (a.cat === c.id) a.cat = null; }); }
+    if (ch) { save(); rLib(); } return; }
+  const co = e.target.closest('[data-catopen]'); if (co) { ui.catOpen = ui.catOpen === co.dataset.catopen ? null : co.dataset.catopen; rLib(); }
+}
+let cardDrag = null;
+function bindBoard() {
+  const m = $('#main');
+  const end = () => { if (!cardDrag) return; cardDrag.ghost && cardDrag.ghost.remove(); cardDrag.el.classList.remove('dragging'); document.querySelectorAll('.over').forEach(x => x.classList.remove('over')); clearInterval(cardDrag.scroll); };
+  const dropAt = (x, y) => { const el = document.elementFromPoint(x, y); return el && el.closest('[data-drop]'); };
+  m.onpointerdown = e => {
+    const c = e.target.closest('[data-card]'); if (!c) return;
+    if (e.target.closest('[data-cdel]')) return;
+    cardDrag = { id: c.dataset.card, el: c, x0: e.clientX, y0: e.clientY, started: false };
+    try { c.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+  };
+  m.onpointermove = e => {
+    const d = cardDrag; if (!d) return;
+    if (!d.started) { if (Math.hypot(e.clientX - d.x0, e.clientY - d.y0) < 8) return;
+      d.started = true; const r = d.el.getBoundingClientRect(); d.dx = d.x0 - r.left; d.dy = d.y0 - r.top;
+      d.ghost = d.el.cloneNode(true); d.ghost.classList.add('ghost'); d.ghost.style.width = r.width + 'px'; document.body.appendChild(d.ghost); d.el.classList.add('dragging'); }
+    d.ghost.style.transform = `translate(${e.clientX - d.dx}px, ${e.clientY - d.dy}px)`;
+    const z = dropAt(e.clientX, e.clientY); document.querySelectorAll('.over').forEach(x => { if (x !== z) x.classList.remove('over'); }); z && z.classList.add('over');
+    /* auto-scroll when dragging near the top / bottom of the page */
+    const mr = m.getBoundingClientRect(), v = e.clientY < mr.top + 60 ? -14 : e.clientY > mr.bottom - 60 ? 14 : 0;
+    clearInterval(d.scroll); if (v) d.scroll = setInterval(() => { m.scrollTop += v; }, 16);
+  };
+  m.onpointerup = e => {
+    const d = cardDrag; if (!d) return; const a = byId(S.lib.art, d.id), z = d.started && dropAt(e.clientX, e.clientY);
+    end(); cardDrag = null;
+    if (!d.started) { cardMenu(a); return; }
+    if (z) { a.cat = z.dataset.drop || null; if (a.cat) confirmSeed(a); save(); }
+    rLib();
+  };
+  m.onpointercancel = () => { end(); cardDrag = null; };
 }
 
 /* =====================================================================
@@ -5143,15 +5312,20 @@ function inspector() {
   return `<h3>Physical mapping</h3><ol class="note" style="padding-left:18px"><li>Tick the IRB scope box, then add a photo of the permitted floor plan (no people).</li><li><b>+ Bubble</b> for every space in the case boundary, corridors too.</li><li><b>+ Connection</b> only where people can pass directly. Set the restriction.</li><li>Anything unknown: select it and set <b>to-confirm</b>. It shows as <b>?</b>.</li><li>Link installations / touchpoints to spaces in the table or on the plan.</li></ol>`;
 }
 let planDrag = null;
+/* All plan pointer handlers sit on the #plan box, which survives redraws. On iPad (finger / Pencil) the
+   browser keeps sending a pointer's events to the element first touched, so the svg inside is redrawn
+   but the box itself is never replaced while a drag is running; the box also captures the pointer. */
+function redrawPlan() { $('#plan').innerHTML = planSvg(); const i = $('#inspector'); if (i) i.innerHTML = inspector(); }
 function bindPlan() {
-  const svg = $('#plan-svg');
-  svg.onpointerdown = async e => {
-    const sp = e.target.closest('[data-space]'), cn = e.target.closest('[data-conn]'), it = e.target.closest('[data-inst]'), p = svgPoint(svg, e);
+  const box = $('#plan'); if (!box || box._bound) return; box._bound = true;
+  box.onpointerdown = async e => {
+    const svg = $('#plan-svg'), sp = e.target.closest('[data-space]'), cn = e.target.closest('[data-conn]'), it = e.target.closest('[data-inst]'), p = svgPoint(svg, e);
     if (ui.mode === 'select') { ui.pendingInstall = null;
-      if (it) { ui.sel = it.dataset.inst; planDrag = { kind: 'inst', id: ui.sel }; }
-      else if (sp) { ui.sel = sp.dataset.space; const s = byId(S.spaces, ui.sel); planDrag = { kind: 'space', id: ui.sel, ox: p.x - s.x, oy: p.y - s.y }; }
+      if (it) { ui.sel = it.dataset.inst; planDrag = { kind: 'inst', id: ui.sel, moved: false }; }
+      else if (sp) { ui.sel = sp.dataset.space; const s = byId(S.spaces, ui.sel); planDrag = { kind: 'space', id: ui.sel, ox: p.x - s.x, oy: p.y - s.y, moved: false }; }
       else ui.sel = cn ? cn.dataset.conn : null;
-      rSpace(); return; }
+      if (planDrag) { e.preventDefault(); try { box.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ } redrawPlan(); } else rSpace();
+      return; }
     if (ui.mode === 'bubble' && !sp) { const id = nextId(S.spaces, 'P'); S.spaces.push({ id, label: '', floor: 1, bubble_type: 'room', x: p.x, y: p.y, in_boundary: true, access: 'all', note: '', evidence: { source: S.plan.image ? 'DOC' : 'EX', status: 'confirmed' } }); ui.sel = id; save(); rSpace(); setTimeout(() => { const i = document.querySelector('#inspector [data-k=label]'); i && i.focus(); }, 50); return; }
     if (ui.mode === 'connect' && sp) { const id = sp.dataset.space; if (!ui.connFrom) { ui.connFrom = id; rSpace(); return; }
       if (ui.connFrom !== id && !S.connections.some(c => (c.a === ui.connFrom && c.b === id) || (c.b === ui.connFrom && c.a === id))) { const cid = nextId(S.connections, 'C'); S.connections.push({ id: cid, a: ui.connFrom, b: id, type: 'door', restriction: 'none', detail: '', evidence: { source: 'OBS', status: 'confirmed' } }); ui.sel = cid; save(); }
@@ -5163,16 +5337,15 @@ function bindPlan() {
       else if (sp && await uiConfirm(`Delete ${sp.dataset.space} and its connections?`)) { const id = sp.dataset.space; S.spaces = S.spaces.filter(s => s.id !== id); S.connections = S.connections.filter(c => c.a !== id && c.b !== id); comps().forEach(t => { if (t.space === id) { t.space = null; t.pos = null; } }); }
       save(); rSpace(); }
   };
-  const box = $('#plan');
-  box.onpointermove = e => { if (!planDrag) return; const p = svgPoint($('#plan-svg'), e);
-    if (planDrag.kind === 'space') { const s = byId(S.spaces, planDrag.id); const dx = p.x - planDrag.ox - s.x, dy = p.y - planDrag.oy - s.y; s.x += dx; s.y += dy; comps().forEach(t => { if (t.space === s.id && t.pos) { t.pos.x += dx; t.pos.y += dy; } }); }
+  box.onpointermove = e => { if (!planDrag) return; e.preventDefault(); const p = svgPoint($('#plan-svg'), e);
+    if (planDrag.kind === 'space') { const s = byId(S.spaces, planDrag.id); const dx = p.x - planDrag.ox - s.x, dy = p.y - planDrag.oy - s.y; if (!dx && !dy) return; s.x += dx; s.y += dy; comps().forEach(t => { if (t.space === s.id && t.pos) { t.pos.x += dx; t.pos.y += dy; } }); }
     else byId(comps(), planDrag.id).pos = p;
-    box.innerHTML = planSvg(); bindPlan(); };
-  box.onpointerup = box.onpointerleave = () => { if (planDrag) { planDrag = null; save(); rSpace(); } };
+    planDrag.moved = true; $('#plan').innerHTML = planSvg(); };
+  box.onpointerup = box.onpointercancel = () => { if (!planDrag) return; const mv = planDrag.moved; planDrag = null; if (mv) save(); rSpace(); };
 }
 function bindInspector() {
   const el = $('#inspector'); if (!el) return;
-  el.oninput = e => { const k = e.target.dataset.k; const o = byId(S.spaces, ui.sel) || byId(S.connections, ui.sel) || byId(comps(), ui.sel); if (!o || !k) return; o[k] = e.target.value; save(); $('#plan').innerHTML = planSvg(); bindPlan(); };
+  el.oninput = e => { const k = e.target.dataset.k; const o = byId(S.spaces, ui.sel) || byId(S.connections, ui.sel) || byId(comps(), ui.sel); if (!o || !k) return; o[k] = e.target.value; save(); $('#plan').innerHTML = planSvg(); };
   el.onclick = async e => {
     const b = e.target.closest('button'); if (!b) return;
     const o = byId(S.spaces, ui.sel) || byId(S.connections, ui.sel) || byId(comps(), ui.sel);
@@ -5187,7 +5360,7 @@ function bindInspector() {
 }
 document.addEventListener('click', e => { if (ui.tab !== 'space') return; const m = e.target.closest('[data-mode]'); if (m) { ui.mode = m.dataset.mode; ui.connFrom = null; ui.pendingInstall = null; rSpace(); } if (e.target.closest('[data-act=photo]') && S.plan.irbOk) $('#file-img').click(); if (e.target.closest('[data-act=photo-rm]')) { S.plan.image = null; save(); rSpace(); } });
 document.addEventListener('change', e => { if (e.target.id === 'irb-ok') { S.plan.irbOk = e.target.checked; save(); rSpace(); } });
-document.addEventListener('input', e => { if (e.target.dataset.act === 'opacity') { S.plan.opacity = +e.target.value; save(); $('#plan').innerHTML = planSvg(); bindPlan(); } });
+document.addEventListener('input', e => { if (e.target.dataset.act === 'opacity') { S.plan.opacity = +e.target.value; save(); $('#plan').innerHTML = planSvg(); } });
 $('#file-img').onchange = e => { const f = e.target.files[0]; if (!f) return; const img = new Image(), url = URL.createObjectURL(f);
   img.onload = () => { const k = Math.min(1, 1800 / Math.max(img.width, img.height)); const c = document.createElement('canvas'); c.width = img.width * k; c.height = img.height * k; c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); S.plan.image = c.toDataURL('image/jpeg', .8); URL.revokeObjectURL(url); save(); rSpace(); };
   img.src = url; e.target.value = ''; };
@@ -5212,24 +5385,28 @@ const sessionFields = (title, hint) => `<h2>${title}</h2><div class="hint">${hin
   <div class="grid2"><label class="field"><span>Site ID</span><input type="text" data-k="site.id" value="${esc(S.site.id)}"></label><label class="field"><span>Site label (no identifiers)</span><input type="text" data-k="site.label" value="${esc(S.site.label)}"></label></div>
   <label class="field"><span>${MODE === 'pilot' ? 'Pilot ID' : 'Session ID'}</span><input type="text" data-k="session.id" value="${esc(S.session.id)}"></label>
   <div class="grid2"><label class="field"><span>Expert role (no name)</span><input type="text" data-k="session.expert" value="${esc(S.session.expert)}"></label><label class="field"><span>Recorded by</span><input type="text" data-k="session.recorder" value="${esc(S.session.recorder)}"></label></div>`;
-const siteLibrary = () => ({ meta: { kind: 'site-library', version: '2.0', exported: new Date().toISOString(), from: S.session.id }, site: S.site, lib: S.lib, spaces: S.spaces, connections: S.connections, plan: S.plan });
-const libraryCsv = () => toCsv([...S.lib.sub.map(i => ({ list: 'sub-function', ...i })), ...S.lib.comp.map(({ pos, ...i }) => ({ list: i.kind, ...i })), ...S.lib.art.map(i => ({ list: 'artifact', ...i })), ...S.lib.virt.map(i => ({ list: 'virtual', ...i })), ...(S.lib.chan || []).map(i => ({ list: 'channel', ...i })), ...S.lib.cond.map(i => ({ list: 'condition', ...i }))]);
+const SITES = ['WCM', 'LWH'];
+const siteLibrary = () => ({ meta: { kind: 'site-library', version: '3.1', exported: new Date().toISOString(), from: S.session.id }, site: S.site, lib: S.lib, spaces: S.spaces, connections: S.connections, plan: S.plan });
+const libraryCsv = () => toCsv([...S.lib.sub.map(i => ({ list: 'sub-function', ...i })), ...S.lib.comp.map(({ pos, ...i }) => ({ list: i.kind, ...i })), ...S.lib.art.map(i => ({ list: 'artifact', ...i, category: catOf(i) ? catOf(i).label : '' })), ...S.lib.virt.map(i => ({ list: 'virtual', ...i, system_label: label(i.system) || '' })), ...(S.lib.chan || []).map(i => ({ list: 'channel', ...i })), ...S.lib.cond.map(i => ({ list: 'condition', ...i }))]);
 function bindSessionInputs() { $('#main').oninput = e => { const k = e.target.dataset.k; if (!k) return; const [o, f] = k.split('.'); S[o][f] = e.target.value; save(); }; }
 
 /* ---------- PILOT: export the site library ---------- */
 function rExportPilot() {
   const base = (S.site.id || 'site').replace(/[^\w-]/g, '_') + '_site-library';
   const n = arr => `${arr.filter(isOk).length}/${arr.length}`;
-  $('#main').innerHTML = `<div class="grid2"><div class="card">${sessionFields('Pilot', 'One visit to build the site library: ① virtual library (roles, systems, channels, virtual spaces, information, conditions) and ② physical mapping (floor plan, bubbles, connections, touchpoints). No patients or staff observed; roles only.')}
+  $('#main').innerHTML = `<div class="grid2"><div class="card"><h2>Pilot site</h2><div class="hint">One visit to build the site library. No patients or staff observed; roles only.</div>
+      <div class="row">${seg('site', SITES, S.site.id)}${S.site.id ? '' : '<span class="note" style="color:#a32b2b">choose the site before exporting</span>'}</div>
       <h2 style="margin-top:12px">Export site library</h2><p class="note">This file is what the <b>Walkthrough</b> page imports before each formal session.</p>
       <div class="row"><button class="btn primary" data-x="lib-json">Download site library (JSON)</button><button class="btn" data-x="library">library.csv</button><button class="btn" data-x="spaces">spaces.csv</button><button class="btn" data-x="connections">connections.csv</button></div>
-      <div class="stat" style="margin-top:10px"><div><b>${n(comps().filter(c => c.kind === 'R'))}</b>roles ✓</div><div><b>${n(comps().filter(c => c.kind === 'D'))}</b>digital systems ✓</div><div><b>${n(S.lib.chan)}</b>channels ✓</div><div><b>${n(S.lib.virt)}</b>virtual spaces ✓</div><div><b>${n(S.lib.art)}</b>information / artifacts ✓</div><div><b>${n(S.lib.cond)}</b>conditions ✓</div><div><b>${S.spaces.length}</b>bubbles</div><div><b>${S.connections.length}</b>connections</div><div><b>${comps().filter(c => c.kind === 'T' && c.space).length}</b>touchpoints linked</div><div><b>${[...S.lib.comp, ...S.lib.chan, ...S.lib.virt, ...S.lib.art, ...S.lib.cond].filter(x => x.pilot === 'unsure').length + S.spaces.filter(x => x.evidence.status === 'to-confirm').length + S.connections.filter(x => x.evidence.status === 'to-confirm').length}</b>marked ? to confirm</div></div></div>
+      <div class="stat" style="margin-top:10px"><div><b>${n(comps().filter(c => c.kind === 'R'))}</b>roles ✓</div><div><b>${dRoots().length}</b>digital system trees</div><div><b>${n(S.lib.chan)}</b>channels ✓</div><div><b>${n(S.lib.virt)}</b>virtual spaces ✓</div><div><b>${S.lib.art.filter(catOf).length}/${S.lib.art.length}</b>information cards sorted</div><div><b>${n(S.lib.cond)}</b>conditions ✓</div><div><b>${S.spaces.length}</b>bubbles</div><div><b>${S.connections.length}</b>connections</div><div><b>${comps().filter(c => c.kind === 'T' && c.space).length}</b>touchpoints linked</div><div><b>${[...S.lib.comp, ...S.lib.chan, ...S.lib.virt, ...S.lib.art, ...S.lib.cond].filter(x => x.pilot === 'unsure').length + S.spaces.filter(x => x.evidence.status === 'to-confirm').length + S.connections.filter(x => x.evidence.status === 'to-confirm').length}</b>marked ? to confirm</div></div></div>
     <div class="card"><h2>Load / reset</h2>
       <div class="row"><button class="btn" data-x="import">Import site library…</button><span class="note">continue editing a saved library</span></div>
       <div class="row"><button class="btn" data-x="demo">Load demo spaces</button><span class="note">practice — replaces current</span></div>
       <div class="row"><button class="btn" data-x="reset" style="color:#a32b2b">Reset everything</button></div></div></div>`;
-  bindSessionInputs();
-  $('#main').onclick = async e => { const b = e.target.closest('[data-x]'); if (!b) return; const x = b.dataset.x;
+  $('#main').onclick = async e => {
+    const sb = e.target.closest('[data-seg=site] button'); if (sb) { S.site.id = sb.dataset.v; S.site.label = sb.dataset.v; S.session.id = sb.dataset.v + '-pilot'; save(); rExportPilot(); return; }
+    const b = e.target.closest('[data-x]'); if (!b) return; const x = b.dataset.x;
+    if (x !== 'import' && x !== 'demo' && x !== 'reset' && !S.site.id) { toast('Choose WCM or LWH first.'); return; }
     if (x === 'lib-json') download(base + '.json', JSON.stringify(siteLibrary(), null, 1), 'application/json');
     if (x === 'library') download(base + '_library.csv', libraryCsv(), 'text/csv');
     if (x === 'spaces') download(base + '_spaces.csv', toCsv(S.spaces), 'text/csv');
@@ -5250,7 +5427,8 @@ $('#file-json').onchange = e => { const f = e.target.files[0]; if (!f) return; c
     save(); render(); toast('Imported ' + f.name);
   } catch (err) { toast('Could not read this file: ' + err.message); } };
   r.readAsText(f); e.target.value = ''; };
-function upgrade(d) { const b = freshState(); for (const k of Object.keys(b)) if (d[k] == null) d[k] = b[k]; for (const k of Object.keys(b.lib)) if (!d.lib[k]) d.lib[k] = b.lib[k]; STAGES.forEach(st => { d.walk[st.id] = d.walk[st.id] || { steps: [], vars: [], probe: '' }; }); return d; }
+function upgrade(d) { const b = freshState(); for (const k of Object.keys(b)) if (d[k] == null) d[k] = b[k]; for (const k of Object.keys(b.lib)) if (!d.lib[k]) d.lib[k] = b.lib[k]; STAGES.forEach(st => { d.walk[st.id] = d.walk[st.id] || { steps: [], vars: [], probe: '' }; });
+  d.lib.virt.forEach(v => { if (v.system === undefined) { const sd = CB.seed.virtual.find(x => x.id === v.id); v.system = sd ? sd.system : null; } }); return d; }
 
 /* ---------- demo: mock spaces + S5 baseline and one variation ---------- */
 function demo() {
@@ -5410,7 +5588,7 @@ const frow = (r, k, lab, help = '') => `<div class="frow ${fieldChanged(r, k) ? 
 
 /* ---------------- input / output rows ---------------- */
 function itemOptions(v) {
-  const byType = {}; live(S.lib.art).forEach(a => (byType[a.type] = byType[a.type] || []).push(a));
+  const byType = {}; live(S.lib.art).forEach(a => { const t = catOf(a) ? catOf(a).label : 'not sorted yet'; (byType[t] = byType[t] || []).push(a); });
   const o = (x) => `<option value="${x.id}" ${x.id === v ? 'selected' : ''}>${esc(x.label)} · ${x.id}</option>`;
   return `<option value="">— what? —</option>${Object.entries(byType).map(([t, xs]) => `<optgroup label="${esc(t)}">${xs.map(o).join('')}</optgroup>`).join('')}<optgroup label="person / entity">${people().map(o).join('')}</optgroup><option value="__new">+ new item…</option>`;
 }
@@ -5471,7 +5649,7 @@ function editor(r) {
   } else {
     const route = r.move.route, miss = route.slice(1).map((x, i) => [route[i], x]).filter(([a, c]) => !S.connections.some(k => (k.a === a && k.b === c) || (k.a === c && k.b === a)));
     const restr = route.slice(1).map((x, i) => S.connections.find(k => (k.a === route[i] && k.b === x) || (k.a === x && k.b === route[i]))).filter(k => k && k.restriction && k.restriction !== 'none');
-    const movers = [...people(), ...tools().filter(t => t.mobility !== 'fixed'), ...live(S.lib.art).filter(a => a.type === 'item' || a.type === 'entity')];
+    const movers = [...people(), ...tools().filter(t => t.mobility !== 'fixed'), ...live(S.lib.art).filter(a => a.type === 'item' || a.type === 'entity' || /^item/i.test(catOf(a) ? catOf(a).label : ''))];
     const others = recs().filter(x => x !== r);
     const recSel = (k) => `<select data-mf="${k}"><option value="">—</option>${others.map(x => `<option value="${x.id}" ${r[k] === x.id ? 'selected' : ''}>#${recNo(x)} ${esc((x.action || x.kind).slice(0, 40))}</option>`).join('')}</select>`;
     body = `<div class="flow">
@@ -5581,8 +5759,8 @@ const notesCsv = () => toCsv(allNotes().map(({ coding, ...n }) => ({ ...n, ...Ob
 /* ---------------- events ---------------- */
 async function addNew(kind, forKey) {
   const lab = await uiPrompt('Name (added during the session, review later)'); if (!lab) return null;
-  if (kind === 'V') { const id = nextId(S.lib.virt, 'V'); S.lib.virt.push({ id, label: lab, pilot: 'added-in-session' }); return id; }
-  if (kind === 'A') { const t = await uiChoose('What kind of item?', V.artifact_type.map(x => [x, x])); if (!t) return null; const id = nextId(S.lib.art, 'A'); S.lib.art.push({ id, label: lab, type: t, pilot: 'added-in-session' }); return id; }
+  if (kind === 'V') { const id = nextId(S.lib.virt, 'V'); S.lib.virt.push({ id, label: lab, system: null, pilot: 'added-in-session' }); return id; }
+  if (kind === 'A') { const c = await uiChoose('Which category?', [...(S.lib.artCats || []).map(x => [x.id, x.label]), ['__none', 'Not sure yet']]); if (!c) return null; const id = nextId(S.lib.art, 'A'); S.lib.art.push({ id, label: lab, cat: c === '__none' ? null : c, pilot: 'added-in-session' }); return id; }
   const id = nextId(comps(), kind); S.lib.comp.push({ id, label: lab, kind, group: 'Added in session', type: kind === 'T' ? 'tool' : 'system', mobility: forKey === 'devices' ? 'mobile' : kind === 'T' ? 'fixed' : undefined, space: null, pos: null, parent: null, pilot: 'added-in-session', note: '' }); return id;
 }
 function addRecord(kind) { const cur = rc(); const n = cur ? nextFrom(cur, kind) : blank(kind); if (cur) insertAfter(cur, n); else recs().push(n); ui.rid = n.id; ui.act = null; save(); render(); $('#main').scrollTop = 0; setTimeout(() => { const a = $('#act-in'); a && a.focus(); }, 30); }
