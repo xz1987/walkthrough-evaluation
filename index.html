@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Walkthrough Kit</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0f6b6b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Walkthrough">
+<link rel="apple-touch-icon" href="icon-180.png">
+<style>
+:root{color-scheme:light;--teal:#0f6b6b;--orange:#c8641e;--ink:#1d2424;--mute:#5d6767;--line:#dcd9d0;--bg:#f6f5f1}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Inter,-apple-system,system-ui,sans-serif;padding:max(32px,env(safe-area-inset-top)) 16px 32px}
+main{max-width:760px;margin:0 auto}h1{font:600 30px/1.2 Jost,-apple-system,sans-serif;margin:0 0 4px}.sub{color:var(--mute);margin:0 0 28px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+a.card{display:block;text-decoration:none;color:inherit;background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px;min-height:150px}
+a.card:active{transform:scale(.99)}a.card b{font:600 21px Jost,-apple-system,sans-serif;display:block;margin-bottom:6px}
+.p b{color:var(--teal)}.w b{color:var(--orange)}.card span{color:var(--mute);font-size:14px}
+.status{margin-top:24px;padding:12px 14px;border-radius:10px;background:#fff;border:1px solid var(--line);font-size:14px;color:var(--mute)}
+.status b{color:var(--ink)}ol{margin:8px 0 0;padding-left:20px}
+</style></head><body><main>
+<h1>Walkthrough Kit</h1>
+<p class="sub">Hypothetical expert walkthrough · records stay on this device · roles only, no names</p>
+<div class="cards">
+  <a class="card p" href="pilot.html"><b>Site Library Pilot</b><span>① Virtual library · ② Physical mapping. One visit; export the site library at the end.</span></a>
+  <a class="card w" href="walkthrough.html"><b>Walkthrough Recorder</b><span>Case + spatial walkthrough, record by record. Import the site library first.</span></a>
+</div>
+<div class="status" id="st">Checking offline readiness…</div>
+<div class="status">
+  <b>Set up on iPad (once, with internet)</b>
+  <ol><li>Open this page in Safari.</li><li>Share → <b>Add to Home Screen</b>.</li><li>Open it from the Home Screen once, then open both tools once.</li><li>Turn on Airplane Mode and reopen to check it works offline.</li></ol>
+  Data is saved in the Home Screen app only (not shared with Safari). Export at the end of every session: the export button opens the share sheet → <b>Save to Files</b>.
+</div>
+</main>
+<script>
+const st = document.getElementById('st');
+const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+if (!('serviceWorker' in navigator)) st.textContent = 'This browser cannot work offline.';
+else navigator.serviceWorker.register('sw.js').then(() => navigator.serviceWorker.ready).then(() => {
+  st.innerHTML = '<b>✓ Ready for offline use.</b> ' + (standalone ? 'Running as Home Screen app.' : 'Not yet on the Home Screen — see steps below.');
+}).catch(() => { st.textContent = 'Offline setup failed (needs https or localhost).'; });
+</script>
+</body></html>

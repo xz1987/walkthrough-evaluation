@@ -1,0 +1,5214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Site Library Pilot</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Jost:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --teal: #1c9c8c; --teal-deep: #147a6e; --teal-tint: #e3f3f1;
+  --orange: #e8843c; --orange-tint: #fcefe4;
+  --violet: #6b63c4; --lavender: #ecebf8;
+  --ink: #1f2a33; --ink-2: #4a5661; --muted: #7c8792;
+  --line: #dfe3e8; --bg: #f3f4f6; --card: #fff; --soft: #f7f8fa;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 13px/1.45 Inter, system-ui, -apple-system, sans-serif; }
+h1, h2, h3, .label, .tab { font-family: Jost, Inter, sans-serif; }
+h1 { font-weight: 600; font-size: 22px; margin: 0; letter-spacing: .02em; }
+h2 { font-weight: 600; font-size: 16px; margin: 0 0 8px; }
+h3 { font-weight: 500; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+.label { font-weight: 500; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.card { background: var(--card); border-radius: 18px; box-shadow: 0 2px 14px rgba(31,42,51,.06); padding: 18px; min-width: 0; }
+.mock { display: inline-block; font: 600 11px Jost, sans-serif; letter-spacing: .16em; color: #b45a1c; border: 1.5px solid #e8b48f; background: var(--orange-tint); border-radius: 8px; padding: 3px 9px; }
+.tabs { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); }
+.tab { border: 0; background: transparent; min-height: 40px; padding: 0 16px; border-radius: 10px; font-weight: 500; font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); cursor: pointer; }
+.tab.on { background: var(--teal); color: #fff; }
+.seg { display: inline-flex; gap: 4px; flex-wrap: wrap; }
+.seg button, .btn { border: 1px solid var(--line); background: var(--card); border-radius: 9px; min-height: 34px; padding: 0 12px; font: 500 12px Inter, sans-serif; color: var(--ink-2); cursor: pointer; }
+.seg button.on { border-color: var(--ink); color: var(--ink); background: var(--soft); box-shadow: inset 0 0 0 1px var(--ink); }
+.btn.primary { background: var(--teal); color: #fff; border-color: var(--teal); }
+select, input[type=text], textarea { font: 13px Inter, sans-serif; border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; background: #fff; color: var(--ink); }
+.chip { display: inline-flex; align-items: baseline; gap: 4px; padding: 2px 8px; margin: 2px 3px 2px 0; border-radius: 7px; background: var(--soft); border: 1px solid var(--line); font-size: 11.5px; color: var(--ink-2); max-width: 100%; }
+.chip b { font: 600 10.5px Jost, sans-serif; color: var(--ink); letter-spacing: .04em; }
+.chip.on { background: #fff4d6; border-color: #e0b84c; color: var(--ink); }
+.chip.fn { background: var(--c); border-color: var(--c); color: #fff; }
+.chip.fn b { color: #fff; }
+.chip.dim { opacity: .4; }
+.tag { display: inline-block; font: 600 9.5px Jost, sans-serif; letter-spacing: .1em; text-transform: uppercase; border-radius: 5px; padding: 1px 6px; margin-left: 4px; vertical-align: 1px; }
+.tag-EX { background: var(--teal-tint); color: var(--teal-deep); }
+.tag-EXest { background: #fff1c9; color: #8a6400; }
+.tag-INT { background: var(--lavender); color: var(--violet); }
+.tag-DOC, .tag-OBS { background: #eceef1; color: var(--ink-2); }
+.kind { font: 600 9.5px Jost, sans-serif; letter-spacing: .1em; text-transform: uppercase; padding: 1px 6px; border-radius: 5px; }
+.kind.barrier { background: #fde3e3; color: #a32b2b; }
+.kind.facilitator { background: #dff2e3; color: #2d7a3d; }
+.kind.workaround { background: #fff1c9; color: #8a6400; }
+.obs { padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 12.5px; }
+.obs:last-child { border-bottom: 0; }
+.obs .ids { color: var(--muted); font-size: 11px; }
+.bm { width: 100%; height: auto; display: block; }
+.bm-label { font: 500 10.5px Inter, sans-serif; fill: var(--ink); }
+.bm-id { font: 600 9px Jost, sans-serif; letter-spacing: .08em; fill: var(--muted); }
+.bm-floor { font: 600 10px Jost, sans-serif; letter-spacing: .16em; fill: var(--muted); }
+.bm-pin { font: 700 9px Jost, sans-serif; fill: #fff; }
+.bm-tid { font: 600 8.5px Jost, sans-serif; fill: var(--violet); }
+.jpd { width: 100%; height: auto; display: block; }
+.jpd-id { font: 700 9.5px Jost, sans-serif; }
+.jpd-lab { font: 500 9px Inter, sans-serif; fill: var(--ink-2); }
+.jpd-lvl { font: 600 10px Jost, sans-serif; fill: var(--muted); }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 11.5px; color: var(--ink-2); margin-top: 8px; }
+.legend i { display: inline-block; vertical-align: middle; margin-right: 6px; }
+.note { font-size: 11.5px; color: var(--muted); }
+table.grid { width: 100%; border-collapse: collapse; }
+table.grid th, table.grid td { text-align: left; vertical-align: top; padding: 7px 9px; border-bottom: 1px solid var(--line); }
+table.grid thead th { font: 500 10.5px Jost, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); background: var(--soft); }
+
+</style>
+<style>
+html, body { height: 100%; }
+  .app { display: flex; flex-direction: column; height: 100%; }
+  .topbar { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; padding: 10px 14px; background: #fff; border-bottom: 1px solid var(--line); }
+  .topbar h1 { font-size: 17px; } .grow { flex: 1; } .saved { font-size: 11px; color: var(--muted); }
+  main { flex: 1; min-height: 0; overflow: auto; padding: 14px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 6px 0; }
+  .field { display: flex; flex-direction: column; gap: 4px; margin: 8px 0; }
+  .field > span { font: 500 10.5px Jost; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .grid2 { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 12px; }
+  .split { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 14px; align-items: start; }
+  .split > * { min-width: 0; }
+  @media (max-width: 1000px) { .split, .grid2 { grid-template-columns: 1fr; } }
+  .sticky { position: sticky; top: 0; }
+  .plan { position: relative; background: var(--soft); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; touch-action: none; }
+  .plan svg { display: block; width: 100%; height: auto; }
+  .tools { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .tools button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .hint { font-size: 12px; color: var(--ink-2); background: #fffbef; border: 1px solid #f0dfa8; border-radius: 8px; padding: 6px 10px; margin-bottom: 8px; }
+  .pick { display: flex; flex-wrap: wrap; gap: 5px; }
+  .pick button { border: 1px solid var(--line); background: #fff; border-radius: 8px; min-height: 32px; padding: 3px 9px; font: 12px Inter, sans-serif; color: var(--ink-2); cursor: pointer; text-align: left; }
+  .pick button b { font: 600 10.5px Jost; color: var(--ink); margin-right: 3px; }
+  .pick button.on { background: #fff4d6; border-color: #d9a520; color: var(--ink); box-shadow: inset 0 0 0 1px #d9a520; }
+  .grp { font: 500 10px Jost; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 8px 0 3px; width: 100%; }
+  .ck { display: grid; grid-template-columns: 54px minmax(0,1fr) auto; gap: 6px 10px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); }
+  .ck .st { display: inline-flex; gap: 4px; }
+  .ck .st button { width: 38px; min-height: 34px; border: 1px solid var(--line); background: #fff; border-radius: 8px; font-size: 15px; cursor: pointer; }
+  .ck .st button.on.y { background: #dff2e3; border-color: #3f9e4d; } .ck .st button.on.n { background: #fde3e3; border-color: #b23b3b; } .ck .st button.on.q { background: #fff1c9; border-color: #c9971a; }
+  .ck input[type=text], .ck select { width: 100%; }
+  .ck .meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; align-items: center; }
+  .ck .meta select, .ck .meta input { width: auto; font-size: 12px !important; padding: 4px 6px; }
+  .absent { text-decoration: line-through; opacity: .45; }
+  .jr { display: flex; align-items: center; gap: 6px; overflow-x: auto; padding: 4px 2px 8px; }
+  .jr .par { display: flex; flex-direction: column; gap: 6px; }
+  .jr .arr { color: #9aa4ae; font-size: 18px; }
+  .sbtn { border: 1.5px solid var(--line); background: #fff; border-radius: 10px; padding: 7px 10px; text-align: left; cursor: pointer; min-width: 150px; font: inherit; color: inherit; }
+  .sbtn.on { border-color: var(--ink); box-shadow: 0 0 0 2px var(--ink); }
+  .sbtn .sn { font: 600 10px Jost; letter-spacing: .1em; color: var(--muted); }
+  .sbtn .fx span.f { font: 600 9.5px Jost; color: #fff; border-radius: 4px; padding: 0 5px; margin-right: 2px; }
+  .sbtn.event { border-style: dashed; border-color: #a32b2b; }
+  .vtabs { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin: 10px 0; }
+  .vtabs button { border: 1px solid var(--line); background: #fff; border-radius: 9px; min-height: 34px; padding: 0 12px; font: 12px Inter; cursor: pointer; }
+  .vtabs button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .vtabs button.base.on { background: var(--teal); border-color: var(--teal); }
+  table.wt { width: 100%; border-collapse: separate; border-spacing: 0; }
+  table.wt th, table.wt td { text-align: left; vertical-align: top; padding: 7px 8px; border-bottom: 1px solid var(--line); font-size: 12px; }
+  table.wt thead th { font: 500 10px Jost; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); background: var(--soft); }
+  table.wt td.c { cursor: pointer; min-width: 90px; } table.wt td.c:hover { background: #f7f8fa; }
+  table.wt td.c.sel { box-shadow: inset 0 0 0 2px var(--ink); }
+  table.wt td.c.ch { background: #fff4d6; } table.wt td.c.ch::after { content: 'changed'; display: block; font: 600 8px Jost; letter-spacing: .12em; color: #8a6400; text-transform: uppercase; }
+  table.wt tr.skip td { opacity: .35; text-decoration: line-through; }
+  table.wt tr.only td:first-child { box-shadow: inset 4px 0 0 #e8843c; }
+  .ci { display: block; margin: 1px 0; } .ci b { font: 600 10px Jost; margin-right: 3px; }
+  .vp { display: inline-block; border: 1.2px dashed #1e63c4; color: #1e63c4; border-radius: 5px; padding: 0 5px; margin: 1px 0; }
+  .empty { color: #b9c0c8; }
+  .ncount { display: inline-block; font: 600 9.5px Jost; background: #fde3e3; color: #a32b2b; border-radius: 5px; padding: 1px 6px; margin-top: 4px; }
+  .note-row { display: grid; grid-template-columns: minmax(0,1.4fr) minmax(0,1fr) auto; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  details summary { cursor: pointer; font-size: 12px; color: var(--ink-2); }
+  textarea { width: 100%; min-height: 52px; }
+  .stat { display: flex; gap: 10px; flex-wrap: wrap; } .stat div { background: var(--soft); border-radius: 8px; padding: 6px 10px; font-size: 12px; } .stat b { font: 600 18px Jost; display: block; }
+  .actions { white-space: nowrap; } .actions .btn { min-height: 28px; padding: 0 7px; font-size: 11.5px; }
+  /* in-page dialogs + toast (artifact-safe) */
+  .dlg-bg { position: fixed; inset: 0; background: rgba(20,24,30,.38); display: grid; place-items: center; z-index: 50; padding: 16px; }
+  .dlg { background: #fff; border-radius: 14px; padding: 18px; width: min(440px, 100%); box-shadow: 0 18px 50px rgba(0,0,0,.25); }
+  .dlg p { margin: 0 0 12px; font-size: 14px; line-height: 1.45; }
+  .dlg input { width: 100%; font-size: 15px; padding: 9px 10px; }
+  .dlg-ch { display: flex; flex-direction: column; gap: 6px; } .dlg-ch .btn { min-height: 42px; text-align: left; }
+  .dlg-act { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; } .dlg-act .btn { min-height: 40px; padding: 0 16px; }
+  .btn.primary.danger { background: #b23b3b; border-color: #b23b3b; }
+  #toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 20px); background: #22252b; color: #fff; padding: 9px 16px; border-radius: 10px; font-size: 13px; opacity: 0; pointer-events: none; transition: .2s; z-index: 60; max-width: calc(100% - 32px); }
+  #toast.on { opacity: 1; transform: translate(-50%, 0); }
+  /* pilot v3: status marks, steps, IRB gate */
+  .st { display: inline-flex; gap: 4px; }
+  .st button { width: 40px; min-height: 36px; border: 1px solid var(--line); background: #fff; border-radius: 8px; font-size: 15px; cursor: pointer; }
+  .st button.on.y { background: #dff2e3; border-color: #3f9e4d; } .st button.on.n { background: #fde3e3; border-color: #b23b3b; } .st button.on.q { background: #fff1c9; border-color: #c9971a; }
+  .st-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 11.5px; color: var(--ink-2); margin: 4px 0 6px; }
+  .st-legend b { display: inline-block; width: 20px; text-align: center; border-radius: 5px; margin-right: 3px; } .st-legend b.y { background: #dff2e3; } .st-legend b.q { background: #fff1c9; } .st-legend b.n { background: #fde3e3; }
+  .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 10px; }
+  @media (max-width: 760px) { .steps { grid-template-columns: 1fr; } }
+  .stp { display: flex; gap: 10px; align-items: center; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; font-size: 13px; }
+  .stp > b { flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--soft); display: grid; place-items: center; font: 600 13px Jost; }
+  .stp.done > b { background: var(--teal); color: #fff; }
+  .irb { margin-bottom: 10px; } .irb-ok { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; } .irb-ok input { width: 20px; height: 20px; margin-top: 1px; flex: none; }
+  .btn[disabled] { opacity: .45; cursor: not-allowed; }
+  .tscroll { overflow-x: auto; } #tp td input, #tp td select { width: 100%; min-width: 110px; min-height: 34px; }
+
+</style>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0f6b6b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Walkthrough">
+<link rel="apple-touch-icon" href="icon-180.png">
+<script>if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));</script>
+</head>
+<body>
+<div class="app">
+  <div class="topbar"><a href="./" class="btn" style="margin-right:8px;text-decoration:none">⌂</a><h1>Site Library Pilot <span class="note">one visit · virtual library + physical mapping</span></h1><nav class="tabs" id="tabs"></nav><span class="grow"></span><span class="saved" id="saved">—</span></div>
+  <main id="main"></main>
+</div>
+<input type="file" id="file-img" accept="image/*" hidden>
+<input type="file" id="file-json" accept="application/json,.json" hidden>
+<script>window.WT_MODE = 'pilot';</script>
+<script>
+/* Walkthrough Evaluation — shared codebook (v1.0)
+ * Single source for: controlled vocabularies, function list, and the
+ * pre-filled Site Library seed used by the pilot checklist and the iPad app.
+ * Edit here, then run `python3 tools/build.py` to refresh docs/codebook.md and dist/.
+ * Body must stay valid JSON (build.py parses it).
+ */
+window.WT_CODEBOOK = {
+ "version": "2.0",
+ "functions": [
+  {
+   "id": "F1",
+   "label": "Triage",
+   "chain": "decision"
+  },
+  {
+   "id": "F2",
+   "label": "Perform evaluation",
+   "chain": "decision",
+   "note": "ED clinician and neuro consultation (on-site or tele) are mechanisms of F2"
+  },
+  {
+   "id": "F3",
+   "label": "Give requests & orders",
+   "chain": "decision"
+  },
+  {
+   "id": "F4",
+   "label": "Make diagnosis decision",
+   "chain": "decision"
+  },
+  {
+   "id": "F5",
+   "label": "Admit patient",
+   "chain": "service",
+   "note": "Mid-pathway inpatient admission; changes care_setting"
+  },
+  {
+   "id": "F6",
+   "label": "Provide requested imaging result",
+   "chain": "service"
+  },
+  {
+   "id": "F7",
+   "label": "Provide requested testing result",
+   "chain": "service"
+  },
+  {
+   "id": "F8",
+   "label": "Provide requested medication",
+   "chain": "service"
+  },
+  {
+   "id": "F9",
+   "label": "Administer requested medication",
+   "chain": "decision",
+   "note": "Case end point: first treatment administered"
+  }
+ ],
+ "vocab": {
+  "frame_type": [
+   "step",
+   "transition",
+   "handoff",
+   "wait"
+  ],
+  "branch_type": [
+   "sequential",
+   "parallel",
+   "conditional",
+   "variation-of"
+  ],
+  "performer_type": [
+   "human",
+   "machine",
+   "system"
+  ],
+  "presence": [
+   "on-site",
+   "remote"
+  ],
+  "artifact_type": [
+   "entity",
+   "information",
+   "document",
+   "item",
+   "decision"
+  ],
+  "care_setting": [
+   "ED",
+   "inpatient"
+  ],
+  "condition_time": [
+   "weekday-day",
+   "evening",
+   "night",
+   "weekend",
+   "surge"
+  ],
+  "condition_rule": [
+   "protocol-driven",
+   "discretion",
+   "requires-approval",
+   "restricted-hours"
+  ],
+  "condition_resource": [
+   "available",
+   "delayed",
+   "unavailable",
+   "substituted"
+  ],
+  "channel": [
+   "in-person",
+   "phone",
+   "pager",
+   "secure message",
+   "EHR",
+   "video / tele",
+   "overhead page"
+  ],
+  "bubble_type": [
+   "room",
+   "corridor",
+   "zone",
+   "vertical",
+   "exterior"
+  ],
+  "connection_type": [
+   "door",
+   "opening",
+   "elevator",
+   "stair"
+  ],
+  "restriction": [
+   "none",
+   "staff-only",
+   "badge",
+   "role-specific",
+   "time-limited"
+  ],
+  "mobility": [
+   "fixed",
+   "mobile",
+   "remote"
+  ],
+  "component_level": [
+   "system",
+   "subsystem",
+   "component"
+  ],
+  "relation": [
+   "supports",
+   "located-in",
+   "operated-by",
+   "communicates-with",
+   "substitutes-for"
+  ],
+  "observation_kind": [
+   "barrier",
+   "facilitator",
+   "workaround"
+  ],
+  "barrier_category": [
+   "space / layout",
+   "equipment",
+   "staffing / role",
+   "communication / handoff",
+   "information / EHR",
+   "policy / protocol",
+   "competing demands"
+  ],
+  "pc_type": [
+   "timeliness",
+   "information availability",
+   "coordination",
+   "continuity",
+   "workload",
+   "safety concern"
+  ],
+  "evidence_source": [
+   "EX",
+   "EX-est",
+   "DOC",
+   "OBS",
+   "INT"
+  ],
+  "status": [
+   "confirmed",
+   "to-confirm",
+   "N/A",
+   "not-recorded"
+  ],
+  "record_kind": [
+   "case",
+   "move"
+  ],
+  "input_logic": [
+   "all",
+   "any",
+   "to-confirm"
+  ],
+  "io_party": [
+   "record output",
+   "person",
+   "system / digital location",
+   "same (new state)",
+   "external",
+   "unknown"
+  ]
+ },
+ "vocab_help": {
+  "EX": "Expert described",
+  "EX-est": "Expert estimate (e.g. duration) — not a measurement",
+  "DOC": "Existing document / floor plan",
+  "OBS": "Visible site feature (no people)",
+  "INT": "Researcher interpretation",
+  "step": "One performer completes a recognisable task under one function and produces an output",
+  "transition": "Movement of person, item or information across role, space or channel",
+  "handoff": "Transition that transfers responsibility",
+  "wait": "Only as its own frame if the expert calls it a key bottleneck; otherwise use waits_for"
+ },
+ "seed": {
+  "_note": "Pre-filled checklist for the pilot. On site: tick (present), cross (absent), add (+). IDs are stable across pilot, app and mock data.",
+  "roles": [
+   {
+    "id": "R01",
+    "label": "Triage nurse",
+    "functions": [
+     "F1"
+    ],
+    "group": "ED team"
+   },
+   {
+    "id": "R02",
+    "label": "ED nurse",
+    "functions": [
+     "F2",
+     "F7",
+     "F8",
+     "F9"
+    ],
+    "group": "ED team"
+   },
+   {
+    "id": "R03",
+    "label": "ED physician",
+    "functions": [
+     "F2",
+     "F3",
+     "F4",
+     "F5"
+    ],
+    "group": "ED team"
+   },
+   {
+    "id": "R04",
+    "label": "Neurologist",
+    "functions": [
+     "F2",
+     "F4"
+    ],
+    "group": "Specialists"
+   },
+   {
+    "id": "R05",
+    "label": "CT technologist",
+    "functions": [
+     "F6"
+    ],
+    "group": "Support services"
+   },
+   {
+    "id": "R06",
+    "label": "Radiologist",
+    "functions": [
+     "F6"
+    ],
+    "group": "Specialists"
+   },
+   {
+    "id": "R07",
+    "label": "Lab technologist",
+    "functions": [
+     "F7"
+    ],
+    "group": "Support services"
+   },
+   {
+    "id": "R08",
+    "label": "Pharmacist",
+    "functions": [
+     "F8"
+    ],
+    "group": "Support services"
+   },
+   {
+    "id": "R09",
+    "label": "Transporter",
+    "functions": [
+     "F5",
+     "F6"
+    ],
+    "group": "Support services"
+   },
+   {
+    "id": "R10",
+    "label": "Inpatient nurse",
+    "functions": [
+     "F8",
+     "F9"
+    ],
+    "group": "Inpatient team"
+   },
+   {
+    "id": "R11",
+    "label": "Hospitalist / admitting physician",
+    "functions": [
+     "F3",
+     "F4",
+     "F5"
+    ],
+    "group": "Inpatient team"
+   },
+   {
+    "id": "R12",
+    "label": "Bed manager",
+    "functions": [
+     "F5"
+    ],
+    "group": "Support services"
+   },
+   {
+    "id": "R13",
+    "label": "Patient",
+    "functions": [],
+    "note": "Entity that moves; not a performer",
+    "group": "Patient (entity)"
+   }
+  ],
+  "physical": [
+   {
+    "id": "T01",
+    "label": "Triage workstation",
+    "type": "installation",
+    "mobility": "fixed",
+    "functions": [
+     "F1"
+    ]
+   },
+   {
+    "id": "T02",
+    "label": "Stretcher",
+    "type": "equipment",
+    "mobility": "mobile",
+    "functions": [
+     "F5",
+     "F6"
+    ]
+   },
+   {
+    "id": "T03",
+    "label": "CT scanner",
+    "type": "equipment",
+    "mobility": "fixed",
+    "functions": [
+     "F6"
+    ]
+   },
+   {
+    "id": "T04",
+    "label": "Point-of-care glucose meter",
+    "type": "tool",
+    "mobility": "mobile",
+    "functions": [
+     "F2",
+     "F7"
+    ]
+   },
+   {
+    "id": "T05",
+    "label": "Automated dispensing cabinet (ED)",
+    "type": "installation",
+    "mobility": "fixed",
+    "functions": [
+     "F8"
+    ]
+   },
+   {
+    "id": "T06",
+    "label": "Pneumatic tube station",
+    "type": "installation",
+    "mobility": "fixed",
+    "functions": [
+     "F7"
+    ]
+   },
+   {
+    "id": "T07",
+    "label": "Tracking board",
+    "type": "installation",
+    "mobility": "fixed",
+    "functions": [
+     "F1",
+     "F2",
+     "F5"
+    ]
+   },
+   {
+    "id": "T08",
+    "label": "Tele-stroke cart",
+    "type": "equipment",
+    "mobility": "mobile",
+    "functions": [
+     "F2"
+    ]
+   },
+   {
+    "id": "T09",
+    "label": "Automated dispensing cabinet (ward)",
+    "type": "installation",
+    "mobility": "fixed",
+    "functions": [
+     "F8"
+    ]
+   },
+   {
+    "id": "T10",
+    "label": "Lab analyzer",
+    "type": "equipment",
+    "mobility": "fixed",
+    "functions": [
+     "F7"
+    ]
+   },
+   {
+    "id": "T11",
+    "label": "Barcode scanner (bedside)",
+    "type": "tool",
+    "mobility": "mobile",
+    "functions": [
+     "F9"
+    ]
+   },
+   {
+    "id": "T12",
+    "label": "Workstation on wheels",
+    "type": "equipment",
+    "mobility": "mobile",
+    "functions": [
+     "F2",
+     "F3",
+     "F9"
+    ]
+   }
+  ],
+  "digital": [
+   {
+    "id": "D01",
+    "label": "EHR",
+    "type": "system",
+    "functions": [
+     "F1",
+     "F2",
+     "F3",
+     "F4",
+     "F5",
+     "F9"
+    ]
+   },
+   {
+    "id": "D01.1",
+    "label": "Order entry (CPOE)",
+    "type": "subsystem",
+    "parent": "D01",
+    "functions": [
+     "F3"
+    ]
+   },
+   {
+    "id": "D01.2",
+    "label": "Medication administration record (MAR)",
+    "type": "subsystem",
+    "parent": "D01",
+    "functions": [
+     "F9"
+    ]
+   },
+   {
+    "id": "D01.3",
+    "label": "Results viewer",
+    "type": "subsystem",
+    "parent": "D01",
+    "functions": [
+     "F4",
+     "F6",
+     "F7"
+    ]
+   },
+   {
+    "id": "D02",
+    "label": "PACS",
+    "type": "system",
+    "functions": [
+     "F6"
+    ]
+   },
+   {
+    "id": "D03",
+    "label": "Secure messaging",
+    "type": "system",
+    "functions": [
+     "F2",
+     "F4",
+     "F5"
+    ]
+   },
+   {
+    "id": "D04",
+    "label": "Phone / paging",
+    "type": "system",
+    "functions": [
+     "F1",
+     "F2",
+     "F5"
+    ]
+   },
+   {
+    "id": "D05",
+    "label": "Tele-stroke video platform",
+    "type": "system",
+    "functions": [
+     "F2"
+    ]
+   },
+   {
+    "id": "D06",
+    "label": "Pharmacy verification queue",
+    "type": "processor",
+    "functions": [
+     "F8"
+    ]
+   },
+   {
+    "id": "D07",
+    "label": "Stroke order set + CDS alert",
+    "type": "processor",
+    "parent": "D01",
+    "functions": [
+     "F3"
+    ]
+   },
+   {
+    "id": "D08",
+    "label": "Bed management system",
+    "type": "system",
+    "functions": [
+     "F5"
+    ]
+   },
+   {
+    "id": "D09",
+    "label": "CT auto-reconstruction",
+    "type": "processor",
+    "functions": [
+     "F6"
+    ]
+   }
+  ],
+  "artifacts": [
+   {
+    "id": "A01",
+    "label": "Patient with stroke symptoms",
+    "type": "entity"
+   },
+   {
+    "id": "A02",
+    "label": "Acuity level + stroke alert",
+    "type": "decision"
+   },
+   {
+    "id": "A03",
+    "label": "Evaluation findings",
+    "type": "information"
+   },
+   {
+    "id": "A04",
+    "label": "Imaging order",
+    "type": "document"
+   },
+   {
+    "id": "A05",
+    "label": "Lab order",
+    "type": "document"
+   },
+   {
+    "id": "A06",
+    "label": "CT images",
+    "type": "information"
+   },
+   {
+    "id": "A07",
+    "label": "Imaging report",
+    "type": "information"
+   },
+   {
+    "id": "A08",
+    "label": "Lab results",
+    "type": "information"
+   },
+   {
+    "id": "A09",
+    "label": "Neurology recommendation",
+    "type": "information"
+   },
+   {
+    "id": "A10",
+    "label": "Diagnosis + treatment decision",
+    "type": "decision"
+   },
+   {
+    "id": "A11",
+    "label": "Medication order",
+    "type": "document"
+   },
+   {
+    "id": "A12",
+    "label": "Verified order",
+    "type": "document"
+   },
+   {
+    "id": "A13",
+    "label": "Dispensed medication",
+    "type": "item"
+   },
+   {
+    "id": "A14",
+    "label": "Administration record (first dose)",
+    "type": "document"
+   },
+   {
+    "id": "A15",
+    "label": "Admission order + bed assignment",
+    "type": "decision"
+   }
+  ],
+  "spaces_typical": [
+   "Ambulance entrance",
+   "Walk-in entrance",
+   "Triage",
+   "Waiting",
+   "ED corridor",
+   "Resus / stroke bay",
+   "ED treatment bays",
+   "Nurse station",
+   "CT suite",
+   "Radiology reading",
+   "Lab",
+   "Pharmacy satellite",
+   "Elevator lobby",
+   "Inpatient corridor",
+   "Inpatient room",
+   "Ward nurse station"
+  ],
+  "virtual": [
+   {
+    "id": "V01",
+    "label": "EHR chart / notes"
+   },
+   {
+    "id": "V02",
+    "label": "Order entry"
+   },
+   {
+    "id": "V03",
+    "label": "Central verification queue"
+   },
+   {
+    "id": "V04",
+    "label": "Secure messaging thread"
+   },
+   {
+    "id": "V05",
+    "label": "Tele-stroke video session"
+   },
+   {
+    "id": "V06",
+    "label": "PACS worklist"
+   },
+   {
+    "id": "V07",
+    "label": "Phone / paging"
+   }
+  ],
+  "conditions": [
+   {
+    "id": "K1",
+    "label": "Admission",
+    "source": "event",
+    "values": [
+     "not admitted",
+     "admitted"
+    ]
+   },
+   {
+    "id": "K2",
+    "label": "Time",
+    "source": "overall",
+    "values": [
+     "day",
+     "night",
+     "weekend"
+    ]
+   },
+   {
+    "id": "K3",
+    "label": "Neurologist",
+    "source": "overall",
+    "values": [
+     "on site",
+     "tele"
+    ]
+   },
+   {
+    "id": "K4",
+    "label": "Pharmacist",
+    "source": "overall",
+    "values": [
+     "on site",
+     "remote"
+    ]
+   },
+   {
+    "id": "K5",
+    "label": "ED bays",
+    "source": "overall",
+    "values": [
+     "available",
+     "full"
+    ]
+   },
+   {
+    "id": "K6",
+    "label": "Transporter",
+    "source": "overall",
+    "values": [
+     "available",
+     "unavailable"
+    ]
+   }
+  ]
+ },
+ "condition_probes": {
+  "F1": "When would someone other than the triage nurse triage, or triage happen somewhere else?",
+  "F2": "When is neurology seen in person vs. tele? Who else may perform the evaluation?",
+  "F3": "When are orders placed by someone else, verbally, or outside the order set?",
+  "F4": "Who makes the diagnosis decision after admission? What information must travel with the patient?",
+  "F5": "What leads to mid-pathway admission? What changes once the patient is admitted?",
+  "F6": "When does imaging get read remotely? When is the scanner or transport unavailable?",
+  "F7": "How do specimens get to the lab at different times? Any point-of-care alternatives?",
+  "F8": "When is the pharmacist not on site? What happens to verification and dispensing then?",
+  "F9": "Who gives the first dose in ED vs. ward? What has to be in place before it is given?"
+ },
+ "stages": [
+  {
+   "id": "S1",
+   "label": "Arrival & triage",
+   "functions": [
+    "F1"
+   ],
+   "next": [
+    "S2",
+    "S3"
+   ]
+  },
+  {
+   "id": "S2",
+   "label": "Evaluation (ED / neuro)",
+   "functions": [
+    "F2",
+    "F3"
+   ],
+   "next": [
+    "S4"
+   ],
+   "parallel_with": "S3"
+  },
+  {
+   "id": "S3",
+   "label": "Imaging & tests",
+   "functions": [
+    "F6",
+    "F7"
+   ],
+   "next": [
+    "S4"
+   ],
+   "parallel_with": "S2"
+  },
+  {
+   "id": "S4",
+   "label": "Diagnosis (ED / neuro-led)",
+   "functions": [
+    "F4"
+   ],
+   "next": [
+    "S5"
+   ]
+  },
+  {
+   "id": "S5",
+   "label": "Medication: order → first dose",
+   "functions": [
+    "F3",
+    "F8",
+    "F9"
+   ],
+   "next": [],
+   "note": "Case ends at first dose"
+  }
+ ],
+ "events": [
+  {
+   "id": "E1",
+   "label": "Admission",
+   "functions": [
+    "F5"
+   ],
+   "may_occur_after": [
+    "S2",
+    "S3",
+    "S4"
+   ],
+   "sets": {
+    "K1": "admitted"
+   },
+   "note": "Not a required stage. When it happens, later stages run under Admission = admitted."
+  }
+ ],
+ "subfunctions": [
+  {
+   "id": "F1.1",
+   "fn": "F1",
+   "label": "Register arrival"
+  },
+  {
+   "id": "F1.2",
+   "fn": "F1",
+   "label": "Assess acuity"
+  },
+  {
+   "id": "F1.3",
+   "fn": "F1",
+   "label": "Activate stroke alert"
+  },
+  {
+   "id": "F2.1",
+   "fn": "F2",
+   "label": "ED bedside assessment"
+  },
+  {
+   "id": "F2.2",
+   "fn": "F2",
+   "label": "Neurology consultation"
+  },
+  {
+   "id": "F2.3",
+   "fn": "F2",
+   "label": "Move patient to care space"
+  },
+  {
+   "id": "F3.1",
+   "fn": "F3",
+   "label": "Select stroke order set"
+  },
+  {
+   "id": "F3.2",
+   "fn": "F3",
+   "label": "Order imaging & labs"
+  },
+  {
+   "id": "F3.3",
+   "fn": "F3",
+   "label": "Order medication"
+  },
+  {
+   "id": "F4.1",
+   "fn": "F4",
+   "label": "Integrate neuro recommendation"
+  },
+  {
+   "id": "F4.2",
+   "fn": "F4",
+   "label": "Confirm eligibility"
+  },
+  {
+   "id": "F4.3",
+   "fn": "F4",
+   "label": "Communicate decision"
+  },
+  {
+   "id": "F5.1",
+   "fn": "F5",
+   "label": "Request bed"
+  },
+  {
+   "id": "F5.2",
+   "fn": "F5",
+   "label": "Hand off to admitting team"
+  },
+  {
+   "id": "F5.3",
+   "fn": "F5",
+   "label": "Transfer patient"
+  },
+  {
+   "id": "F6.1",
+   "fn": "F6",
+   "label": "Transport to CT"
+  },
+  {
+   "id": "F6.2",
+   "fn": "F6",
+   "label": "Acquire images"
+  },
+  {
+   "id": "F6.3",
+   "fn": "F6",
+   "label": "Read & report"
+  },
+  {
+   "id": "F7.1",
+   "fn": "F7",
+   "label": "Collect & send specimen"
+  },
+  {
+   "id": "F7.2",
+   "fn": "F7",
+   "label": "Analyse & post result"
+  },
+  {
+   "id": "F8.1",
+   "fn": "F8",
+   "label": "Verify order"
+  },
+  {
+   "id": "F8.2",
+   "fn": "F8",
+   "label": "Retrieve / dispense"
+  },
+  {
+   "id": "F9.1",
+   "fn": "F9",
+   "label": "Check & scan"
+  },
+  {
+   "id": "F9.2",
+   "fn": "F9",
+   "label": "Administer & document"
+  }
+ ],
+ "stage_probes": {
+  "S1": "When would someone else triage, or triage happen somewhere else?",
+  "S2": "When is neurology on site vs tele? When does the evaluation happen outside a bay?",
+  "S3": "When is the scanner, transport or lab route different? When is imaging read remotely?",
+  "S4": "Who leads the decision — ED or neuro? What changes if the patient has been admitted?",
+  "S5": "When is the pharmacist remote? Who orders and gives the first dose after admission?",
+  "E1": "What leads to admission before treatment? When can it happen? What changes afterwards?"
+ }
+};
+
+</script>
+<script>
+/* MOCK dataset — generated by tools/make_mock.py. Do not edit by hand. */
+window.WT_DATA = {
+ "meta": {
+  "mock": true,
+  "version": "1.0",
+  "generated_by": "tools/make_mock.py",
+  "notice": "MOCK — invented for diagram discussion. Not collected data."
+ },
+ "sites": [
+  {
+   "id": "S01",
+   "label": "MOCK Site A"
+  }
+ ],
+ "sessions": [
+  {
+   "id": "S01-261120-W1",
+   "site": "S01",
+   "expert": "ED clinician (mock)",
+   "scenarios": [
+    "SC01",
+    "SC02"
+   ]
+  }
+ ],
+ "scenarios": [
+  {
+   "id": "SC01",
+   "label": "Weekday day · stays in ED",
+   "control": {
+    "care_setting": "ED",
+    "time": "weekday-day",
+    "rule": "protocol-driven",
+    "resource": [
+     {
+      "object": "all",
+      "state": "available"
+     }
+    ]
+   }
+  },
+  {
+   "id": "SC02",
+   "label": "Night · bays full · admitted mid-pathway",
+   "control": {
+    "care_setting": "ED → inpatient",
+    "time": "night",
+    "rule": "protocol-driven",
+    "resource": [
+     {
+      "object": "ED bay",
+      "state": "unavailable"
+     },
+     {
+      "object": "Transporter (R09)",
+      "state": "unavailable"
+     },
+     {
+      "object": "Neurologist on site (R04)",
+      "state": "substituted"
+     },
+     {
+      "object": "Satellite pharmacist (R08)",
+      "state": "substituted"
+     }
+    ]
+   }
+  }
+ ],
+ "functions": [
+  {
+   "id": "F1",
+   "label": "Triage",
+   "chain": "decision"
+  },
+  {
+   "id": "F2",
+   "label": "Perform evaluation",
+   "chain": "decision",
+   "note": "ED clinician and neuro consultation (on-site or tele) are mechanisms of F2"
+  },
+  {
+   "id": "F3",
+   "label": "Give requests & orders",
+   "chain": "decision"
+  },
+  {
+   "id": "F4",
+   "label": "Make diagnosis decision",
+   "chain": "decision"
+  },
+  {
+   "id": "F5",
+   "label": "Admit patient",
+   "chain": "service",
+   "note": "Mid-pathway inpatient admission; changes care_setting"
+  },
+  {
+   "id": "F6",
+   "label": "Provide requested imaging result",
+   "chain": "service"
+  },
+  {
+   "id": "F7",
+   "label": "Provide requested testing result",
+   "chain": "service"
+  },
+  {
+   "id": "F8",
+   "label": "Provide requested medication",
+   "chain": "service"
+  },
+  {
+   "id": "F9",
+   "label": "Administer requested medication",
+   "chain": "decision",
+   "note": "Case end point: first treatment administered"
+  }
+ ],
+ "spaces": [
+  {
+   "id": "P01",
+   "label": "Ambulance entrance",
+   "floor": 1,
+   "bubble_type": "exterior",
+   "x": 80,
+   "y": 80,
+   "in_boundary": true,
+   "access": "all",
+   "evidence": {
+    "source": "DOC",
+    "status": "confirmed"
+   }
+  },
+  {
+   "id": "P06",
+   "label": "Resus / stroke bay",
+   "floor": 1,
+   "bubble_type": "room",
+   "x": 230,
+   "y": 80,
+   "in_boundary": true,
+   "access": "all",
+   "evidence": {
+    "source": "DOC",
+    "status": "confirmed"
+   }
+  },
+  {
+   "id": "P07",
+   "label": "ED treatment bays",
+   "floor": 1,
+   "bubble_type": "room",
+   "x": 400,
+   "y": 80,
+   "in_boundary": true,
+   "access": "all",
+   "evidence": {
+    "source": "DOC",
+    "status": "confirmed"
+   }
+  },
+  {
+   "id": "P08",
+   "label": "ED nurse station",
+   "floor": 1,
+   "bubble_type": "zone",
+   "x": 560,
+   "y": 80,
+   "in_boundary": true,
+   "access": "all",
+   "evidence": {
+    "source": "DOC",
+    "status": "confirmed"
+   }
+  },
+  {
+   "id": "P02",
+   "label": "Walk-in entrance",
+   "floor": 1,
+   "bubble_type": "exterior",
+   "x": 80,
+   "y": 300,
+   "in_boundary": true,
+   "access": "all",
+   "evidence": {
+    "source": "DOC",
+    "status": "confirmed"
+   }
+  },
+  {
+   "id": "P03",
+   "label": "Triage",
+   "floor": 1,
+   "bubble_type": "room",
+   "x": 230,
+   "y": 300,
+   "in_boundary": true,
+   "access": "all",
+   "evidence": {
+    "source": "DOC",
+    "status": "confirmed"
+   }
+  },
+  {
+   "id": "P04",
+   "label": "Waiting",
+   "floor": 1,
+   "bubble_type": "room",
+   "x": 230,
+   "y": 440,
+   "in_boundary": true,
+   "access": "all",
+   "evidence": {
+    "source": "DOC",
+    "status": "confirmed"
+   }
+  },
+  {
+   "id": "P05",
+   "label": "ED corridor A",
+   "floor": 1,
+   "bubble_type": "corridor",
+   "x": 400,
+   "y": 220,
+   "in_boundary": true,
+   "access": "all",
+   "evidence": {
+    "source": "DOC",
+    "status": "confirmed"
+   }
+  },
+  {
+   "id": "P09",
+   "label": "ED corridor B",
+   "floor": 1,
+   "bubble_type": "corridor",
+   "x": 590,
+   "y": 250,
+   "in_boundary": true,
+   "access": "all",
+   "evidence": {
+    "source": "DOC",
+    "status": "confirmed"
+   }
+  },
+  {
+   "id": "P10",
+   "label": "CT suite",
+   "floor": 1,
+   "bubble_type": "room",
+   "x": 470,
+   "y": 420,
+   "in_boundary": true,
+   "access": "all",
+   "evidence": {
+    "source": "DOC",
+    "status": "confirmed"
+   }
+  },
+  {
+   "id": "P11",
+   "label": "Radiology reading",
+   "floor": 1,
+   "bubble_type": "room",
+   "x": 630,
+   "y": 450,
+   "in_boundary": true,
+   "access": "restricted-role",
+   "evidence": {
+    "source": "DOC",
+    "status": "confirmed"
+   }
+  },
+  {
+   "id": "P13",
+   "label": "Pharmacy satellite",
+   "floor": 1,
+   "bubble_type": "room",
+   "x": 740,
+   "y": 330,
+   "in_boundary": true,
+   "access": "restricted-role",
+   "evidence": {
+    "source": "DOC",
+    "status": "confirmed"
+   }
+  },
+  {
+   "id": "P14",
+   "label": "Elevator lobby",
+   "floor": 1,
+   "bubble_type": "vertical",
+   "x": 740,
+   "y": 170,
+   "in_boundary": true,
+   "access": "all",
+   "evidence": {
+    "source": "DOC",
+    "status": "confirmed"
+   }
+  },
+  {
+   "id": "P12",
+   "label": "Lab · L2",
+   "floor": 2,
+   "bubble_type": "room",
+   "x": 900,
+   "y": 80,
+   "in_boundary": true,
+   "access": "all",
+   "evidence": {
+    "source": "DOC",
+    "status": "confirmed"
+   }
+  },
+  {
+   "id": "P15",
+   "label": "Inpatient corridor · L3",
+   "floor": 3,
+   "bubble_type": "corridor",
+   "x": 900,
+   "y": 250,
+   "in_boundary": true,
+   "access": "all",
+   "evidence": {
+    "source": "DOC",
+    "status": "confirmed"
+   }
+  },
+  {
+   "id": "P16",
+   "label": "Inpatient room · L3",
+   "floor": 3,
+   "bubble_type": "room",
+   "x": 900,
+   "y": 390,
+   "in_boundary": true,
+   "access": "all",
+   "evidence": {
+    "source": "DOC",
+    "status": "confirmed"
+   }
+  },
+  {
+   "id": "P17",
+   "label": "Ward nurse station · L3",
+   "floor": 3,
+   "bubble_type": "zone",
+   "x": 900,
+   "y": 520,
+   "in_boundary": true,
+   "access": "restricted-role",
+   "evidence": {
+    "source": "DOC",
+    "status": "confirmed"
+   }
+  }
+ ],
+ "connections": [
+  {
+   "id": "C01",
+   "a": "P01",
+   "b": "P06",
+   "type": "door",
+   "restriction": "none",
+   "evidence": {
+    "source": "DOC",
+    "status": "confirmed"
+   }
+  },
+  {
+   "id": "C02",
+   "a": "P01",
+   "b": "P05",
+   "type": "door",
+   "restriction": "none",
+   "evidence": {
+    "source": "DOC",
+    "status": "confirmed"
+   }
+  },
+  {
+   "id": "C03",
+   "a": "P02",
+   "b": "P03",
+   "type": "opening",
+   "restriction": "none",
+   "evidence": {
+    "source": "DOC",
+    "status": "confirmed"
+   }
+  },
+  {
+   "id": "C04",
+   "a": "P03",
+   "b": "P04",
+   "type": "opening",
+   "restriction": "none",
+   "evidence": {
+    "source": "DOC",
+    "status": "confirmed"
+   }
+  },
+  {
+   "id": "C05",
+   "a": "P03",
+   "b": "P05",
+   "type": "door",
+   "restriction": "badge",
+   "evidence": {
+    "source": "EX",
+    "status": "confirmed"
+   }
+  },
+  {
+   "id": "C06",
+   "a": "P05",
+   "b": "P06",
+   "type": "opening",
+   "restriction": "none",
+   "evidence": {
+    "source": "DOC",
+    "status": "confirmed"
+   }
+  },
+  {
+   "id": "C07",
+   "a": "P05",
+   "b": "P07",
+   "type": "opening",
+   "restriction": "none",
+   "evidence": {
+    "source": "DOC",
+    "status": "confirmed"
+   }
+  },
+  {
+   "id": "C08",
+   "a": "P05",
+   "b": "P08",
+   "type": "opening",
+   "restriction": "none",
+   "evidence": {
+    "source": "DOC",
+    "status": "confirmed"
+   }
+  },
+  {
+   "id": "C09",
+   "a": "P05",
+   "b": "P09",
+   "type": "opening",
+   "restriction": "none",
+   "evidence": {
+    "source": "DOC",
+    "status": "confirmed"
+   }
+  },
+  {
+   "id": "C10",
+   "a": "P09",
+   "b": "P10",
+   "type": "door",
+   "restriction": "none",
+   "evidence": {
+    "source": "DOC",
+    "status": "confirmed"
+   }
+  },
+  {
+   "id": "C11",
+   "a": "P10",
+   "b": "P11",
+   "type": "door",
+   "restriction": "staff-only",
+   "evidence": {
+    "source": "EX",
+    "status": "confirmed"
+   }
+  },
+  {
+   "id": "C12",
+   "a": "P09",
+   "b": "P13",
+   "type": "door",
+   "restriction": "badge",
+   "evidence": {
+    "source": "EX",
+    "status": "confirmed"
+   }
+  },
+  {
+   "id": "C13",
+   "a": "P09",
+   "b": "P14",
+   "type": "opening",
+   "restriction": "none",
+   "evidence": {
+    "source": "DOC",
+    "status": "confirmed"
+   }
+  },
+  {
+   "id": "C14",
+   "a": "P14",
+   "b": "P12",
+   "type": "elevator",
+   "restriction": "none",
+   "evidence": {
+    "source": "DOC",
+    "status": "confirmed"
+   }
+  },
+  {
+   "id": "C15",
+   "a": "P14",
+   "b": "P15",
+   "type": "elevator",
+   "restriction": "role-specific",
+   "evidence": {
+    "source": "EX",
+    "status": "to-confirm"
+   }
+  },
+  {
+   "id": "C16",
+   "a": "P15",
+   "b": "P16",
+   "type": "door",
+   "restriction": "none",
+   "evidence": {
+    "source": "DOC",
+    "status": "confirmed"
+   }
+  },
+  {
+   "id": "C17",
+   "a": "P15",
+   "b": "P17",
+   "type": "opening",
+   "restriction": "none",
+   "evidence": {
+    "source": "DOC",
+    "status": "confirmed"
+   }
+  },
+  {
+   "id": "C18",
+   "a": "P08",
+   "b": "P09",
+   "type": "opening",
+   "restriction": "staff-only",
+   "evidence": {
+    "source": "EX",
+    "status": "confirmed"
+   }
+  }
+ ],
+ "components": [
+  {
+   "id": "MI",
+   "label": "Mechanism infrastructure",
+   "kind": "G",
+   "level": "system",
+   "parent": null
+  },
+  {
+   "id": "G-R",
+   "label": "People (roles)",
+   "kind": "G",
+   "level": "subsystem",
+   "parent": "MI"
+  },
+  {
+   "id": "G-P",
+   "label": "Built environment",
+   "kind": "G",
+   "level": "subsystem",
+   "parent": "MI"
+  },
+  {
+   "id": "G-T",
+   "label": "Equipment & installations",
+   "kind": "G",
+   "level": "subsystem",
+   "parent": "MI"
+  },
+  {
+   "id": "G-D",
+   "label": "Information systems",
+   "kind": "G",
+   "level": "subsystem",
+   "parent": "MI"
+  },
+  {
+   "id": "R01",
+   "label": "Triage nurse",
+   "kind": "R",
+   "level": "component",
+   "parent": "G-R",
+   "functions": [
+    "F1"
+   ]
+  },
+  {
+   "id": "R02",
+   "label": "ED nurse",
+   "kind": "R",
+   "level": "component",
+   "parent": "G-R",
+   "functions": [
+    "F2",
+    "F7",
+    "F8",
+    "F9"
+   ]
+  },
+  {
+   "id": "R03",
+   "label": "ED physician",
+   "kind": "R",
+   "level": "component",
+   "parent": "G-R",
+   "functions": [
+    "F2",
+    "F3",
+    "F4",
+    "F5"
+   ]
+  },
+  {
+   "id": "R04",
+   "label": "Neurologist",
+   "kind": "R",
+   "level": "component",
+   "parent": "G-R",
+   "functions": [
+    "F2",
+    "F4"
+   ]
+  },
+  {
+   "id": "R05",
+   "label": "CT technologist",
+   "kind": "R",
+   "level": "component",
+   "parent": "G-R",
+   "functions": [
+    "F6"
+   ]
+  },
+  {
+   "id": "R06",
+   "label": "Radiologist",
+   "kind": "R",
+   "level": "component",
+   "parent": "G-R",
+   "functions": [
+    "F6"
+   ]
+  },
+  {
+   "id": "R07",
+   "label": "Lab technologist",
+   "kind": "R",
+   "level": "component",
+   "parent": "G-R",
+   "functions": [
+    "F7"
+   ]
+  },
+  {
+   "id": "R08",
+   "label": "Pharmacist",
+   "kind": "R",
+   "level": "component",
+   "parent": "G-R",
+   "functions": [
+    "F8"
+   ]
+  },
+  {
+   "id": "R09",
+   "label": "Transporter",
+   "kind": "R",
+   "level": "component",
+   "parent": "G-R",
+   "functions": [
+    "F5",
+    "F6"
+   ]
+  },
+  {
+   "id": "R10",
+   "label": "Inpatient nurse",
+   "kind": "R",
+   "level": "component",
+   "parent": "G-R",
+   "functions": [
+    "F8",
+    "F9"
+   ]
+  },
+  {
+   "id": "R11",
+   "label": "Hospitalist / admitting physician",
+   "kind": "R",
+   "level": "component",
+   "parent": "G-R",
+   "functions": [
+    "F3",
+    "F4",
+    "F5"
+   ]
+  },
+  {
+   "id": "R12",
+   "label": "Bed manager",
+   "kind": "R",
+   "level": "component",
+   "parent": "G-R",
+   "functions": [
+    "F5"
+   ]
+  },
+  {
+   "id": "R13",
+   "label": "Patient",
+   "kind": "R",
+   "level": "component",
+   "parent": "G-R",
+   "functions": []
+  },
+  {
+   "id": "T01",
+   "label": "Triage workstation",
+   "kind": "T",
+   "type": "installation",
+   "level": "component",
+   "parent": "G-T",
+   "mobility": "fixed",
+   "space": "P03",
+   "functions": [
+    "F1"
+   ]
+  },
+  {
+   "id": "T02",
+   "label": "Stretcher",
+   "kind": "T",
+   "type": "equipment",
+   "level": "component",
+   "parent": "G-T",
+   "mobility": "mobile",
+   "space": "P05",
+   "functions": [
+    "F5",
+    "F6"
+   ]
+  },
+  {
+   "id": "T03",
+   "label": "CT scanner",
+   "kind": "T",
+   "type": "equipment",
+   "level": "component",
+   "parent": "G-T",
+   "mobility": "fixed",
+   "space": "P10",
+   "functions": [
+    "F6"
+   ]
+  },
+  {
+   "id": "T04",
+   "label": "Point-of-care glucose meter",
+   "kind": "T",
+   "type": "tool",
+   "level": "component",
+   "parent": "G-T",
+   "mobility": "mobile",
+   "space": "P07",
+   "functions": [
+    "F2",
+    "F7"
+   ]
+  },
+  {
+   "id": "T05",
+   "label": "Automated dispensing cabinet (ED)",
+   "kind": "T",
+   "type": "installation",
+   "level": "component",
+   "parent": "G-T",
+   "mobility": "fixed",
+   "space": "P08",
+   "functions": [
+    "F8"
+   ]
+  },
+  {
+   "id": "T06",
+   "label": "Pneumatic tube station",
+   "kind": "T",
+   "type": "installation",
+   "level": "component",
+   "parent": "G-T",
+   "mobility": "fixed",
+   "space": "P08",
+   "functions": [
+    "F7"
+   ]
+  },
+  {
+   "id": "T07",
+   "label": "Tracking board",
+   "kind": "T",
+   "type": "installation",
+   "level": "component",
+   "parent": "G-T",
+   "mobility": "fixed",
+   "space": "P08",
+   "functions": [
+    "F1",
+    "F2",
+    "F5"
+   ]
+  },
+  {
+   "id": "T08",
+   "label": "Tele-stroke cart",
+   "kind": "T",
+   "type": "equipment",
+   "level": "component",
+   "parent": "G-T",
+   "mobility": "mobile",
+   "space": "P06",
+   "functions": [
+    "F2"
+   ]
+  },
+  {
+   "id": "T09",
+   "label": "Automated dispensing cabinet (ward)",
+   "kind": "T",
+   "type": "installation",
+   "level": "component",
+   "parent": "G-T",
+   "mobility": "fixed",
+   "space": "P17",
+   "functions": [
+    "F8"
+   ]
+  },
+  {
+   "id": "T10",
+   "label": "Lab analyzer",
+   "kind": "T",
+   "type": "equipment",
+   "level": "component",
+   "parent": "G-T",
+   "mobility": "fixed",
+   "space": "P12",
+   "functions": [
+    "F7"
+   ]
+  },
+  {
+   "id": "T11",
+   "label": "Barcode scanner (bedside)",
+   "kind": "T",
+   "type": "tool",
+   "level": "component",
+   "parent": "G-T",
+   "mobility": "mobile",
+   "space": "P07",
+   "functions": [
+    "F9"
+   ]
+  },
+  {
+   "id": "T12",
+   "label": "Workstation on wheels",
+   "kind": "T",
+   "type": "equipment",
+   "level": "component",
+   "parent": "G-T",
+   "mobility": "mobile",
+   "space": "P07",
+   "functions": [
+    "F2",
+    "F3",
+    "F9"
+   ]
+  },
+  {
+   "id": "D01",
+   "label": "EHR",
+   "kind": "D",
+   "type": "system",
+   "level": "system",
+   "parent": "G-D",
+   "functions": [
+    "F1",
+    "F2",
+    "F3",
+    "F4",
+    "F5",
+    "F9"
+   ]
+  },
+  {
+   "id": "D01.1",
+   "label": "Order entry (CPOE)",
+   "kind": "D",
+   "type": "subsystem",
+   "level": "subsystem",
+   "parent": "D01",
+   "functions": [
+    "F3"
+   ]
+  },
+  {
+   "id": "D01.2",
+   "label": "Medication administration record (MAR)",
+   "kind": "D",
+   "type": "subsystem",
+   "level": "subsystem",
+   "parent": "D01",
+   "functions": [
+    "F9"
+   ]
+  },
+  {
+   "id": "D01.3",
+   "label": "Results viewer",
+   "kind": "D",
+   "type": "subsystem",
+   "level": "subsystem",
+   "parent": "D01",
+   "functions": [
+    "F4",
+    "F6",
+    "F7"
+   ]
+  },
+  {
+   "id": "D02",
+   "label": "PACS",
+   "kind": "D",
+   "type": "system",
+   "level": "system",
+   "parent": "G-D",
+   "functions": [
+    "F6"
+   ]
+  },
+  {
+   "id": "D03",
+   "label": "Secure messaging",
+   "kind": "D",
+   "type": "system",
+   "level": "system",
+   "parent": "G-D",
+   "functions": [
+    "F2",
+    "F4",
+    "F5"
+   ]
+  },
+  {
+   "id": "D04",
+   "label": "Phone / paging",
+   "kind": "D",
+   "type": "system",
+   "level": "system",
+   "parent": "G-D",
+   "functions": [
+    "F1",
+    "F2",
+    "F5"
+   ]
+  },
+  {
+   "id": "D05",
+   "label": "Tele-stroke video platform",
+   "kind": "D",
+   "type": "system",
+   "level": "system",
+   "parent": "G-D",
+   "functions": [
+    "F2"
+   ]
+  },
+  {
+   "id": "D06",
+   "label": "Pharmacy verification queue",
+   "kind": "D",
+   "type": "processor",
+   "level": "system",
+   "parent": "G-D",
+   "functions": [
+    "F8"
+   ]
+  },
+  {
+   "id": "D07",
+   "label": "Stroke order set + CDS alert",
+   "kind": "D",
+   "type": "processor",
+   "level": "subsystem",
+   "parent": "D01",
+   "functions": [
+    "F3"
+   ]
+  },
+  {
+   "id": "D08",
+   "label": "Bed management system",
+   "kind": "D",
+   "type": "system",
+   "level": "system",
+   "parent": "G-D",
+   "functions": [
+    "F5"
+   ]
+  },
+  {
+   "id": "D09",
+   "label": "CT auto-reconstruction",
+   "kind": "D",
+   "type": "processor",
+   "level": "system",
+   "parent": "G-D",
+   "functions": [
+    "F6"
+   ]
+  }
+ ],
+ "relations": [
+  {
+   "source": "T01",
+   "target": "P03",
+   "relation": "located-in"
+  },
+  {
+   "source": "T03",
+   "target": "P10",
+   "relation": "located-in"
+  },
+  {
+   "source": "T05",
+   "target": "P08",
+   "relation": "located-in"
+  },
+  {
+   "source": "T06",
+   "target": "P08",
+   "relation": "located-in"
+  },
+  {
+   "source": "T07",
+   "target": "P08",
+   "relation": "located-in"
+  },
+  {
+   "source": "T08",
+   "target": "P06",
+   "relation": "located-in"
+  },
+  {
+   "source": "T09",
+   "target": "P17",
+   "relation": "located-in"
+  },
+  {
+   "source": "T10",
+   "target": "P12",
+   "relation": "located-in"
+  },
+  {
+   "source": "T03",
+   "target": "R05",
+   "relation": "operated-by"
+  },
+  {
+   "source": "T08",
+   "target": "R02",
+   "relation": "operated-by"
+  },
+  {
+   "source": "T10",
+   "target": "R07",
+   "relation": "operated-by"
+  },
+  {
+   "source": "D09",
+   "target": "T03",
+   "relation": "supports"
+  },
+  {
+   "source": "D05",
+   "target": "T08",
+   "relation": "supports"
+  },
+  {
+   "source": "D07",
+   "target": "D01.1",
+   "relation": "supports"
+  },
+  {
+   "source": "D02",
+   "target": "D01",
+   "relation": "communicates-with"
+  },
+  {
+   "source": "D06",
+   "target": "D01.1",
+   "relation": "communicates-with"
+  },
+  {
+   "source": "D08",
+   "target": "D01",
+   "relation": "communicates-with"
+  },
+  {
+   "source": "T06",
+   "target": "T10",
+   "relation": "communicates-with"
+  },
+  {
+   "source": "D04",
+   "target": "D05",
+   "relation": "substitutes-for"
+  },
+  {
+   "source": "R02",
+   "target": "R09",
+   "relation": "substitutes-for"
+  },
+  {
+   "source": "T09",
+   "target": "T05",
+   "relation": "substitutes-for"
+  }
+ ],
+ "artifacts": [
+  {
+   "id": "A01",
+   "label": "Patient with stroke symptoms",
+   "type": "entity"
+  },
+  {
+   "id": "A02",
+   "label": "Acuity level + stroke alert",
+   "type": "decision"
+  },
+  {
+   "id": "A03",
+   "label": "Evaluation findings",
+   "type": "information"
+  },
+  {
+   "id": "A04",
+   "label": "Imaging order",
+   "type": "document"
+  },
+  {
+   "id": "A05",
+   "label": "Lab order",
+   "type": "document"
+  },
+  {
+   "id": "A06",
+   "label": "CT images",
+   "type": "information"
+  },
+  {
+   "id": "A07",
+   "label": "Imaging report",
+   "type": "information"
+  },
+  {
+   "id": "A08",
+   "label": "Lab results",
+   "type": "information"
+  },
+  {
+   "id": "A09",
+   "label": "Neurology recommendation",
+   "type": "information"
+  },
+  {
+   "id": "A10",
+   "label": "Diagnosis + treatment decision",
+   "type": "decision"
+  },
+  {
+   "id": "A11",
+   "label": "Medication order",
+   "type": "document"
+  },
+  {
+   "id": "A12",
+   "label": "Verified order",
+   "type": "document"
+  },
+  {
+   "id": "A13",
+   "label": "Dispensed medication",
+   "type": "item"
+  },
+  {
+   "id": "A14",
+   "label": "Administration record (first dose)",
+   "type": "document"
+  },
+  {
+   "id": "A15",
+   "label": "Admission order + bed assignment",
+   "type": "decision"
+  }
+ ],
+ "frames": [
+  {
+   "id": "FR01",
+   "scenario": "SC01",
+   "order": 1,
+   "branch_type": "sequential",
+   "variation_of": null,
+   "parent_frame": null,
+   "function": "F1",
+   "frame_type": "step",
+   "task": "Triage on arrival; recognise stroke signs; call stroke alert",
+   "performer": {
+    "id": "R01",
+    "type": "human",
+    "presence": "on-site"
+   },
+   "inputs": [
+    "A01"
+   ],
+   "outputs": [
+    "A02"
+   ],
+   "receiver": "R03",
+   "control": {
+    "care_setting": "ED",
+    "time": "weekday-day",
+    "rule": "protocol-driven"
+   },
+   "mechanism": {
+    "roles": [
+     "R01",
+     "R13"
+    ],
+    "spaces": [
+     "P03"
+    ],
+    "T": [
+     "T01",
+     "T07"
+    ],
+    "D": [
+     "D01",
+     "D04"
+    ],
+    "channel": "phone"
+   },
+   "route": {
+    "mover": "R13",
+    "path": [
+     "P02",
+     "P03"
+    ],
+    "kind": "expert-described"
+   },
+   "waits_for": null,
+   "observations": [
+    "B01",
+    "FA01"
+   ],
+   "pc": [
+    "PC01"
+   ],
+   "evidence": {
+    "source": "EX",
+    "status": "confirmed",
+    "note": ""
+   }
+  },
+  {
+   "id": "FR02",
+   "scenario": "SC01",
+   "order": 2,
+   "branch_type": "sequential",
+   "variation_of": null,
+   "parent_frame": null,
+   "function": "F2",
+   "frame_type": "transition",
+   "task": "Move patient from triage to treatment bay",
+   "performer": {
+    "id": "R02",
+    "type": "human",
+    "presence": "on-site"
+   },
+   "inputs": [
+    "A02"
+   ],
+   "outputs": [
+    "A01"
+   ],
+   "receiver": "R03",
+   "control": {
+    "care_setting": "ED",
+    "time": "weekday-day",
+    "rule": "protocol-driven"
+   },
+   "mechanism": {
+    "roles": [
+     "R02",
+     "R13"
+    ],
+    "spaces": [
+     "P03",
+     "P05",
+     "P07"
+    ],
+    "T": [
+     "T02"
+    ],
+    "D": [],
+    "channel": "in-person"
+   },
+   "route": {
+    "mover": "R13",
+    "path": [
+     "P03",
+     "P05",
+     "P07"
+    ],
+    "kind": "expert-described"
+   },
+   "waits_for": null,
+   "observations": [],
+   "pc": [],
+   "evidence": {
+    "source": "EX",
+    "status": "confirmed",
+    "note": ""
+   }
+  },
+  {
+   "id": "FR03",
+   "scenario": "SC01",
+   "order": 3,
+   "branch_type": "sequential",
+   "variation_of": null,
+   "parent_frame": null,
+   "function": "F2",
+   "frame_type": "step",
+   "task": "ED physician evaluation at bedside",
+   "performer": {
+    "id": "R03",
+    "type": "human",
+    "presence": "on-site"
+   },
+   "inputs": [
+    "A02"
+   ],
+   "outputs": [
+    "A03"
+   ],
+   "receiver": "R04",
+   "control": {
+    "care_setting": "ED",
+    "time": "weekday-day",
+    "rule": "protocol-driven"
+   },
+   "mechanism": {
+    "roles": [
+     "R03",
+     "R02"
+    ],
+    "spaces": [
+     "P07"
+    ],
+    "T": [
+     "T04",
+     "T12"
+    ],
+    "D": [
+     "D01"
+    ],
+    "channel": "in-person"
+   },
+   "route": null,
+   "waits_for": null,
+   "observations": [],
+   "pc": [],
+   "evidence": {
+    "source": "EX",
+    "status": "confirmed",
+    "note": ""
+   }
+  },
+  {
+   "id": "FR04",
+   "scenario": "SC01",
+   "order": 4,
+   "branch_type": "sequential",
+   "variation_of": null,
+   "parent_frame": null,
+   "function": "F3",
+   "frame_type": "step",
+   "task": "Place imaging + lab orders through stroke order set",
+   "performer": {
+    "id": "R03",
+    "type": "human",
+    "presence": "on-site"
+   },
+   "inputs": [
+    "A03"
+   ],
+   "outputs": [
+    "A04",
+    "A05"
+   ],
+   "receiver": "R05",
+   "control": {
+    "care_setting": "ED",
+    "time": "weekday-day",
+    "rule": "protocol-driven"
+   },
+   "mechanism": {
+    "roles": [
+     "R03"
+    ],
+    "spaces": [
+     "P07"
+    ],
+    "T": [
+     "T12"
+    ],
+    "D": [
+     "D01.1",
+     "D07"
+    ],
+    "channel": "EHR"
+   },
+   "route": null,
+   "waits_for": null,
+   "observations": [
+    "FA02"
+   ],
+   "pc": [],
+   "evidence": {
+    "source": "EX",
+    "status": "confirmed",
+    "note": ""
+   }
+  },
+  {
+   "id": "FR05",
+   "scenario": "SC01",
+   "order": 5,
+   "branch_type": "sequential",
+   "variation_of": null,
+   "parent_frame": null,
+   "function": "F6",
+   "frame_type": "transition",
+   "task": "Transport patient to CT",
+   "performer": {
+    "id": "R09",
+    "type": "human",
+    "presence": "on-site"
+   },
+   "inputs": [
+    "A04"
+   ],
+   "outputs": [
+    "A01"
+   ],
+   "receiver": "R05",
+   "control": {
+    "care_setting": "ED",
+    "time": "weekday-day",
+    "rule": "protocol-driven"
+   },
+   "mechanism": {
+    "roles": [
+     "R09",
+     "R13"
+    ],
+    "spaces": [
+     "P07",
+     "P05",
+     "P09",
+     "P10"
+    ],
+    "T": [
+     "T02"
+    ],
+    "D": [],
+    "channel": "in-person"
+   },
+   "route": {
+    "mover": "R13",
+    "path": [
+     "P07",
+     "P05",
+     "P09",
+     "P10"
+    ],
+    "kind": "expert-described"
+   },
+   "waits_for": "Transporter (R09)",
+   "observations": [
+    "B02",
+    "B13"
+   ],
+   "pc": [
+    "PC02"
+   ],
+   "evidence": {
+    "source": "EX",
+    "status": "confirmed",
+    "note": ""
+   }
+  },
+  {
+   "id": "FR06",
+   "scenario": "SC01",
+   "order": 6,
+   "branch_type": "sequential",
+   "variation_of": null,
+   "parent_frame": null,
+   "function": "F6",
+   "frame_type": "step",
+   "task": "CT acquisition and auto-reconstruction",
+   "performer": {
+    "id": "T03",
+    "type": "machine",
+    "presence": "on-site"
+   },
+   "inputs": [
+    "A04",
+    "A01"
+   ],
+   "outputs": [
+    "A06"
+   ],
+   "receiver": "R06",
+   "control": {
+    "care_setting": "ED",
+    "time": "weekday-day",
+    "rule": "protocol-driven"
+   },
+   "mechanism": {
+    "roles": [
+     "R05"
+    ],
+    "spaces": [
+     "P10"
+    ],
+    "T": [
+     "T03"
+    ],
+    "D": [
+     "D09",
+     "D02"
+    ],
+    "channel": "EHR"
+   },
+   "route": null,
+   "waits_for": null,
+   "observations": [],
+   "pc": [],
+   "evidence": {
+    "source": "EX",
+    "status": "confirmed",
+    "note": ""
+   }
+  },
+  {
+   "id": "FR06b",
+   "scenario": "SC01",
+   "order": 5,
+   "branch_type": "parallel",
+   "variation_of": null,
+   "parent_frame": null,
+   "function": "F7",
+   "frame_type": "transition",
+   "task": "Send blood specimen by pneumatic tube",
+   "performer": {
+    "id": "R02",
+    "type": "human",
+    "presence": "on-site"
+   },
+   "inputs": [
+    "A05"
+   ],
+   "outputs": [
+    "A05"
+   ],
+   "receiver": "T10",
+   "control": {
+    "care_setting": "ED",
+    "time": "weekday-day",
+    "rule": "protocol-driven"
+   },
+   "mechanism": {
+    "roles": [
+     "R02"
+    ],
+    "spaces": [
+     "P07",
+     "P05",
+     "P08"
+    ],
+    "T": [
+     "T06"
+    ],
+    "D": [],
+    "channel": "in-person"
+   },
+   "route": {
+    "mover": "item",
+    "path": [
+     "P07",
+     "P05",
+     "P08"
+    ],
+    "kind": "expert-described"
+   },
+   "waits_for": null,
+   "observations": [],
+   "pc": [],
+   "evidence": {
+    "source": "EX",
+    "status": "confirmed",
+    "note": "Tube network is not a walkable connection"
+   }
+  },
+  {
+   "id": "FR06c",
+   "scenario": "SC01",
+   "order": 6,
+   "branch_type": "parallel",
+   "variation_of": null,
+   "parent_frame": null,
+   "function": "F7",
+   "frame_type": "step",
+   "task": "Lab analysis; results posted to EHR",
+   "performer": {
+    "id": "T10",
+    "type": "machine",
+    "presence": "on-site"
+   },
+   "inputs": [
+    "A05"
+   ],
+   "outputs": [
+    "A08"
+   ],
+   "receiver": "R03",
+   "control": {
+    "care_setting": "ED",
+    "time": "weekday-day",
+    "rule": "protocol-driven"
+   },
+   "mechanism": {
+    "roles": [
+     "R07"
+    ],
+    "spaces": [
+     "P12"
+    ],
+    "T": [
+     "T10"
+    ],
+    "D": [
+     "D01.3"
+    ],
+    "channel": "EHR"
+   },
+   "route": null,
+   "waits_for": null,
+   "observations": [],
+   "pc": [],
+   "evidence": {
+    "source": "EX",
+    "status": "confirmed",
+    "note": ""
+   }
+  },
+  {
+   "id": "FR07",
+   "scenario": "SC01",
+   "order": 7,
+   "branch_type": "sequential",
+   "variation_of": null,
+   "parent_frame": null,
+   "function": "F6",
+   "frame_type": "step",
+   "task": "Radiologist reads CT; calls result to ED",
+   "performer": {
+    "id": "R06",
+    "type": "human",
+    "presence": "on-site"
+   },
+   "inputs": [
+    "A06"
+   ],
+   "outputs": [
+    "A07"
+   ],
+   "receiver": "R03",
+   "control": {
+    "care_setting": "ED",
+    "time": "weekday-day",
+    "rule": "protocol-driven"
+   },
+   "mechanism": {
+    "roles": [
+     "R06"
+    ],
+    "spaces": [
+     "P11"
+    ],
+    "T": [],
+    "D": [
+     "D02",
+     "D04"
+    ],
+    "channel": "phone"
+   },
+   "route": null,
+   "waits_for": null,
+   "observations": [],
+   "pc": [],
+   "evidence": {
+    "source": "EX",
+    "status": "confirmed",
+    "note": ""
+   }
+  },
+  {
+   "id": "FR08",
+   "scenario": "SC01",
+   "order": 8,
+   "branch_type": "sequential",
+   "variation_of": null,
+   "parent_frame": null,
+   "function": "F2",
+   "frame_type": "step",
+   "task": "Neurology consultation at bedside",
+   "performer": {
+    "id": "R04",
+    "type": "human",
+    "presence": "on-site"
+   },
+   "inputs": [
+    "A03",
+    "A07",
+    "A08"
+   ],
+   "outputs": [
+    "A09"
+   ],
+   "receiver": "R03",
+   "control": {
+    "care_setting": "ED",
+    "time": "weekday-day",
+    "rule": "protocol-driven"
+   },
+   "mechanism": {
+    "roles": [
+     "R04",
+     "R03"
+    ],
+    "spaces": [
+     "P07"
+    ],
+    "T": [],
+    "D": [
+     "D03",
+     "D01"
+    ],
+    "channel": "in-person"
+   },
+   "route": null,
+   "waits_for": "A07 Imaging report",
+   "observations": [
+    "FA03"
+   ],
+   "pc": [],
+   "evidence": {
+    "source": "EX",
+    "status": "confirmed",
+    "note": ""
+   }
+  },
+  {
+   "id": "FR09",
+   "scenario": "SC01",
+   "order": 9,
+   "branch_type": "sequential",
+   "variation_of": null,
+   "parent_frame": null,
+   "function": "F4",
+   "frame_type": "step",
+   "task": "Diagnosis + treatment decision",
+   "performer": {
+    "id": "R03",
+    "type": "human",
+    "presence": "on-site"
+   },
+   "inputs": [
+    "A09",
+    "A07",
+    "A08"
+   ],
+   "outputs": [
+    "A10"
+   ],
+   "receiver": "R03",
+   "control": {
+    "care_setting": "ED",
+    "time": "weekday-day",
+    "rule": "protocol-driven"
+   },
+   "mechanism": {
+    "roles": [
+     "R03",
+     "R04"
+    ],
+    "spaces": [
+     "P07"
+    ],
+    "T": [],
+    "D": [
+     "D01.3"
+    ],
+    "channel": "in-person"
+   },
+   "route": null,
+   "waits_for": null,
+   "observations": [],
+   "pc": [],
+   "evidence": {
+    "source": "EX",
+    "status": "confirmed",
+    "note": ""
+   }
+  },
+  {
+   "id": "FR10",
+   "scenario": "SC01",
+   "order": 10,
+   "branch_type": "sequential",
+   "variation_of": null,
+   "parent_frame": null,
+   "function": "F3",
+   "frame_type": "step",
+   "task": "Place medication order",
+   "performer": {
+    "id": "R03",
+    "type": "human",
+    "presence": "on-site"
+   },
+   "inputs": [
+    "A10"
+   ],
+   "outputs": [
+    "A11"
+   ],
+   "receiver": "D06",
+   "control": {
+    "care_setting": "ED",
+    "time": "weekday-day",
+    "rule": "protocol-driven"
+   },
+   "mechanism": {
+    "roles": [
+     "R03"
+    ],
+    "spaces": [
+     "P07"
+    ],
+    "T": [
+     "T12"
+    ],
+    "D": [
+     "D01.1",
+     "D07"
+    ],
+    "channel": "EHR"
+   },
+   "route": null,
+   "waits_for": null,
+   "observations": [],
+   "pc": [],
+   "evidence": {
+    "source": "EX",
+    "status": "confirmed",
+    "note": ""
+   }
+  },
+  {
+   "id": "FR11",
+   "scenario": "SC01",
+   "order": 11,
+   "branch_type": "sequential",
+   "variation_of": null,
+   "parent_frame": null,
+   "function": "F8",
+   "frame_type": "step",
+   "task": "Pharmacist verifies order in satellite pharmacy",
+   "performer": {
+    "id": "R08",
+    "type": "human",
+    "presence": "on-site"
+   },
+   "inputs": [
+    "A11"
+   ],
+   "outputs": [
+    "A12"
+   ],
+   "receiver": "T05",
+   "control": {
+    "care_setting": "ED",
+    "time": "weekday-day",
+    "rule": "protocol-driven"
+   },
+   "mechanism": {
+    "roles": [
+     "R08"
+    ],
+    "spaces": [
+     "P13"
+    ],
+    "T": [],
+    "D": [
+     "D06",
+     "D01.1"
+    ],
+    "channel": "EHR"
+   },
+   "route": null,
+   "waits_for": null,
+   "observations": [],
+   "pc": [],
+   "evidence": {
+    "source": "EX",
+    "status": "confirmed",
+    "note": ""
+   }
+  },
+  {
+   "id": "FR12",
+   "scenario": "SC01",
+   "order": 12,
+   "branch_type": "sequential",
+   "variation_of": null,
+   "parent_frame": null,
+   "function": "F8",
+   "frame_type": "transition",
+   "task": "ED nurse retrieves medication from ADC",
+   "performer": {
+    "id": "R02",
+    "type": "human",
+    "presence": "on-site"
+   },
+   "inputs": [
+    "A12"
+   ],
+   "outputs": [
+    "A13"
+   ],
+   "receiver": "R02",
+   "control": {
+    "care_setting": "ED",
+    "time": "weekday-day",
+    "rule": "protocol-driven"
+   },
+   "mechanism": {
+    "roles": [
+     "R02"
+    ],
+    "spaces": [
+     "P07",
+     "P05",
+     "P08"
+    ],
+    "T": [
+     "T05"
+    ],
+    "D": [],
+    "channel": "in-person"
+   },
+   "route": {
+    "mover": "R02",
+    "path": [
+     "P07",
+     "P05",
+     "P08",
+     "P05",
+     "P07"
+    ],
+    "kind": "expert-described"
+   },
+   "waits_for": null,
+   "observations": [
+    "B03"
+   ],
+   "pc": [],
+   "evidence": {
+    "source": "EX",
+    "status": "confirmed",
+    "note": ""
+   }
+  },
+  {
+   "id": "FR13",
+   "scenario": "SC01",
+   "order": 13,
+   "branch_type": "sequential",
+   "variation_of": null,
+   "parent_frame": null,
+   "function": "F9",
+   "frame_type": "step",
+   "task": "Administer first dose; scan and document",
+   "performer": {
+    "id": "R02",
+    "type": "human",
+    "presence": "on-site"
+   },
+   "inputs": [
+    "A13"
+   ],
+   "outputs": [
+    "A14"
+   ],
+   "receiver": null,
+   "control": {
+    "care_setting": "ED",
+    "time": "weekday-day",
+    "rule": "protocol-driven"
+   },
+   "mechanism": {
+    "roles": [
+     "R02",
+     "R13"
+    ],
+    "spaces": [
+     "P07"
+    ],
+    "T": [
+     "T11"
+    ],
+    "D": [
+     "D01.2"
+    ],
+    "channel": "EHR"
+   },
+   "route": null,
+   "waits_for": null,
+   "observations": [],
+   "pc": [],
+   "evidence": {
+    "source": "EX",
+    "status": "confirmed",
+    "note": ""
+   }
+  },
+  {
+   "id": "FR21",
+   "scenario": "SC02",
+   "order": 1,
+   "branch_type": "variation-of",
+   "variation_of": "FR01",
+   "parent_frame": null,
+   "function": "F1",
+   "frame_type": "step",
+   "task": "Triage on arrival; recognise stroke signs; call stroke alert",
+   "performer": {
+    "id": "R01",
+    "type": "human",
+    "presence": "on-site"
+   },
+   "inputs": [
+    "A01"
+   ],
+   "outputs": [
+    "A02"
+   ],
+   "receiver": "R03",
+   "control": {
+    "care_setting": "ED",
+    "time": "night",
+    "rule": "protocol-driven"
+   },
+   "mechanism": {
+    "roles": [
+     "R01",
+     "R13"
+    ],
+    "spaces": [
+     "P03"
+    ],
+    "T": [
+     "T01",
+     "T07"
+    ],
+    "D": [
+     "D01",
+     "D04"
+    ],
+    "channel": "phone"
+   },
+   "route": {
+    "mover": "R13",
+    "path": [
+     "P02",
+     "P03"
+    ],
+    "kind": "expert-described"
+   },
+   "waits_for": null,
+   "observations": [
+    "B01",
+    "FA01"
+   ],
+   "pc": [
+    "PC01"
+   ],
+   "evidence": {
+    "source": "EX",
+    "status": "confirmed",
+    "note": ""
+   },
+   "obs": [
+    "B01",
+    "FA01"
+   ]
+  },
+  {
+   "id": "FR22",
+   "scenario": "SC02",
+   "order": 2,
+   "branch_type": "variation-of",
+   "variation_of": "FR02",
+   "parent_frame": null,
+   "function": "F2",
+   "frame_type": "transition",
+   "task": "Place patient on hallway bed (bays full)",
+   "performer": {
+    "id": "R02",
+    "type": "human",
+    "presence": "on-site"
+   },
+   "inputs": [
+    "A02"
+   ],
+   "outputs": [
+    "A01"
+   ],
+   "receiver": "R03",
+   "control": {
+    "care_setting": "ED",
+    "time": "night",
+    "rule": "protocol-driven"
+   },
+   "mechanism": {
+    "roles": [
+     "R02",
+     "R13"
+    ],
+    "spaces": [
+     "P03",
+     "P05"
+    ],
+    "T": [
+     "T02"
+    ],
+    "D": [],
+    "channel": "in-person"
+   },
+   "route": {
+    "mover": "R13",
+    "path": [
+     "P03",
+     "P05"
+    ],
+    "kind": "expert-described"
+   },
+   "waits_for": null,
+   "observations": [],
+   "pc": [],
+   "evidence": {
+    "source": "EX",
+    "status": "confirmed",
+    "note": ""
+   },
+   "obs": [
+    "B04"
+   ]
+  },
+  {
+   "id": "FR23",
+   "scenario": "SC02",
+   "order": 3,
+   "branch_type": "variation-of",
+   "variation_of": "FR03",
+   "parent_frame": null,
+   "function": "F2",
+   "frame_type": "step",
+   "task": "ED physician evaluation on hallway bed",
+   "performer": {
+    "id": "R03",
+    "type": "human",
+    "presence": "on-site"
+   },
+   "inputs": [
+    "A02"
+   ],
+   "outputs": [
+    "A03"
+   ],
+   "receiver": "R04",
+   "control": {
+    "care_setting": "ED",
+    "time": "night",
+    "rule": "protocol-driven"
+   },
+   "mechanism": {
+    "roles": [
+     "R03",
+     "R02"
+    ],
+    "spaces": [
+     "P05"
+    ],
+    "T": [
+     "T04",
+     "T12"
+    ],
+    "D": [
+     "D01"
+    ],
+    "channel": "in-person"
+   },
+   "route": null,
+   "waits_for": null,
+   "observations": [],
+   "pc": [],
+   "evidence": {
+    "source": "EX",
+    "status": "confirmed",
+    "note": ""
+   },
+   "obs": [
+    "B05",
+    "B04"
+   ]
+  },
+  {
+   "id": "FR24",
+   "scenario": "SC02",
+   "order": 4,
+   "branch_type": "variation-of",
+   "variation_of": "FR04",
+   "parent_frame": null,
+   "function": "F3",
+   "frame_type": "step",
+   "task": "Place imaging + lab orders through stroke order set",
+   "performer": {
+    "id": "R03",
+    "type": "human",
+    "presence": "on-site"
+   },
+   "inputs": [
+    "A03"
+   ],
+   "outputs": [
+    "A04",
+    "A05"
+   ],
+   "receiver": "R05",
+   "control": {
+    "care_setting": "ED",
+    "time": "night",
+    "rule": "protocol-driven"
+   },
+   "mechanism": {
+    "roles": [
+     "R03"
+    ],
+    "spaces": [
+     "P05"
+    ],
+    "T": [
+     "T12"
+    ],
+    "D": [
+     "D01.1",
+     "D07"
+    ],
+    "channel": "EHR"
+   },
+   "route": null,
+   "waits_for": null,
+   "observations": [
+    "FA02"
+   ],
+   "pc": [],
+   "evidence": {
+    "source": "EX",
+    "status": "confirmed",
+    "note": ""
+   }
+  },
+  {
+   "id": "FR25",
+   "scenario": "SC02",
+   "order": 5,
+   "branch_type": "variation-of",
+   "variation_of": "FR05",
+   "parent_frame": null,
+   "function": "F6",
+   "frame_type": "transition",
+   "task": "ED nurse transports patient to CT (no transporter at night)",
+   "performer": {
+    "id": "R02",
+    "type": "human",
+    "presence": "on-site"
+   },
+   "inputs": [
+    "A04"
+   ],
+   "outputs": [
+    "A01"
+   ],
+   "receiver": "R05",
+   "control": {
+    "care_setting": "ED",
+    "time": "night",
+    "rule": "protocol-driven"
+   },
+   "mechanism": {
+    "roles": [
+     "R02",
+     "R13"
+    ],
+    "spaces": [
+     "P05",
+     "P09",
+     "P10"
+    ],
+    "T": [
+     "T02"
+    ],
+    "D": [],
+    "channel": "in-person"
+   },
+   "route": {
+    "mover": "R13",
+    "path": [
+     "P05",
+     "P09",
+     "P10"
+    ],
+    "kind": "expert-described"
+   },
+   "waits_for": "Transporter (R09)",
+   "observations": [
+    "B02",
+    "B13"
+   ],
+   "pc": [
+    "PC02",
+    "PC03"
+   ],
+   "evidence": {
+    "source": "EX",
+    "status": "confirmed",
+    "note": ""
+   },
+   "waits": null,
+   "obs": [
+    "B06",
+    "W01",
+    "B13"
+   ]
+  },
+  {
+   "id": "FR26",
+   "scenario": "SC02",
+   "order": 6,
+   "branch_type": "variation-of",
+   "variation_of": "FR06",
+   "parent_frame": null,
+   "function": "F6",
+   "frame_type": "step",
+   "task": "CT acquisition and auto-reconstruction",
+   "performer": {
+    "id": "T03",
+    "type": "machine",
+    "presence": "on-site"
+   },
+   "inputs": [
+    "A04",
+    "A01"
+   ],
+   "outputs": [
+    "A06"
+   ],
+   "receiver": "R06",
+   "control": {
+    "care_setting": "ED",
+    "time": "night",
+    "rule": "protocol-driven"
+   },
+   "mechanism": {
+    "roles": [
+     "R05"
+    ],
+    "spaces": [
+     "P10"
+    ],
+    "T": [
+     "T03"
+    ],
+    "D": [
+     "D09",
+     "D02"
+    ],
+    "channel": "EHR"
+   },
+   "route": null,
+   "waits_for": null,
+   "observations": [],
+   "pc": [],
+   "evidence": {
+    "source": "EX",
+    "status": "confirmed",
+    "note": ""
+   }
+  },
+  {
+   "id": "FR26b",
+   "scenario": "SC02",
+   "order": 5,
+   "branch_type": "parallel",
+   "variation_of": "FR06b",
+   "parent_frame": null,
+   "function": "F7",
+   "frame_type": "transition",
+   "task": "Send blood specimen by pneumatic tube",
+   "performer": {
+    "id": "R02",
+    "type": "human",
+    "presence": "on-site"
+   },
+   "inputs": [
+    "A05"
+   ],
+   "outputs": [
+    "A05"
+   ],
+   "receiver": "T10",
+   "control": {
+    "care_setting": "ED",
+    "time": "night",
+    "rule": "protocol-driven"
+   },
+   "mechanism": {
+    "roles": [
+     "R02"
+    ],
+    "spaces": [
+     "P05",
+     "P08"
+    ],
+    "T": [
+     "T06"
+    ],
+    "D": [],
+    "channel": "in-person"
+   },
+   "route": {
+    "mover": "item",
+    "path": [
+     "P05",
+     "P08"
+    ],
+    "kind": "expert-described"
+   },
+   "waits_for": null,
+   "observations": [],
+   "pc": [],
+   "evidence": {
+    "source": "EX",
+    "status": "confirmed",
+    "note": "Tube network is not a walkable connection"
+   }
+  },
+  {
+   "id": "FR26c",
+   "scenario": "SC02",
+   "order": 6,
+   "branch_type": "parallel",
+   "variation_of": "FR06c",
+   "parent_frame": null,
+   "function": "F7",
+   "frame_type": "step",
+   "task": "Lab analysis; results posted to EHR",
+   "performer": {
+    "id": "T10",
+    "type": "machine",
+    "presence": "on-site"
+   },
+   "inputs": [
+    "A05"
+   ],
+   "outputs": [
+    "A08"
+   ],
+   "receiver": "R03",
+   "control": {
+    "care_setting": "ED",
+    "time": "night",
+    "rule": "protocol-driven"
+   },
+   "mechanism": {
+    "roles": [
+     "R07"
+    ],
+    "spaces": [
+     "P12"
+    ],
+    "T": [
+     "T10"
+    ],
+    "D": [
+     "D01.3"
+    ],
+    "channel": "EHR"
+   },
+   "route": null,
+   "waits_for": null,
+   "observations": [],
+   "pc": [],
+   "evidence": {
+    "source": "EX",
+    "status": "confirmed",
+    "note": ""
+   }
+  },
+  {
+   "id": "FR27",
+   "scenario": "SC02",
+   "order": 7,
+   "branch_type": "variation-of",
+   "variation_of": "FR07",
+   "parent_frame": null,
+   "function": "F6",
+   "frame_type": "step",
+   "task": "Teleradiology reads CT; report posted to EHR",
+   "performer": {
+    "id": "R06",
+    "type": "human",
+    "presence": "remote"
+   },
+   "inputs": [
+    "A06"
+   ],
+   "outputs": [
+    "A07"
+   ],
+   "receiver": "R03",
+   "control": {
+    "care_setting": "ED",
+    "time": "night",
+    "rule": "protocol-driven"
+   },
+   "mechanism": {
+    "roles": [
+     "R06"
+    ],
+    "spaces": [],
+    "T": [],
+    "D": [
+     "D02",
+     "D01.3"
+    ],
+    "channel": "EHR"
+   },
+   "route": null,
+   "waits_for": null,
+   "observations": [],
+   "pc": [
+    "PC04"
+   ],
+   "evidence": {
+    "source": "EX",
+    "status": "confirmed",
+    "note": ""
+   },
+   "obs": [
+    "B07"
+   ]
+  },
+  {
+   "id": "FR28",
+   "scenario": "SC02",
+   "order": 8,
+   "branch_type": "variation-of",
+   "variation_of": "FR08",
+   "parent_frame": null,
+   "function": "F2",
+   "frame_type": "step",
+   "task": "Tele-stroke neurology consultation",
+   "performer": {
+    "id": "R04",
+    "type": "human",
+    "presence": "remote"
+   },
+   "inputs": [
+    "A03",
+    "A07",
+    "A08"
+   ],
+   "outputs": [
+    "A09"
+   ],
+   "receiver": "R03",
+   "control": {
+    "care_setting": "ED",
+    "time": "night",
+    "rule": "protocol-driven"
+   },
+   "mechanism": {
+    "roles": [
+     "R04",
+     "R02",
+     "R03"
+    ],
+    "spaces": [
+     "P06",
+     "P05"
+    ],
+    "T": [
+     "T08"
+    ],
+    "D": [
+     "D05",
+     "D01"
+    ],
+    "channel": "video / tele"
+   },
+   "route": {
+    "mover": "T08",
+    "path": [
+     "P06",
+     "P05"
+    ],
+    "kind": "expert-described"
+   },
+   "waits_for": "A07 Imaging report",
+   "observations": [
+    "FA03"
+   ],
+   "pc": [],
+   "evidence": {
+    "source": "EX",
+    "status": "confirmed",
+    "note": ""
+   },
+   "obs": [
+    "B08",
+    "FA04"
+   ]
+  },
+  {
+   "id": "FR29",
+   "scenario": "SC02",
+   "order": 9,
+   "branch_type": "sequential",
+   "variation_of": null,
+   "parent_frame": null,
+   "function": "F5",
+   "frame_type": "handoff",
+   "task": "Decide to admit for observation; request bed; hand off to hospitalist",
+   "performer": {
+    "id": "R03",
+    "type": "human",
+    "presence": "on-site"
+   },
+   "inputs": [
+    "A03",
+    "A07",
+    "A09"
+   ],
+   "outputs": [
+    "A15"
+   ],
+   "receiver": "R11",
+   "control": {
+    "care_setting": "ED",
+    "time": "night",
+    "rule": "protocol-driven"
+   },
+   "mechanism": {
+    "roles": [
+     "R03",
+     "R11",
+     "R12"
+    ],
+    "spaces": [
+     "P05"
+    ],
+    "T": [],
+    "D": [
+     "D08",
+     "D03"
+    ],
+    "channel": "secure message"
+   },
+   "route": null,
+   "waits_for": "Bed assignment (R12 / D08)",
+   "observations": [
+    "B09",
+    "B10"
+   ],
+   "pc": [
+    "PC06"
+   ],
+   "evidence": {
+    "source": "EX",
+    "status": "confirmed",
+    "note": ""
+   }
+  },
+  {
+   "id": "FR30",
+   "scenario": "SC02",
+   "order": 10,
+   "branch_type": "sequential",
+   "variation_of": null,
+   "parent_frame": null,
+   "function": "F5",
+   "frame_type": "transition",
+   "task": "Transport patient to inpatient room",
+   "performer": {
+    "id": "R09",
+    "type": "human",
+    "presence": "on-site"
+   },
+   "inputs": [
+    "A15"
+   ],
+   "outputs": [
+    "A01"
+   ],
+   "receiver": "R10",
+   "control": {
+    "care_setting": "inpatient",
+    "time": "night",
+    "rule": "protocol-driven"
+   },
+   "mechanism": {
+    "roles": [
+     "R09",
+     "R13"
+    ],
+    "spaces": [
+     "P05",
+     "P09",
+     "P14",
+     "P15",
+     "P16"
+    ],
+    "T": [
+     "T02"
+    ],
+    "D": [],
+    "channel": "in-person"
+   },
+   "route": {
+    "mover": "R13",
+    "path": [
+     "P05",
+     "P09",
+     "P14",
+     "P15",
+     "P16"
+    ],
+    "kind": "expert-described"
+   },
+   "waits_for": null,
+   "observations": [
+    "B13"
+   ],
+   "pc": [
+    "PC06"
+   ],
+   "evidence": {
+    "source": "EX",
+    "status": "to-confirm",
+    "note": "Night transporter for admissions: expert unsure"
+   }
+  },
+  {
+   "id": "FR31",
+   "scenario": "SC02",
+   "order": 11,
+   "branch_type": "variation-of",
+   "variation_of": "FR09",
+   "parent_frame": null,
+   "function": "F4",
+   "frame_type": "step",
+   "task": "Hospitalist makes diagnosis + treatment decision",
+   "performer": {
+    "id": "R11",
+    "type": "human",
+    "presence": "on-site"
+   },
+   "inputs": [
+    "A15",
+    "A09",
+    "A07",
+    "A08"
+   ],
+   "outputs": [
+    "A10"
+   ],
+   "receiver": "R03",
+   "control": {
+    "care_setting": "inpatient",
+    "time": "night",
+    "rule": "protocol-driven"
+   },
+   "mechanism": {
+    "roles": [
+     "R11"
+    ],
+    "spaces": [
+     "P17"
+    ],
+    "T": [],
+    "D": [
+     "D01.3"
+    ],
+    "channel": "in-person"
+   },
+   "route": null,
+   "waits_for": null,
+   "observations": [],
+   "pc": [
+    "PC05"
+   ],
+   "evidence": {
+    "source": "EX",
+    "status": "confirmed",
+    "note": ""
+   },
+   "obs": [
+    "B10"
+   ]
+  },
+  {
+   "id": "FR32",
+   "scenario": "SC02",
+   "order": 12,
+   "branch_type": "variation-of",
+   "variation_of": "FR10",
+   "parent_frame": null,
+   "function": "F3",
+   "frame_type": "step",
+   "task": "Place medication order",
+   "performer": {
+    "id": "R11",
+    "type": "human",
+    "presence": "on-site"
+   },
+   "inputs": [
+    "A10"
+   ],
+   "outputs": [
+    "A11"
+   ],
+   "receiver": "D06",
+   "control": {
+    "care_setting": "inpatient",
+    "time": "night",
+    "rule": "protocol-driven"
+   },
+   "mechanism": {
+    "roles": [
+     "R11"
+    ],
+    "spaces": [
+     "P17"
+    ],
+    "T": [],
+    "D": [
+     "D01.1"
+    ],
+    "channel": "EHR"
+   },
+   "route": null,
+   "waits_for": null,
+   "observations": [],
+   "pc": [],
+   "evidence": {
+    "source": "EX",
+    "status": "confirmed",
+    "note": ""
+   },
+   "obs": [
+    "B11"
+   ]
+  },
+  {
+   "id": "FR33",
+   "scenario": "SC02",
+   "order": 13,
+   "branch_type": "variation-of",
+   "variation_of": "FR11",
+   "parent_frame": null,
+   "function": "F8",
+   "frame_type": "step",
+   "task": "Remote pharmacist verifies order (central queue)",
+   "performer": {
+    "id": "R08",
+    "type": "human",
+    "presence": "remote"
+   },
+   "inputs": [
+    "A11"
+   ],
+   "outputs": [
+    "A12"
+   ],
+   "receiver": "T05",
+   "control": {
+    "care_setting": "inpatient",
+    "time": "night",
+    "rule": "protocol-driven"
+   },
+   "mechanism": {
+    "roles": [
+     "R08"
+    ],
+    "spaces": [],
+    "T": [],
+    "D": [
+     "D06",
+     "D01.1"
+    ],
+    "channel": "EHR"
+   },
+   "route": null,
+   "waits_for": null,
+   "observations": [],
+   "pc": [
+    "PC07"
+   ],
+   "evidence": {
+    "source": "EX",
+    "status": "confirmed",
+    "note": ""
+   },
+   "obs": [
+    "B12"
+   ]
+  },
+  {
+   "id": "FR34",
+   "scenario": "SC02",
+   "order": 14,
+   "branch_type": "variation-of",
+   "variation_of": "FR12",
+   "parent_frame": null,
+   "function": "F8",
+   "frame_type": "transition",
+   "task": "Inpatient nurse retrieves medication from ward ADC",
+   "performer": {
+    "id": "R10",
+    "type": "human",
+    "presence": "on-site"
+   },
+   "inputs": [
+    "A12"
+   ],
+   "outputs": [
+    "A13"
+   ],
+   "receiver": "R02",
+   "control": {
+    "care_setting": "inpatient",
+    "time": "night",
+    "rule": "protocol-driven"
+   },
+   "mechanism": {
+    "roles": [
+     "R10"
+    ],
+    "spaces": [
+     "P16",
+     "P15",
+     "P17"
+    ],
+    "T": [
+     "T09"
+    ],
+    "D": [],
+    "channel": "in-person"
+   },
+   "route": {
+    "mover": "R10",
+    "path": [
+     "P16",
+     "P15",
+     "P17",
+     "P15",
+     "P16"
+    ],
+    "kind": "expert-described"
+   },
+   "waits_for": null,
+   "observations": [
+    "B03"
+   ],
+   "pc": [],
+   "evidence": {
+    "source": "EX",
+    "status": "confirmed",
+    "note": ""
+   },
+   "obs": [
+    "FA05"
+   ]
+  },
+  {
+   "id": "FR35",
+   "scenario": "SC02",
+   "order": 15,
+   "branch_type": "variation-of",
+   "variation_of": "FR13",
+   "parent_frame": null,
+   "function": "F9",
+   "frame_type": "step",
+   "task": "Administer first dose; scan and document",
+   "performer": {
+    "id": "R10",
+    "type": "human",
+    "presence": "on-site"
+   },
+   "inputs": [
+    "A13"
+   ],
+   "outputs": [
+    "A14"
+   ],
+   "receiver": null,
+   "control": {
+    "care_setting": "inpatient",
+    "time": "night",
+    "rule": "protocol-driven"
+   },
+   "mechanism": {
+    "roles": [
+     "R10",
+     "R13"
+    ],
+    "spaces": [
+     "P16"
+    ],
+    "T": [
+     "T11"
+    ],
+    "D": [
+     "D01.2"
+    ],
+    "channel": "EHR"
+   },
+   "route": null,
+   "waits_for": null,
+   "observations": [],
+   "pc": [],
+   "evidence": {
+    "source": "EX",
+    "status": "confirmed",
+    "note": ""
+   }
+  }
+ ],
+ "observations": [
+  {
+   "id": "B01",
+   "kind": "barrier",
+   "category": "staffing / role",
+   "text": "Atypical symptoms may not trigger a stroke alert; depends on triage nurse recognition",
+   "source": "EX",
+   "frames": [
+    "FR01",
+    "FR21"
+   ],
+   "components": [
+    "R01"
+   ],
+   "spaces": [
+    "P03"
+   ]
+  },
+  {
+   "id": "FA01",
+   "kind": "facilitator",
+   "category": "information / EHR",
+   "text": "Stroke screening prompt built into triage form",
+   "source": "EX",
+   "frames": [
+    "FR01",
+    "FR21"
+   ],
+   "components": [
+    "D01"
+   ],
+   "spaces": []
+  },
+  {
+   "id": "FA02",
+   "kind": "facilitator",
+   "category": "policy / protocol",
+   "text": "Stroke order set bundles imaging and lab orders",
+   "source": "EX",
+   "frames": [
+    "FR04",
+    "FR24"
+   ],
+   "components": [
+    "D07",
+    "D01.1"
+   ],
+   "spaces": []
+  },
+  {
+   "id": "B02",
+   "kind": "barrier",
+   "category": "staffing / role",
+   "text": "CT ready but waits for a transporter to bring the patient",
+   "source": "EX",
+   "frames": [
+    "FR05"
+   ],
+   "components": [
+    "R09",
+    "T02"
+   ],
+   "spaces": [
+    "P05",
+    "P09"
+   ]
+  },
+  {
+   "id": "FA03",
+   "kind": "facilitator",
+   "category": "staffing / role",
+   "text": "Neurologist on site during the day examines at bedside",
+   "source": "EX",
+   "frames": [
+    "FR08"
+   ],
+   "components": [
+    "R04"
+   ],
+   "spaces": [
+    "P07"
+   ]
+  },
+  {
+   "id": "B03",
+   "kind": "barrier",
+   "category": "space / layout",
+   "text": "ADC sits at nurse station, away from bays; nurse leaves bedside to retrieve",
+   "source": "EX",
+   "frames": [
+    "FR12"
+   ],
+   "components": [
+    "T05"
+   ],
+   "spaces": [
+    "P08",
+    "P07"
+   ]
+  },
+  {
+   "id": "B04",
+   "kind": "barrier",
+   "category": "space / layout",
+   "text": "Bays full at night; patient evaluated on hallway bed",
+   "source": "EX",
+   "frames": [
+    "FR22",
+    "FR23"
+   ],
+   "components": [],
+   "spaces": [
+    "P05"
+   ]
+  },
+  {
+   "id": "B05",
+   "kind": "barrier",
+   "category": "equipment",
+   "text": "Hallway bed lacks privacy and wall equipment for examination",
+   "source": "EX",
+   "frames": [
+    "FR23"
+   ],
+   "components": [
+    "T12"
+   ],
+   "spaces": [
+    "P05"
+   ]
+  },
+  {
+   "id": "B06",
+   "kind": "barrier",
+   "category": "staffing / role",
+   "text": "No transporter available at night",
+   "source": "EX",
+   "frames": [
+    "FR25"
+   ],
+   "components": [
+    "R09"
+   ],
+   "spaces": []
+  },
+  {
+   "id": "W01",
+   "kind": "workaround",
+   "category": "staffing / role",
+   "text": "ED nurse transports the patient to CT instead",
+   "source": "EX",
+   "frames": [
+    "FR25"
+   ],
+   "components": [
+    "R02",
+    "T02"
+   ],
+   "spaces": [
+    "P05",
+    "P09",
+    "P10"
+   ]
+  },
+  {
+   "id": "B07",
+   "kind": "barrier",
+   "category": "communication / handoff",
+   "text": "Remote report reaches ED only via EHR; ED phones to ask for critical findings",
+   "source": "EX",
+   "frames": [
+    "FR27"
+   ],
+   "components": [
+    "D02",
+    "D01.3"
+   ],
+   "spaces": []
+  },
+  {
+   "id": "B08",
+   "kind": "barrier",
+   "category": "equipment",
+   "text": "Tele-stroke cart stored in resus; must be moved to the hallway and connected",
+   "source": "EX",
+   "frames": [
+    "FR28"
+   ],
+   "components": [
+    "T08",
+    "D05"
+   ],
+   "spaces": [
+    "P06",
+    "P05"
+   ]
+  },
+  {
+   "id": "FA04",
+   "kind": "facilitator",
+   "category": "information / EHR",
+   "text": "Tele-stroke neurology available 24/7",
+   "source": "EX",
+   "frames": [
+    "FR28"
+   ],
+   "components": [
+    "D05",
+    "R04"
+   ],
+   "spaces": []
+  },
+  {
+   "id": "B09",
+   "kind": "barrier",
+   "category": "space / layout",
+   "text": "Admission waits for an inpatient bed assignment",
+   "source": "EX",
+   "frames": [
+    "FR29"
+   ],
+   "components": [
+    "D08",
+    "R12"
+   ],
+   "spaces": [
+    "P16"
+   ]
+  },
+  {
+   "id": "B10",
+   "kind": "barrier",
+   "category": "communication / handoff",
+   "text": "Neurology recommendation is free text and not part of the verbal handoff to hospitalist",
+   "source": "EX",
+   "frames": [
+    "FR29",
+    "FR31"
+   ],
+   "components": [
+    "D01",
+    "R11"
+   ],
+   "spaces": []
+  },
+  {
+   "id": "B11",
+   "kind": "barrier",
+   "category": "information / EHR",
+   "text": "Stroke order set not offered in the inpatient ordering context",
+   "source": "EX",
+   "frames": [
+    "FR32"
+   ],
+   "components": [
+    "D07",
+    "D01.1"
+   ],
+   "spaces": []
+  },
+  {
+   "id": "B12",
+   "kind": "barrier",
+   "category": "information / EHR",
+   "text": "Night verification queue does not flag stroke orders as priority",
+   "source": "EX",
+   "frames": [
+    "FR33"
+   ],
+   "components": [
+    "D06"
+   ],
+   "spaces": []
+  },
+  {
+   "id": "FA05",
+   "kind": "facilitator",
+   "category": "space / layout",
+   "text": "Ward ADC is close to the inpatient room",
+   "source": "EX",
+   "frames": [
+    "FR34"
+   ],
+   "components": [
+    "T09"
+   ],
+   "spaces": [
+    "P17",
+    "P16"
+   ]
+  },
+  {
+   "id": "B13",
+   "kind": "barrier",
+   "category": "staffing / role",
+   "text": "F5 and F6 movement both depend on one transporter role; at night the load shifts to ED nurses",
+   "source": "INT",
+   "frames": [
+    "FR05",
+    "FR25",
+    "FR30"
+   ],
+   "components": [
+    "R09",
+    "R02"
+   ],
+   "spaces": []
+  }
+ ],
+ "performance": [
+  {
+   "id": "PC01",
+   "type": "timeliness",
+   "text": "Missed recognition at triage delays everything downstream",
+   "frames": [
+    "FR01",
+    "FR21"
+   ],
+   "source": "EX"
+  },
+  {
+   "id": "PC02",
+   "type": "timeliness",
+   "text": "Imaging start depends on getting the patient to CT",
+   "frames": [
+    "FR05",
+    "FR25"
+   ],
+   "source": "EX"
+  },
+  {
+   "id": "PC03",
+   "type": "workload",
+   "text": "ED nurse leaves other patients while transporting",
+   "frames": [
+    "FR25"
+   ],
+   "source": "EX"
+  },
+  {
+   "id": "PC04",
+   "type": "information availability",
+   "text": "Report visibility in ED when read remotely",
+   "frames": [
+    "FR27"
+   ],
+   "source": "EX"
+  },
+  {
+   "id": "PC05",
+   "type": "continuity",
+   "text": "Hospitalist may re-request neurology input after admission",
+   "frames": [
+    "FR31"
+   ],
+   "source": "EX"
+  },
+  {
+   "id": "PC06",
+   "type": "coordination",
+   "text": "Bed, transport and handoff must line up for admission",
+   "frames": [
+    "FR29",
+    "FR30"
+   ],
+   "source": "EX"
+  },
+  {
+   "id": "PC07",
+   "type": "timeliness",
+   "text": "Verification can sit in queue at night — expert estimate '30+ min', not measured",
+   "frames": [
+    "FR33"
+   ],
+   "source": "EX-est"
+  }
+ ],
+ "themes": [
+  {
+   "id": "TH01",
+   "label": "Movement & transport dependency",
+   "definition": "Steps that need a person or item to move, and who that depends on",
+   "observations": [
+    "B02",
+    "B06",
+    "W01",
+    "B13",
+    "B03"
+   ]
+  },
+  {
+   "id": "TH02",
+   "label": "Information continuity across handoffs",
+   "definition": "Information that must travel between roles, channels or care settings",
+   "observations": [
+    "B07",
+    "B10",
+    "B11"
+   ]
+  },
+  {
+   "id": "TH03",
+   "label": "Remote expertise & technology readiness",
+   "definition": "Remote performers and the equipment that connects them",
+   "observations": [
+    "B08",
+    "FA04",
+    "B07",
+    "B12"
+   ]
+  },
+  {
+   "id": "TH04",
+   "label": "Space capacity & placement",
+   "definition": "Where care happens when preferred spaces are full or far",
+   "observations": [
+    "B04",
+    "B05",
+    "B09",
+    "B03",
+    "FA05"
+   ]
+  },
+  {
+   "id": "TH05",
+   "label": "Decision support & protocol",
+   "definition": "Prompts, order sets and rules that structure decisions",
+   "observations": [
+    "FA01",
+    "FA02",
+    "B11",
+    "B12",
+    "B01"
+   ]
+  }
+ ],
+ "dependencies": [
+  {
+   "component": "T08",
+   "functions": [
+    "F2"
+   ],
+   "roles": [
+    "R04",
+    "R02"
+   ],
+   "frames": [
+    "FR28"
+   ],
+   "alternatives": [
+    "Phone consult via D04 (no video exam)",
+    "Neurologist in person (daytime only)"
+   ],
+   "source": "EX"
+  },
+  {
+   "component": "D06",
+   "functions": [
+    "F8"
+   ],
+   "roles": [
+    "R08",
+    "R02",
+    "R10"
+   ],
+   "frames": [
+    "FR11",
+    "FR33"
+   ],
+   "alternatives": [
+    "On-site satellite pharmacist (day)",
+    "Override dispensing under protocol (to-confirm)"
+   ],
+   "source": "EX"
+  }
+ ]
+};
+
+</script>
+<script>
+/* Shared rendering helpers for expected-result views and the app.
+ * Depends on window.WT_CODEBOOK; dataset passed explicitly. */
+(function () {
+  const FN_COLOR = { F1: '#1c9c8c', F2: '#2f7fc1', F3: '#6b63c4', F4: '#c2417a', F5: '#8a6d3b', F6: '#e8843c', F7: '#c9971a', F8: '#3f9e4d', F9: '#b23b3b' };
+  const SC_COLOR = { SC01: '#1c9c8c', SC02: '#e8843c', both: '#5b6772' };
+  const ROUTE_COLORS = ['#d81b60', '#00897b', '#1e63c4', '#ef6c00', '#6d4c41'];
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  function index(D) {
+    const by = (arr) => Object.fromEntries((arr || []).map(x => [x.id, x]));
+    return {
+      D, comp: by(D.components), space: by(D.spaces), art: by(D.artifacts), fn: by(D.functions),
+      obs: by(D.observations), pc: by(D.performance), theme: by(D.themes), frame: by(D.frames), sc: by(D.scenarios),
+      label(id) { const x = this.comp[id] || this.space[id] || this.art[id] || this.fn[id]; return x ? x.label : id; },
+    };
+  }
+
+  /* ---------- graph ---------- */
+  function adjacency(D, { excludeRestricted = false } = {}) {
+    const adj = {};
+    D.spaces.forEach(s => adj[s.id] = []);
+    D.connections.forEach(c => {
+      if (excludeRestricted && c.restriction !== 'none') return;
+      if (!adj[c.a] || !adj[c.b]) return;
+      adj[c.a].push(c.b); adj[c.b].push(c.a);
+    });
+    return adj;
+  }
+  function bfs(adj, root) {
+    const depth = { [root]: 0 }, q = [root];
+    while (q.length) { const u = q.shift(); (adj[u] || []).forEach(v => { if (!(v in depth)) { depth[v] = depth[u] + 1; q.push(v); } }); }
+    return depth;
+  }
+
+  /* ---------- bubble map ---------- */
+  function bubbleSize(s) {
+    if (s.bubble_type === 'corridor') return [150, 30];
+    if (s.bubble_type === 'vertical') return [96, 34];
+    if (s.bubble_type === 'zone') return [118, 38];
+    return [124, 44];
+  }
+  /* opts: highlight:Set, dim:bool, routes:[{path,color,dash,label}], comps:Set (T ids to show), installs:bool, width, height, onSpace */
+  function bubbleMap(D, opts = {}) {
+    const W = opts.width || 1000, H = opts.height || 590;
+    const hi = opts.highlight || new Set();
+    const anyHi = hi.size > 0 || (opts.routes || []).length > 0;
+    const S = Object.fromEntries(D.spaces.map(s => [s.id, s]));
+    let g = '';
+    // floor split
+    const upper = D.spaces.filter(s => s.floor > 1);
+    if (upper.length) {
+      const x0 = Math.min(...upper.map(s => s.x)) - 85;
+      g += `<line x1="${x0}" y1="10" x2="${x0}" y2="${H - 10}" stroke="#c9cfd6" stroke-dasharray="4 5"/>`;
+      g += `<text x="${x0 - 8}" y="22" text-anchor="end" class="bm-floor">FLOOR 1 · ED</text><text x="${x0 + 8}" y="22" class="bm-floor">UPPER FLOORS</text>`;
+    }
+    D.connections.forEach(c => {
+      const a = S[c.a], b = S[c.b]; if (!a || !b) return;
+      const on = hi.has(c.a) && hi.has(c.b);
+      const dash = c.type === 'elevator' ? '2 4' : (c.restriction !== 'none' ? '7 4' : '');
+      g += `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${on ? '#5b6772' : '#cfd5db'}" stroke-width="${on ? 3 : 2}" ${dash ? `stroke-dasharray="${dash}"` : ''} opacity="${anyHi && !on ? .55 : 1}"/>`;
+    });
+    D.spaces.forEach(s => {
+      const [w, h] = bubbleSize(s); const on = hi.has(s.id);
+      const fill = s.bubble_type === 'corridor' ? '#eef0f2' : s.bubble_type === 'exterior' ? '#fff' : s.bubble_type === 'vertical' ? '#e7ecf3' : '#f6ece2';
+      const op = anyHi && !on ? .38 : 1;
+      g += `<rect x="${s.x - w / 2}" y="${s.y - h / 2}" width="${w}" height="${h}" rx="${h / 2}" fill="#fff"/>
+        <g class="bm-space" data-id="${s.id}" opacity="${op}" style="cursor:${opts.onSpace ? 'pointer' : 'default'}">
+        <rect x="${s.x - w / 2}" y="${s.y - h / 2}" width="${w}" height="${h}" rx="${h / 2}" fill="${on ? '#fff4d6' : fill}" stroke="${on ? '#b07a00' : '#c9cfd6'}" stroke-width="${on ? 2.2 : 1.2}" ${s.bubble_type === 'exterior' ? 'stroke-dasharray="4 3"' : ''}/>
+        <text x="${s.x}" y="${s.y - 2}" text-anchor="middle" class="bm-label">${esc(s.label)}</text>
+        <text x="${s.x}" y="${s.y + 11}" text-anchor="middle" class="bm-id">${s.id}${opts.depth && opts.depth[s.id] != null ? ' · d' + opts.depth[s.id] : ''}</text></g>`;
+    });
+    if (opts.installs !== false) {
+      const per = {};
+      D.components.filter(c => c.kind === 'T' && c.space).forEach(c => {
+        const s = S[c.space]; if (!s) return;
+        const k = per[c.space] = (per[c.space] || 0) + 1; const [w, h] = bubbleSize(s);
+        const x = s.x + w / 2 - 6 - (k - 1) * 15, y = s.y - h / 2 - 7;
+        const on = opts.comps && opts.comps.has(c.id);
+        const op = (opts.comps && opts.comps.size && !on) ? .3 : 1;
+        g += `<g opacity="${op}"><rect x="${x - 6}" y="${y - 6}" width="12" height="12" rx="2.5" fill="${on ? '#6b63c4' : '#fff'}" stroke="#6b63c4" stroke-width="1.3"/><title>${c.id} ${esc(c.label)}</title>
+          ${on ? `<text x="${x}" y="${y - 9}" text-anchor="middle" class="bm-tid">${c.id}</text>` : ''}</g>`;
+      });
+    }
+    (opts.routes || []).forEach((r, i) => {
+      const pts = r.path.map(id => S[id]).filter(Boolean); if (pts.length < 2 && !r.single) return;
+      const off = (i - ((opts.routes.length - 1) / 2)) * 7;
+      const color = r.color || ROUTE_COLORS[i % ROUTE_COLORS.length];
+      const mid = `m${i}${Math.random().toString(36).slice(2, 6)}`;
+      g += `<defs><marker id="${mid}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="${color}"/></marker></defs>`;
+      g += `<polyline points="${pts.map(p => `${p.x + off},${p.y + off}`).join(' ')}" fill="none" stroke="${color}" stroke-width="3.2" stroke-linejoin="round" ${r.dash ? 'stroke-dasharray="7 5"' : ''} marker-end="url(#${mid})"/>`;
+      const p0 = pts[0];
+      g += `<circle cx="${p0.x + off}" cy="${p0.y + off}" r="8" fill="${color}"/><text x="${p0.x + off}" y="${p0.y + off + 3.5}" text-anchor="middle" class="bm-pin">${r.label || (i + 1)}</text>`;
+    });
+    return `<svg viewBox="0 0 ${W} ${H}" class="bm" role="img" aria-label="Bubble diagram">${g}</svg>`;
+  }
+
+  /* ---------- JPD ---------- */
+  function jpd(D, root, opts = {}) {
+    const adj = adjacency(D, opts);
+    const depth = bfs(adj, root);
+    const levels = {};
+    Object.entries(depth).forEach(([id, d]) => (levels[d] = levels[d] || []).push(id));
+    const maxD = Math.max(...Object.keys(levels).map(Number));
+    const W = opts.width || 560, rowH = 70, H = (maxD + 1) * rowH + 40;
+    const pos = {};
+    Object.entries(levels).forEach(([d, ids]) => {
+      ids.sort();
+      ids.forEach((id, k) => pos[id] = { x: (k + 1) * W / (ids.length + 1), y: H - 30 - d * rowH });
+    });
+    const route = opts.route || [];
+    const rEdges = new Set(route.slice(1).map((v, i) => [route[i], v].sort().join('|')));
+    let g = '';
+    for (let d = 0; d <= maxD; d++) g += `<text x="6" y="${H - 26 - d * rowH}" class="jpd-lvl">${d}</text>`;
+    D.connections.forEach(c => {
+      if (!(c.a in pos) || !(c.b in pos)) return;
+      if (opts.excludeRestricted && c.restriction !== 'none') return;
+      const on = rEdges.has([c.a, c.b].sort().join('|'));
+      g += `<line x1="${pos[c.a].x}" y1="${pos[c.a].y}" x2="${pos[c.b].x}" y2="${pos[c.b].y}" stroke="${on ? (opts.color || '#d81b60') : '#cfd5db'}" stroke-width="${on ? 3.4 : 1.5}" ${c.type === 'elevator' ? 'stroke-dasharray="2 4"' : ''}/>`;
+    });
+    const S = Object.fromEntries(D.spaces.map(s => [s.id, s]));
+    Object.entries(pos).forEach(([id, p]) => {
+      const on = route.includes(id) || (opts.mark && opts.mark.has(id)), isRoot = id === root;
+      g += `<g><circle cx="${p.x}" cy="${p.y}" r="${isRoot ? 13 : 11}" fill="${isRoot ? '#1f2a33' : on ? (opts.color || '#d81b60') : '#fff'}" stroke="${on || isRoot ? 'none' : '#9aa4ae'}" stroke-width="1.4"/>
+        <text x="${p.x}" y="${p.y + 3.5}" text-anchor="middle" class="jpd-id" fill="${on || isRoot ? '#fff' : '#4a5661'}">${id.replace('P', '')}</text>
+        <text x="${p.x}" y="${p.y + 24}" text-anchor="middle" class="jpd-lab">${esc((S[id] || {}).label || id)}</text></g>`;
+    });
+    const unreachable = D.spaces.filter(s => !(s.id in depth)).map(s => s.id);
+    const total = Object.values(depth).reduce((a, b) => a + b, 0), n = Object.keys(depth).length - 1;
+    return { svg: `<svg viewBox="0 0 ${W} ${H}" class="jpd" role="img" aria-label="Justified plan graph">${g}</svg>`, depth, maxD, meanDepth: n ? (total / n) : 0, unreachable };
+  }
+
+  /* ---------- chips ---------- */
+  function chip(id, label, cls = '', color) {
+    return `<span class="chip ${cls}" ${color ? `style="--c:${color}"` : ''} title="${esc(label)}"><b>${esc(id)}</b> ${esc(label)}</span>`;
+  }
+  function tag(t) {
+    const map = { EX: 'Expert', 'EX-est': 'Expert estimate', DOC: 'Document', OBS: 'Visible', INT: 'Researcher interp.' };
+    return `<span class="tag tag-${esc(t).replace(/[^a-z]/gi, '')}">${esc(map[t] || t)}</span>`;
+  }
+
+  window.WT = { FN_COLOR, SC_COLOR, ROUTE_COLORS, esc, index, adjacency, bfs, bubbleMap, jpd, chip, tag };
+})();
+
+</script>
+<script>
+/* =====================================================================
+   Recorder core (shared by pilot.html and walkthrough.html)
+   Pilot: ① Library · ② Space · Pilot & export. Walk mode: walk-frame.js replaces render().
+   ===================================================================== */
+const MODE = window.WT_MODE || 'walk';   // 'pilot' = site library tool · 'walk' = formal data collection
+const CB = window.WT_CODEBOOK, V = CB.vocab, { esc, FN_COLOR } = WT;
+const $ = s => document.querySelector(s);
+const W = 1000, H = 620;
+const STAGES = [...CB.stages.map(s => ({ ...s, kind: 'stage' })), ...CB.events.map(e => ({ ...e, kind: 'event' }))];
+
+/* ---------- storage ---------- */
+const store = (() => {
+  let dbp = null;
+  const open = () => dbp || (dbp = new Promise((res, rej) => { try { const r = indexedDB.open('wt-' + MODE, 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); } catch (e) { rej(e); } }));
+  return {
+    async get(k) { try { const db = await open(); return await new Promise((res, rej) => { const q = db.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }); } catch (e) { try { return JSON.parse(localStorage.getItem(k)); } catch (e2) { return null; } } },
+    async set(k, v) { try { const db = await open(); await new Promise((res, rej) => { const t = db.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, k); t.oncomplete = res; t.onerror = () => rej(t.error); }); return true; } catch (e) { try { localStorage.setItem(k, JSON.stringify({ ...v, plan: { ...v.plan, image: null } })); return true; } catch (e2) { return false; } } },
+  };
+})();
+
+/* ---------- state ---------- */
+function freshState() {
+  const s = CB.seed, today = new Date().toISOString().slice(2, 10).replace(/-/g, '');
+  return {
+    meta: { mock: false, version: '2.0', app: 'walkthrough-recorder 2.0', created: new Date().toISOString() },
+    site: { id: 'S01', label: '' }, session: { id: `S01-${today}-${MODE === 'pilot' ? 'P1' : 'W1'}`, expert: '', recorder: '' }, libSource: null,
+    lib: {
+      sub: CB.subfunctions.map(x => ({ ...x, pilot: 'seed' })),
+      comp: [
+        ...s.roles.map(r => ({ id: r.id, label: r.label, kind: 'R', group: r.group, pilot: 'seed', note: '' })),
+        ...s.physical.map(t => ({ id: t.id, label: t.label, kind: 'T', type: t.type, mobility: t.mobility, space: null, pos: null, pilot: 'seed', note: '' })),
+        ...s.digital.map(d => ({ id: d.id, label: d.label, kind: 'D', type: d.type, parent: d.parent || null, pilot: 'seed', note: '' })),
+      ],
+      art: s.artifacts.map(a => ({ ...a, pilot: 'seed' })),
+      virt: s.virtual.map(v => ({ ...v, pilot: 'seed' })),
+      chan: V.channel.map((c, i) => ({ id: 'CH' + String(i + 1).padStart(2, '0'), label: c, pilot: 'seed' })),
+      cond: s.conditions.map(c => ({ ...c, values: [...c.values], pilot: 'seed' })),
+    },
+    spaces: [], connections: [], plan: { image: null, opacity: .55, irbOk: false },
+    walk: Object.fromEntries(STAGES.map(st => [st.id, { steps: [], vars: [], probe: '' }])),
+    notes: [], frames: [],
+  };
+}
+let S = null;
+let ui = { tab: MODE === 'pilot' ? 'library' : 'walk', lg: 'R', lfn: null, mode: 'select', sel: null, connFrom: null, pendingInstall: null, stage: 'S1', vid: null, cell: null };
+const nextId = (arr, prefix, pad = 2) => { let n = 1; const ids = new Set(arr.map(x => x.id)); while (ids.has(prefix + String(n).padStart(pad, '0'))) n++; return prefix + String(n).padStart(pad, '0'); };
+const byId = (arr, id) => arr.find(x => x.id === id);
+const label = id => { const x = [...S.lib.sub, ...S.lib.comp, ...S.lib.art, ...S.lib.virt, ...S.spaces].find(y => y.id === id); return x ? x.label : id; };
+const comps = () => S.lib.comp;
+const live = arr => arr.filter(x => x.pilot !== 'absent');
+const toggle = (arr, v) => arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v];
+let saveT = null;
+function save() { $('#saved').textContent = 'saving…'; clearTimeout(saveT); saveT = setTimeout(async () => { const ok = await store.set('state', S); $('#saved').textContent = ok ? 'saved in this browser · ' + new Date().toLocaleTimeString() : 'NOT saved — export now'; }, 300); }
+const seg = (name, opts, val) => `<div class="seg" data-seg="${name}">${opts.map(o => { const [v, l] = Array.isArray(o) ? o : [o, o]; return `<button data-v="${esc(v)}" class="${v === val ? 'on' : ''}">${esc(l)}</button>`; }).join('')}</div>`;
+
+/* ---------- in-page dialogs (artifact viewers block prompt / confirm / alert) ---------- */
+function uiAsk({ text, input = false, value = '', ok = 'OK', danger = false, choices = null }) {
+  return new Promise(res => {
+    const bg = document.createElement('div'); bg.className = 'dlg-bg';
+    bg.innerHTML = `<div class="dlg" role="dialog" aria-modal="true"><p>${esc(text)}</p>${input ? `<input type="text" id="dlg-in" value="${esc(value)}">` : ''}${choices ? `<div class="dlg-ch">${choices.map(([v, l]) => `<button class="btn" data-v="${esc(v)}">${esc(l)}</button>`).join('')}</div>` : ''}<div class="dlg-act"><button class="btn" data-c="0">Cancel</button>${choices ? '' : `<button class="btn primary ${danger ? 'danger' : ''}" data-c="1">${esc(ok)}</button>`}</div></div>`;
+    document.body.appendChild(bg);
+    const inp = bg.querySelector('#dlg-in'); setTimeout(() => (inp || bg.querySelector('[data-c="1"]') || bg.querySelector('[data-v]')).focus(), 30);
+    const done = v => { bg.remove(); res(v); };
+    bg.addEventListener('click', e => { e.stopPropagation(); const b = e.target.closest('button'); if (e.target === bg) return done(null); if (!b) return;
+      if (b.dataset.v !== undefined) return done(b.dataset.v); if (b.dataset.c === '0') return done(null); done(input ? (inp.value.trim() || null) : true); });
+    bg.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Escape') done(null); if (e.key === 'Enter' && !choices) { e.preventDefault(); done(input ? (inp.value.trim() || null) : true); } });
+  });
+}
+const uiPrompt = (text, value = '') => uiAsk({ text, input: true, value });
+const uiConfirm = (text, ok = 'Delete') => uiAsk({ text, ok, danger: /delete|clear|replace/i.test(ok) }).then(r => r === true);
+const uiChoose = (text, choices) => uiAsk({ text, choices });
+function toast(msg) { let t = document.getElementById('toast'); if (!t) { t = document.createElement('div'); t.id = 'toast'; document.body.appendChild(t); } t.textContent = msg; t.className = 'on'; clearTimeout(t._h); t._h = setTimeout(() => { t.className = ''; }, 2600); }
+
+/* ---------- tabs ---------- */
+const TABS = MODE === 'pilot'
+  ? [['library', '① Virtual library'], ['space', '② Physical mapping'], ['export', 'Pilot & export']]
+  : [];   // walk mode: walk-frame.js replaces render()
+function render() { $('#tabs').innerHTML = TABS.map(([k, l]) => `<button class="tab ${ui.tab === k ? 'on' : ''}" data-t="${k}">${l}</button>`).join(''); ({ library: rLib, space: rSpace, export: rExportPilot })[ui.tab](); }
+$('#tabs').onclick = e => { const b = e.target.closest('[data-t]'); if (!b) return; ui.tab = b.dataset.t; render(); };
+
+/* =====================================================================
+   ① LIBRARY — pre-filled checklist that becomes the hierarchies
+   ===================================================================== */
+const LG = [['R', 'People / roles'], ['D', 'Digital systems'], ['chan', 'Channels'], ['virt', 'Virtual spaces'], ['art', 'Information / artifacts'], ['cond', 'Key conditions']];
+const TTYPES = ['installation', 'equipment', 'touchpoint', 'tool'];
+const isOk = x => x.pilot === 'present' || x.pilot === 'added' || x.pilot === 'added-in-session';
+function libItems(g) { return g === 'R' ? comps().filter(c => c.kind === 'R') : g === 'D' ? comps().filter(c => c.kind === 'D') : g === 'T' ? comps().filter(c => c.kind === 'T') : S.lib[g] || []; }
+const stBtns = x => `<div class="st"><button class="y ${isOk(x) ? 'on' : ''}" data-st="present" title="confirmed" aria-label="confirmed">✓</button><button class="q ${x.pilot === 'unsure' ? 'on' : ''}" data-st="unsure" title="to confirm" aria-label="to confirm">?</button><button class="n ${x.pilot === 'absent' ? 'on' : ''}" data-st="absent" title="not at this site" aria-label="not at this site">✗</button></div>`;
+const setSt = (it, v) => { it.pilot = (v === 'present' ? isOk(it) : it.pilot === v) ? 'seed' : v; };
+function rLib() {
+  const g = ui.lg = LG.some(([k]) => k === ui.lg) ? ui.lg : 'R', items = libItems(g);
+  const cnt = k => { const it = libItems(k); return `✓${it.filter(isOk).length} ?${it.filter(x => x.pilot === 'unsure').length} · ${it.length}`; };
+  const groups = [...new Set(comps().filter(c => c.kind === 'R').map(c => c.group))];
+  const dParents = comps().filter(c => c.kind === 'D' && !c.parent);
+  const opts = (arr, v) => arr.map(o => `<option ${o === v ? 'selected' : ''}>${esc(o)}</option>`).join('');
+  const meta = x => {
+    if (g === 'R') return `<select data-f="group">${opts(groups, x.group)}<option value="__new">+ new group…</option></select>`;
+    if (g === 'D') return `<select data-f="type">${opts(['system', 'subsystem', 'processor', 'channel'], x.type)}</select><select data-f="parent"><option value="">— top level</option>${dParents.filter(p => p.id !== x.id).map(p => `<option value="${p.id}" ${p.id === x.parent ? 'selected' : ''}>part of ${p.id} ${esc(p.label)}</option>`).join('')}</select>`;
+    if (g === 'art') return `<select data-f="type">${opts(V.artifact_type, x.type)}</select>`;
+    if (g === 'cond') return `<select data-f="source">${opts(['event', 'overall'], x.source)}</select><input type="text" data-f="values" value="${esc(x.values.join(', '))}" style="min-width:240px" title="values, comma separated; first = usual">`;
+    return '';
+  };
+  const HELP = {
+    R: 'Roles involved in the case. Roles only, no names. The group is optional and can be fixed later.',
+    D: 'Information systems and their parts (e.g. order entry is part of the EHR). Physical equipment and touchpoints go on the Physical mapping tab.',
+    chan: 'How information is passed: in person, phone, pager, secure message, EHR, video. How channels are modelled is still open, so record what is used.',
+    virt: 'Digital places where work happens or waits: charts, queues, message threads, video sessions.',
+    art: 'Information, decisions, documents and items that are used or produced along the case.',
+    cond: 'Circumstances that change who does what, how or where (time, staffing, resources, earlier events). Ask: "When would this be done by someone else, another way or somewhere else?" First value = usual.' };
+  $('#main').innerHTML = `<div class="card">
+    <div class="hint"><b>Virtual library.</b> Confirm what this case involves. Mark each item, add what is missing. Function is not classified on site.</div>
+    <div class="row">${seg('lg', LG.map(([k, l]) => [k, `${l} · ${cnt(k)}`]), g)}</div>
+    <p class="note">${HELP[g]}</p>
+    <div class="st-legend"><span><b class="y">✓</b> confirmed</span><span><b class="q">?</b> to confirm</span><span><b class="n">✗</b> not at this site</span><span>unmarked = not reviewed yet</span></div>
+    ${items.map(x => `<div class="ck" data-id="${esc(x.id)}"><b style="font:600 12px Jost">${esc(x.id)}</b><div><input type="text" data-f="label" value="${esc(x.label)}" class="${x.pilot === 'absent' ? 'absent' : ''}"><div class="meta">${meta(x)}<input type="text" data-f="note" value="${esc(x.note || '')}" placeholder="note" style="flex:1;min-width:140px">${x.pilot === 'added' || x.pilot === 'added-in-session' ? '<span class="chip on">added</span>' : ''}</div></div>${stBtns(x)}</div>`).join('')}
+    <div class="row" style="margin-top:10px"><button class="btn primary" data-act="add">+ Add missing item</button></div></div>`;
+  const m = $('#main');
+  m.onclick = async e => {
+    const sb = e.target.closest('[data-seg=lg] button'); if (sb) { ui.lg = sb.dataset.v; rLib(); return; }
+    const stb = e.target.closest('[data-st]'); if (stb) { setSt(libItems(g).find(x => x.id === stb.closest('[data-id]').dataset.id), stb.dataset.st); save(); rLib(); return; }
+    if (e.target.closest('[data-act=add]')) {
+      const lab = await uiPrompt('Name of the missing item'); if (!lab) return;
+      if (g === 'R') S.lib.comp.push({ id: nextId(comps(), 'R'), label: lab, kind: 'R', group: 'Other', pilot: 'added', note: '' });
+      else if (g === 'D') S.lib.comp.push({ id: nextId(comps(), 'D'), label: lab, kind: 'D', type: 'system', parent: null, pilot: 'added', note: '' });
+      else if (g === 'chan') S.lib.chan.push({ id: nextId(S.lib.chan, 'CH'), label: lab, pilot: 'added' });
+      else if (g === 'art') { const t = await uiChoose('What kind of item?', V.artifact_type.map(x => [x, x])); if (!t) return; S.lib.art.push({ id: nextId(S.lib.art, 'A'), label: lab, type: t, pilot: 'added' }); }
+      else if (g === 'virt') S.lib.virt.push({ id: nextId(S.lib.virt, 'V'), label: lab, pilot: 'added' });
+      else if (g === 'cond') S.lib.cond.push({ id: nextId(S.lib.cond, 'K', 1), label: lab, source: 'overall', values: ['usual', 'changed'], pilot: 'added' });
+      save(); rLib();
+    }
+  };
+  m.onchange = async e => {
+    const row = e.target.closest('[data-id]'); if (!row) return; const it = libItems(g).find(x => x.id === row.dataset.id); const f = e.target.dataset.f; if (!f) return;
+    if (f === 'group' && e.target.value === '__new') { const n = await uiPrompt('Name of the new group'); if (n) it.group = n; save(); rLib(); return; }
+    if (f === 'values') it.values = e.target.value.split(',').map(x => x.trim()).filter(Boolean);
+    else if (f === 'parent') it.parent = e.target.value || null;
+    else it[f] = e.target.value;
+    save();
+  };
+}
+
+/* =====================================================================
+   ② SPACE — plan photo, bubbles, connections, installations
+   ===================================================================== */
+const MODES = [['select', 'Select / move'], ['bubble', '+ Bubble'], ['connect', '+ Connection'], ['install', '+ Installation / touchpoint'], ['delete', 'Delete']];
+const HINTS = { select: 'Tap to select, drag to move.', bubble: 'Tap where a space is. Corridors are their own bubble.', connect: 'Tap two bubbles people can pass between directly. Adjacent ≠ connected.', install: 'Tap a bubble, then pick the installation on the right.', delete: 'Tap a bubble, connection or installation to delete.' };
+const gridBg = () => { let g = `<rect width="${W}" height="${H}" fill="#fafbfc"/>`; for (let x = 0; x <= W; x += 50) g += `<line x1="${x}" y1="0" x2="${x}" y2="${H}" stroke="#eef0f2"/>`; for (let y = 0; y <= H; y += 50) g += `<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="#eef0f2"/>`; return g; };
+function planSvg({ route = null, id = 'plan-svg', mark = null, instOn = null } = {}) {
+  const img = S.plan.image ? `<image href="${S.plan.image}" x="0" y="0" width="${W}" height="${H}" preserveAspectRatio="xMidYMid meet" opacity="${S.plan.opacity}"/>` : gridBg();
+  let g = '';
+  S.connections.forEach(c => { const a = byId(S.spaces, c.a), b = byId(S.spaces, c.b); if (!a || !b) return; const on = ui.sel === c.id; const dash = c.type === 'elevator' || c.type === 'stair' ? '3 5' : c.restriction !== 'none' ? '8 5' : '';
+    g += `<line data-conn="${c.id}" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${on ? '#d81b60' : '#5b6772'}" stroke-width="${on ? 6 : 4}" ${dash ? `stroke-dasharray="${dash}"` : ''} opacity=".85"/><line data-conn="${c.id}" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="transparent" stroke-width="22"/>`; });
+  S.connections.forEach(c => { const a = byId(S.spaces, c.a), b = byId(S.spaces, c.b); if (!a || !b || !c.evidence || c.evidence.status !== 'to-confirm') return; const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2; g += `<g pointer-events="none"><circle cx="${mx}" cy="${my}" r="10" fill="#c9971a"/><text x="${mx}" y="${my + 4.5}" text-anchor="middle" style="font:700 12px Inter,sans-serif;fill:#fff">?</text></g>`; });
+  if (route && route.length > 1) { const pts = route.map(i => byId(S.spaces, i)).filter(Boolean); g += `<polyline points="${pts.map(p => `${p.x},${p.y}`).join(' ')}" fill="none" stroke="#d81b60" stroke-width="6" stroke-linejoin="round" opacity=".85"/>`; }
+  S.spaces.forEach(s => { const on = ui.sel === s.id || ui.connFrom === s.id, inR = (route && route.includes(s.id)) || (mark && mark.has(s.id));
+    const w = s.bubble_type === 'corridor' ? 150 : 124, h = s.bubble_type === 'corridor' ? 34 : 46;
+    g += `<g data-space="${s.id}" style="cursor:pointer"><rect x="${s.x - w / 2}" y="${s.y - h / 2}" width="${w}" height="${h}" rx="${h / 2}" fill="${inR ? '#fde3ec' : s.bubble_type === 'corridor' ? '#eef0f2' : '#fffaf2'}" fill-opacity=".93" stroke="${on || inR ? '#d81b60' : '#9aa4ae'}" stroke-width="${on ? 3 : 1.6}" ${s.evidence && s.evidence.status === 'to-confirm' ? 'stroke-dasharray="5 4"' : ''}/><text x="${s.x}" y="${s.y - 2}" text-anchor="middle" class="bm-label" style="font-size:12px">${esc(s.label || '(unnamed)')}</text><text x="${s.x}" y="${s.y + 13}" text-anchor="middle" class="bm-id">${s.id}${s.floor && s.floor != 1 ? ' · L' + s.floor : ''}</text></g>`;
+    if (s.evidence && s.evidence.status === 'to-confirm') g += `<g pointer-events="none"><circle cx="${s.x + w / 2 - 6}" cy="${s.y - h / 2 + 4}" r="10" fill="#c9971a"/><text x="${s.x + w / 2 - 6}" y="${s.y - h / 2 + 8.5}" text-anchor="middle" style="font:700 12px Inter,sans-serif;fill:#fff">?</text></g>`;
+    if (route) { const k = route.indexOf(s.id); if (k >= 0) g += `<circle cx="${s.x - w / 2 + 4}" cy="${s.y - h / 2 + 4}" r="11" fill="#d81b60"/><text x="${s.x - w / 2 + 4}" y="${s.y - h / 2 + 8}" text-anchor="middle" class="bm-pin" style="font-size:11px">${k + 1}</text>`; } });
+  comps().filter(c => c.kind === 'T' && c.space && c.pos).forEach(c => { const on = ui.sel === c.id || (instOn && instOn.has(c.id)); g += `<g data-inst="${c.id}"><rect x="${c.pos.x - 9}" y="${c.pos.y - 9}" width="18" height="18" rx="3" fill="${on ? '#6b63c4' : '#fff'}" stroke="#6b63c4" stroke-width="2"/><text x="${c.pos.x}" y="${c.pos.y - 13}" text-anchor="middle" class="bm-tid" style="font-size:10px">${c.id}</text></g>`; });
+  return `<svg viewBox="0 0 ${W} ${H}" id="${id}">${img}${g}</svg>`;
+}
+function svgPoint(svg, e) { const r = svg.getBoundingClientRect(); return { x: Math.round((e.clientX - r.left) / r.width * W), y: Math.round((e.clientY - r.top) / r.height * H) }; }
+function rSpace() {
+  const tps = comps().filter(c => c.kind === 'T'), placed = tps.filter(c => c.space && c.pilot !== 'absent');
+  const tbc = S.spaces.filter(s => s.evidence.status === 'to-confirm').length + S.connections.filter(c => c.evidence.status === 'to-confirm').length;
+  const step = (n, on, t, sub) => `<div class="stp ${on ? 'done' : ''}"><b>${on ? '✓' : n}</b><div><div>${t}</div><div class="note">${sub}</div></div></div>`;
+  $('#main').innerHTML = `<div class="steps">${step(1, !!S.plan.image, 'Floor plan', S.plan.image ? 'photo added' : S.plan.irbOk ? 'ready to add' : 'confirm IRB scope first')}${step(2, S.spaces.length > 0, 'Bubbles &amp; connections', `${S.spaces.length} spaces · ${S.connections.length} connections · ${tbc} marked ?`)}${step(3, placed.length > 0, 'Installations / touchpoints', `${placed.length} linked to a space`)}</div>
+    <div class="card irb"><label class="irb-ok"><input type="checkbox" id="irb-ok" ${S.plan.irbOk ? 'checked' : ''}><span>Photographing and saving this floor plan is within the project scope described to the IRB and the site's permission. No people are in the photo.</span></label>
+      <div class="row"><button class="btn ${S.plan.irbOk ? 'primary' : ''}" data-act="photo" ${S.plan.irbOk ? '' : 'disabled'}>${S.plan.image ? 'Replace' : 'Add'} plan photo</button>${S.plan.image ? `<label class="note">photo <input type="range" min=".1" max="1" step=".05" value="${S.plan.opacity}" data-act="opacity"></label><button class="btn" data-act="photo-rm">Remove photo</button>` : ''}<span class="note">The photo stays on this device. No permitted plan? Draw the bubbles on the grid.</span></div></div>
+    <div class="split"><div>
+      <div class="tools">${MODES.map(([k, l]) => `<button class="btn ${ui.mode === k ? 'on' : ''}" data-mode="${k}">${l}</button>`).join('')}</div>
+      <div class="hint">${HINTS[ui.mode]}${ui.connFrom ? ` From <b>${ui.connFrom}</b>, tap the second bubble.` : ''}</div>
+      <div class="plan" id="plan">${planSvg()}</div>
+      <div class="legend"><span>dashed line = restricted · dotted = elevator / stair · <b style="color:#a3740c">?</b> = to confirm (set in the panel)</span></div>
+      <div class="card" style="margin-top:12px" id="tp"><h3>Installations / touchpoints · type and space</h3><p class="note">Link each item to a space here, or place it on the plan with <b>+ Installation / touchpoint</b>.</p>
+        <div class="tscroll"><table class="grid"><thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Mobility</th><th>Space</th><th>Status</th></tr></thead><tbody>
+        ${tps.map(t => `<tr data-id="${t.id}"><td><b>${t.id}</b></td><td><input type="text" data-tf="label" value="${esc(t.label)}" class="${t.pilot === 'absent' ? 'absent' : ''}"></td><td><select data-tf="type">${TTYPES.map(o => `<option ${o === t.type ? 'selected' : ''}>${o}</option>`).join('')}</select></td><td><select data-tf="mobility">${V.mobility.map(o => `<option ${o === t.mobility ? 'selected' : ''}>${o}</option>`).join('')}</select></td><td><select data-tf="space"><option value="">— not linked —</option>${S.spaces.map(sp => `<option value="${sp.id}" ${t.space === sp.id ? 'selected' : ''}>${sp.id} ${esc(sp.label || '(unnamed)')}</option>`).join('')}</select></td><td>${stBtns(t)}</td></tr>`).join('')}
+        </tbody></table></div><div class="row"><button class="btn" data-act="tp-add">+ Add missing item</button></div></div>
+    </div><div class="card sticky" id="inspector">${inspector()}</div></div>`;
+  bindPlan(); bindInspector(); bindTp();
+}
+function placeIn(t, spaceId) {
+  const sp = byId(S.spaces, spaceId); if (!sp) { t.space = null; t.pos = null; return; }
+  const k = comps().filter(c => c.kind === 'T' && c.space === sp.id && c !== t).length;
+  t.space = sp.id; t.pos = { x: sp.x + 50 - k * 22, y: sp.y - 34 }; if (t.pilot === 'seed') t.pilot = 'present';
+}
+function bindTp() {
+  const el = $('#tp'); if (!el) return;
+  el.oninput = e => { const row = e.target.closest('[data-id]'); if (row && e.target.dataset.tf === 'label') { byId(comps(), row.dataset.id).label = e.target.value; save(); } };
+  el.onchange = e => { const row = e.target.closest('[data-id]'), f = e.target.dataset.tf; if (!row || !f || f === 'label') return; const t = byId(comps(), row.dataset.id);
+    if (f === 'space') placeIn(t, e.target.value); else t[f] = e.target.value; save(); rSpace(); };
+  el.onclick = async e => { const stb = e.target.closest('[data-st]'); if (stb) { setSt(byId(comps(), stb.closest('[data-id]').dataset.id), stb.dataset.st); save(); rSpace(); return; }
+    if (e.target.closest('[data-act=tp-add]')) { const lab = await uiPrompt('Name of the installation / touchpoint'); if (!lab) return; S.lib.comp.push({ id: nextId(comps(), 'T'), label: lab, kind: 'T', type: 'touchpoint', mobility: 'fixed', space: null, pos: null, pilot: 'added', note: '' }); save(); rSpace(); } };
+}
+function inspector() {
+  const s = byId(S.spaces, ui.sel), c = byId(S.connections, ui.sel), t = ui.sel && byId(comps(), ui.sel);
+  const txt = (k, v, ph = '') => `<input type="text" data-k="${k}" value="${esc(v || '')}" placeholder="${ph}">`;
+  if (s) return `<h3>Space ${s.id}</h3><label class="field"><span>Name</span>${txt('label', s.label, 'e.g. CT suite')}</label><div class="field"><span>Bubble type</span>${seg('bubble_type', V.bubble_type, s.bubble_type)}</div>
+    <div class="grid2"><label class="field"><span>Floor</span>${txt('floor', s.floor)}</label><div class="field"><span>Access</span>${seg('access', ['all', 'restricted-role', 'restricted-time'], s.access)}</div></div>
+    <div class="field"><span>Evidence</span>${seg('ev.source', ['DOC', 'OBS', 'EX'], s.evidence.source)}${seg('ev.status', V.status, s.evidence.status)}</div><label class="field"><span>Note</span>${txt('note', s.note)}</label>`;
+  if (c) return `<h3>Connection ${c.id}: ${c.a} ↔ ${c.b}</h3><div class="field"><span>Type</span>${seg('type', V.connection_type, c.type)}</div><div class="field"><span>Restriction</span>${seg('restriction', V.restriction, c.restriction)}</div><label class="field"><span>Detail</span>${txt('detail', c.detail)}</label><div class="field"><span>Evidence</span>${seg('ev.source', ['DOC', 'OBS', 'EX'], c.evidence.source)}${seg('ev.status', V.status, c.evidence.status)}</div>`;
+  if (t && t.kind === 'T') return `<h3>${esc(t.type || 'installation')} ${t.id}</h3><label class="field"><span>Name</span>${txt('label', t.label)}</label><div class="field"><span>Type</span>${seg('type', TTYPES, t.type)}</div><div class="field"><span>Mobility</span>${seg('mobility', V.mobility, t.mobility)}</div><div class="field"><span>Space</span><div>${t.space ? `<b>${t.space}</b> ${esc(label(t.space))}` : 'not linked'}</div></div><label class="field"><span>Purpose / who uses it</span>${txt('note', t.note)}</label><button class="btn" data-act="unplace">Remove from plan</button>`;
+  if (ui.pendingInstall) { const sp = byId(S.spaces, ui.pendingInstall.space); return `<h3>Place installation in ${sp.id} ${esc(sp.label)}</h3><div class="pick" data-pick="place">${live(comps().filter(x => x.kind === 'T' && !x.space)).map(x => `<button data-v="${x.id}"><b>${x.id}</b>${esc(x.label)}</button>`).join('')}</div><div class="row"><button class="btn" data-act="new-T">+ not on list</button></div>`; }
+  return `<h3>Physical mapping</h3><ol class="note" style="padding-left:18px"><li>Tick the IRB scope box, then add a photo of the permitted floor plan (no people).</li><li><b>+ Bubble</b> for every space in the case boundary, corridors too.</li><li><b>+ Connection</b> only where people can pass directly. Set the restriction.</li><li>Anything unknown: select it and set <b>to-confirm</b>. It shows as <b>?</b>.</li><li>Link installations / touchpoints to spaces in the table or on the plan.</li></ol>`;
+}
+let planDrag = null;
+function bindPlan() {
+  const svg = $('#plan-svg');
+  svg.onpointerdown = async e => {
+    const sp = e.target.closest('[data-space]'), cn = e.target.closest('[data-conn]'), it = e.target.closest('[data-inst]'), p = svgPoint(svg, e);
+    if (ui.mode === 'select') { ui.pendingInstall = null;
+      if (it) { ui.sel = it.dataset.inst; planDrag = { kind: 'inst', id: ui.sel }; }
+      else if (sp) { ui.sel = sp.dataset.space; const s = byId(S.spaces, ui.sel); planDrag = { kind: 'space', id: ui.sel, ox: p.x - s.x, oy: p.y - s.y }; }
+      else ui.sel = cn ? cn.dataset.conn : null;
+      rSpace(); return; }
+    if (ui.mode === 'bubble' && !sp) { const id = nextId(S.spaces, 'P'); S.spaces.push({ id, label: '', floor: 1, bubble_type: 'room', x: p.x, y: p.y, in_boundary: true, access: 'all', note: '', evidence: { source: S.plan.image ? 'DOC' : 'EX', status: 'confirmed' } }); ui.sel = id; save(); rSpace(); setTimeout(() => { const i = document.querySelector('#inspector [data-k=label]'); i && i.focus(); }, 50); return; }
+    if (ui.mode === 'connect' && sp) { const id = sp.dataset.space; if (!ui.connFrom) { ui.connFrom = id; rSpace(); return; }
+      if (ui.connFrom !== id && !S.connections.some(c => (c.a === ui.connFrom && c.b === id) || (c.b === ui.connFrom && c.a === id))) { const cid = nextId(S.connections, 'C'); S.connections.push({ id: cid, a: ui.connFrom, b: id, type: 'door', restriction: 'none', detail: '', evidence: { source: 'OBS', status: 'confirmed' } }); ui.sel = cid; save(); }
+      ui.connFrom = null; rSpace(); return; }
+    if (ui.mode === 'install' && sp) { ui.pendingInstall = { space: sp.dataset.space, pos: p }; ui.sel = null; rSpace(); return; }
+    if (ui.mode === 'delete') {
+      if (it) { const t = byId(comps(), it.dataset.inst); t.space = null; t.pos = null; }
+      else if (cn) S.connections = S.connections.filter(c => c.id !== cn.dataset.conn);
+      else if (sp && await uiConfirm(`Delete ${sp.dataset.space} and its connections?`)) { const id = sp.dataset.space; S.spaces = S.spaces.filter(s => s.id !== id); S.connections = S.connections.filter(c => c.a !== id && c.b !== id); comps().forEach(t => { if (t.space === id) { t.space = null; t.pos = null; } }); }
+      save(); rSpace(); }
+  };
+  const box = $('#plan');
+  box.onpointermove = e => { if (!planDrag) return; const p = svgPoint($('#plan-svg'), e);
+    if (planDrag.kind === 'space') { const s = byId(S.spaces, planDrag.id); const dx = p.x - planDrag.ox - s.x, dy = p.y - planDrag.oy - s.y; s.x += dx; s.y += dy; comps().forEach(t => { if (t.space === s.id && t.pos) { t.pos.x += dx; t.pos.y += dy; } }); }
+    else byId(comps(), planDrag.id).pos = p;
+    box.innerHTML = planSvg(); bindPlan(); };
+  box.onpointerup = box.onpointerleave = () => { if (planDrag) { planDrag = null; save(); rSpace(); } };
+}
+function bindInspector() {
+  const el = $('#inspector'); if (!el) return;
+  el.oninput = e => { const k = e.target.dataset.k; const o = byId(S.spaces, ui.sel) || byId(S.connections, ui.sel) || byId(comps(), ui.sel); if (!o || !k) return; o[k] = e.target.value; save(); $('#plan').innerHTML = planSvg(); bindPlan(); };
+  el.onclick = async e => {
+    const b = e.target.closest('button'); if (!b) return;
+    const o = byId(S.spaces, ui.sel) || byId(S.connections, ui.sel) || byId(comps(), ui.sel);
+    const sg = b.closest('[data-seg]'), pk = b.closest('[data-pick]');
+    if (sg && o) { const k = sg.dataset.seg, v = b.dataset.v; if (k.startsWith('ev.')) o.evidence[k.slice(3)] = v; else o[k] = v; }
+    else if (pk && pk.dataset.pick === 'place') { const t = byId(comps(), b.dataset.v); t.space = ui.pendingInstall.space; t.pos = ui.pendingInstall.pos; t.pilot = 'present'; ui.sel = t.id; ui.pendingInstall = null; }
+    else if (b.dataset.act === 'new-T') { const lab = await uiPrompt('Installation / tool name'); if (!lab) return; const id = nextId(comps(), 'T'); S.lib.comp.push({ id, label: lab, kind: 'T', type: 'installation', mobility: 'fixed', space: ui.pendingInstall.space, pos: ui.pendingInstall.pos, pilot: 'added', note: '' }); ui.sel = id; ui.pendingInstall = null; }
+    else if (b.dataset.act === 'unplace' && o) { o.space = null; o.pos = null; ui.sel = null; }
+    else return;
+    save(); rSpace();
+  };
+}
+document.addEventListener('click', e => { if (ui.tab !== 'space') return; const m = e.target.closest('[data-mode]'); if (m) { ui.mode = m.dataset.mode; ui.connFrom = null; ui.pendingInstall = null; rSpace(); } if (e.target.closest('[data-act=photo]') && S.plan.irbOk) $('#file-img').click(); if (e.target.closest('[data-act=photo-rm]')) { S.plan.image = null; save(); rSpace(); } });
+document.addEventListener('change', e => { if (e.target.id === 'irb-ok') { S.plan.irbOk = e.target.checked; save(); rSpace(); } });
+document.addEventListener('input', e => { if (e.target.dataset.act === 'opacity') { S.plan.opacity = +e.target.value; save(); $('#plan').innerHTML = planSvg(); bindPlan(); } });
+$('#file-img').onchange = e => { const f = e.target.files[0]; if (!f) return; const img = new Image(), url = URL.createObjectURL(f);
+  img.onload = () => { const k = Math.min(1, 1800 / Math.max(img.width, img.height)); const c = document.createElement('canvas'); c.width = img.width * k; c.height = img.height * k; c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); S.plan.image = c.toDataURL('image/jpeg', .8); URL.revokeObjectURL(url); save(); rSpace(); };
+  img.src = url; e.target.value = ''; };
+
+/* =====================================================================
+   SESSION & EXPORT — JSON (structured) + frames.csv (task × variation)
+   ===================================================================== */
+/* Downloads: inside a claude.ai artifact a page cannot start a download itself; the
+   `downloads` capability shows the viewer a save prompt instead. Plain browsers fall back to a link. */
+let dlCap; const dlReady = (async () => { try { dlCap = window.claude && window.claude.use ? await window.claude.use('downloads') : null; } catch (e) { dlCap = null; } })();
+async function download(name, text, type) {
+  if (!text) { toast('Nothing to export yet.'); return; }
+  if (window.claude && window.claude.use) await dlReady;
+  if (dlCap) { try { await dlCap.save({ filename: name, data: text }); toast('Saved ' + name); } catch (e) { toast(e && e.code === 'declined' ? 'Not saved.' : 'Could not save ' + name + (e && e.code ? ' (' + e.code + ')' : '')); } return; }
+  /* Home-screen web app on iPad: a plain download link is unreliable there, so use the share sheet (Save to Files / AirDrop). */
+  try { const f = new File([text], name, { type }); if (navigator.canShare && navigator.canShare({ files: [f] }) && /iPad|iPhone|Macintosh/.test(navigator.userAgent) && 'ontouchend' in document) { await navigator.share({ files: [f] }); toast('Shared ' + name); return; } } catch (e) { if (e && e.name === 'AbortError') { toast('Not saved.'); return; } }
+  const blob = new Blob([text], { type }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+const flat = v => Array.isArray(v) ? v.map(flat).join('|') : v && typeof v === 'object' ? JSON.stringify(v) : v == null ? '' : String(v);
+function toCsv(rows) { if (!rows.length) return ''; const cols = [...new Set(rows.flatMap(r => Object.keys(r)))]; const q = s => /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; return [cols.join(','), ...rows.map(r => cols.map(c => q(flat(r[c]))).join(','))].join('\n'); }
+const sessionFields = (title, hint) => `<h2>${title}</h2><div class="hint">${hint}</div>
+  <div class="grid2"><label class="field"><span>Site ID</span><input type="text" data-k="site.id" value="${esc(S.site.id)}"></label><label class="field"><span>Site label (no identifiers)</span><input type="text" data-k="site.label" value="${esc(S.site.label)}"></label></div>
+  <label class="field"><span>${MODE === 'pilot' ? 'Pilot ID' : 'Session ID'}</span><input type="text" data-k="session.id" value="${esc(S.session.id)}"></label>
+  <div class="grid2"><label class="field"><span>Expert role (no name)</span><input type="text" data-k="session.expert" value="${esc(S.session.expert)}"></label><label class="field"><span>Recorded by</span><input type="text" data-k="session.recorder" value="${esc(S.session.recorder)}"></label></div>`;
+const siteLibrary = () => ({ meta: { kind: 'site-library', version: '2.0', exported: new Date().toISOString(), from: S.session.id }, site: S.site, lib: S.lib, spaces: S.spaces, connections: S.connections, plan: S.plan });
+const libraryCsv = () => toCsv([...S.lib.sub.map(i => ({ list: 'sub-function', ...i })), ...S.lib.comp.map(({ pos, ...i }) => ({ list: i.kind, ...i })), ...S.lib.art.map(i => ({ list: 'artifact', ...i })), ...S.lib.virt.map(i => ({ list: 'virtual', ...i })), ...(S.lib.chan || []).map(i => ({ list: 'channel', ...i })), ...S.lib.cond.map(i => ({ list: 'condition', ...i }))]);
+function bindSessionInputs() { $('#main').oninput = e => { const k = e.target.dataset.k; if (!k) return; const [o, f] = k.split('.'); S[o][f] = e.target.value; save(); }; }
+
+/* ---------- PILOT: export the site library ---------- */
+function rExportPilot() {
+  const base = (S.site.id || 'site').replace(/[^\w-]/g, '_') + '_site-library';
+  const n = arr => `${arr.filter(isOk).length}/${arr.length}`;
+  $('#main').innerHTML = `<div class="grid2"><div class="card">${sessionFields('Pilot', 'One visit to build the site library: ① virtual library (roles, systems, channels, virtual spaces, information, conditions) and ② physical mapping (floor plan, bubbles, connections, touchpoints). No patients or staff observed; roles only.')}
+      <h2 style="margin-top:12px">Export site library</h2><p class="note">This file is what the <b>Walkthrough</b> page imports before each formal session.</p>
+      <div class="row"><button class="btn primary" data-x="lib-json">Download site library (JSON)</button><button class="btn" data-x="library">library.csv</button><button class="btn" data-x="spaces">spaces.csv</button><button class="btn" data-x="connections">connections.csv</button></div>
+      <div class="stat" style="margin-top:10px"><div><b>${n(comps().filter(c => c.kind === 'R'))}</b>roles ✓</div><div><b>${n(comps().filter(c => c.kind === 'D'))}</b>digital systems ✓</div><div><b>${n(S.lib.chan)}</b>channels ✓</div><div><b>${n(S.lib.virt)}</b>virtual spaces ✓</div><div><b>${n(S.lib.art)}</b>information / artifacts ✓</div><div><b>${n(S.lib.cond)}</b>conditions ✓</div><div><b>${S.spaces.length}</b>bubbles</div><div><b>${S.connections.length}</b>connections</div><div><b>${comps().filter(c => c.kind === 'T' && c.space).length}</b>touchpoints linked</div><div><b>${[...S.lib.comp, ...S.lib.chan, ...S.lib.virt, ...S.lib.art, ...S.lib.cond].filter(x => x.pilot === 'unsure').length + S.spaces.filter(x => x.evidence.status === 'to-confirm').length + S.connections.filter(x => x.evidence.status === 'to-confirm').length}</b>marked ? to confirm</div></div></div>
+    <div class="card"><h2>Load / reset</h2>
+      <div class="row"><button class="btn" data-x="import">Import site library…</button><span class="note">continue editing a saved library</span></div>
+      <div class="row"><button class="btn" data-x="demo">Load demo spaces</button><span class="note">practice — replaces current</span></div>
+      <div class="row"><button class="btn" data-x="reset" style="color:#a32b2b">Reset everything</button></div></div></div>`;
+  bindSessionInputs();
+  $('#main').onclick = async e => { const b = e.target.closest('[data-x]'); if (!b) return; const x = b.dataset.x;
+    if (x === 'lib-json') download(base + '.json', JSON.stringify(siteLibrary(), null, 1), 'application/json');
+    if (x === 'library') download(base + '_library.csv', libraryCsv(), 'text/csv');
+    if (x === 'spaces') download(base + '_spaces.csv', toCsv(S.spaces), 'text/csv');
+    if (x === 'connections') download(base + '_connections.csv', toCsv(S.connections), 'text/csv');
+    if (x === 'import') $('#file-json').click();
+    if (x === 'demo') { if (!await uiConfirm('Replace the current pilot data with the demo spaces?', 'Load demo')) return; S = demo(); S.walk = freshState().walk; S.notes = []; save(); render(); }
+    if (x === 'reset') { if (!await uiConfirm('Delete all pilot data stored on this device? Export the site library first.', 'Delete all')) return; S = freshState(); save(); render(); } };
+}
+
+$('#file-json').onchange = e => { const f = e.target.files[0]; if (!f) return; const r = new FileReader();
+  r.onload = () => { try {
+    const d = JSON.parse(r.result);
+    if (MODE === 'walk' && d.meta && d.meta.kind === 'site-library') {           // library hand-off from the Pilot page
+      Object.assign(S, { site: d.site, lib: d.lib, spaces: d.spaces, connections: d.connections, plan: d.plan || S.plan, libSource: `${f.name}` });
+    } else if (MODE === 'pilot' && d.meta && d.meta.kind === 'site-library') {
+      S = upgrade({ ...freshState(), site: d.site, lib: d.lib, spaces: d.spaces, connections: d.connections, plan: d.plan || { image: null, opacity: .55 } });
+    } else { delete d.frames; delete d.stages; S = upgrade(d); }
+    save(); render(); toast('Imported ' + f.name);
+  } catch (err) { toast('Could not read this file: ' + err.message); } };
+  r.readAsText(f); e.target.value = ''; };
+function upgrade(d) { const b = freshState(); for (const k of Object.keys(b)) if (d[k] == null) d[k] = b[k]; for (const k of Object.keys(b.lib)) if (!d.lib[k]) d.lib[k] = b.lib[k]; STAGES.forEach(st => { d.walk[st.id] = d.walk[st.id] || { steps: [], vars: [], probe: '' }; }); return d; }
+
+/* ---------- demo: mock spaces + S5 baseline and one variation ---------- */
+function demo() {
+  const d = freshState(), M = window.WT_DATA;
+  d.spaces = M.spaces.map(s => ({ ...s, note: '' })); d.connections = M.connections.map(c => ({ ...c, detail: '' }));
+  const place = { T01: 'P03', T03: 'P10', T05: 'P08', T06: 'P08', T07: 'P08', T08: 'P06', T09: 'P17', T10: 'P12' };
+  const k = {}; d.lib.comp.forEach(c => { if (place[c.id]) { const s = d.spaces.find(x => x.id === place[c.id]); k[s.id] = (k[s.id] || 0) + 1; c.space = s.id; c.pos = { x: s.x + 70 - k[s.id] * 22, y: s.y - 32 }; c.pilot = 'present'; } });
+  const st = (id, sub, people, tools, inputs, outputs, places, route = []) => ({ id, sub, people, tools, inputs, outputs, places, route, only: null });
+  d.walk.S5.steps = [
+    st('TK001', 'F3.3', ['R03'], ['D01.1', 'D07'], ['A10'], ['A11'], ['P07', 'V02']),
+    st('TK002', 'F8.1', ['R08'], ['D06'], ['A11'], ['A12'], ['P13', 'V03']),
+    st('TK003', 'F8.2', ['R02'], ['T05'], ['A12'], ['A13'], ['P08'], ['P07', 'P05', 'P08', 'P05', 'P07']),
+    st('TK004', 'F9.2', ['R02'], ['T11', 'D01.2'], ['A13'], ['A14'], ['P07']),
+  ];
+  d.walk.S5.vars = [{ id: 'S5-V1', when: { K1: 'admitted', K2: 'night', K4: 'remote' }, over: {
+    TK001: { people: ['R11'], tools: ['D01.1'], places: ['P17', 'V02'] }, TK002: { places: ['V03'] },
+    TK003: { people: ['R10'], tools: ['T09'], places: ['P17'], route: ['P16', 'P15', 'P17', 'P15', 'P16'] }, TK004: { people: ['R10'], places: ['P16'] } } }];
+  const n = (id, text, step, sub) => ({ id, text, kind: 'barrier', source: 'EX', stage: 'S5', step, sub, variation: 'S5-V1', when: { K1: 'admitted', K2: 'night', K4: 'remote' }, coding: { theme: '', failure: '', consequence: '', control: '', pc: '' } });
+  d.notes = [n('N01', 'order set not on ward', 'TK001', 'F3.3'), n('N02', 'night queue no stroke flag', 'TK002', 'F8.1')];
+  d.session.expert = 'demo'; d.site.label = 'DEMO';
+  return d;
+}
+
+/* ---------- boot ---------- */
+(async () => { const saved = await store.get('state'); S = saved ? upgrade(saved) : freshState(); render(); $('#saved').textContent = saved ? 'restored from this browser' : 'new — nothing saved yet'; })();
+
+</script>
+</body>
+</html>
