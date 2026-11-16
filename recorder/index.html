@@ -1,0 +1,1454 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Walkthrough Recorder</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#147a6e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Recorder">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Jost:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light;
+  --teal: #1c9c8c; --teal-deep: #147a6e; --teal-tint: #e3f3f1;
+  --orange: #e8843c; --orange-tint: #fcefe4;
+  --violet: #6b63c4; --lavender: #ecebf8;
+  --ink: #1f2a33; --ink-2: #4a5661; --muted: #7c8792;
+  --line: #dfe3e8; --bg: #f3f4f6; --soft: #f7f8fa;
+  --chg: #fff4d6; --chg-line: #d9a520; --bad: #a32b2b;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 14px/1.4 Inter, -apple-system, system-ui, sans-serif; -webkit-text-size-adjust: 100%; }
+button, input, select, textarea { font: inherit; color: inherit; }
+h1, h2, h3 { font-family: Jost, -apple-system, sans-serif; margin: 0; }
+.app { display: flex; flex-direction: column; height: 100%; }
+.top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; padding: max(8px, env(safe-area-inset-top)) 14px 8px; background: #fff; border-bottom: 1px solid var(--line); }
+.top h1 { font-size: 18px; font-weight: 600; }
+.sid { font: 600 12px Jost; color: var(--teal-deep); background: var(--teal-tint); border-radius: 6px; padding: 2px 8px; }
+.sid:empty { display: none; }
+#tabs { display: flex; gap: 4px; flex: 1; }
+#tabs button { border: 1px solid var(--line); background: #fff; border-radius: 9px; min-height: 38px; padding: 0 14px; cursor: pointer; }
+#tabs button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+.saved { font-size: 11px; color: var(--muted); }
+main { flex: 1; min-height: 0; overflow: auto; padding: 12px 12px calc(12px + env(safe-area-inset-bottom)); }
+
+.btn { border: 1px solid var(--line); background: #fff; border-radius: 9px; min-height: 40px; padding: 0 14px; cursor: pointer; white-space: nowrap; }
+.btn:active { transform: scale(.98); }
+.btn.primary { background: var(--teal-deep); color: #fff; border-color: var(--teal-deep); }
+.btn.dark { background: var(--ink); color: #fff; border-color: var(--ink); }
+.btn.br { border-color: var(--orange); color: #b45a1c; }
+.btn.danger { color: var(--bad); }
+.btn.primary.danger { background: var(--bad); border-color: var(--bad); color: #fff; }
+.btn.big { min-height: 48px; font-size: 15px; padding: 0 20px; font-weight: 600; }
+.btn.sm { min-height: 32px; padding: 0 9px; font-size: 12.5px; }
+.btn[disabled] { opacity: .4; cursor: not-allowed; }
+.muted { color: var(--muted); } .small { font-size: 12px; }
+.card { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
+
+/* record layout */
+.rec { display: grid; grid-template-columns: 200px minmax(0, 1fr) minmax(380px, 460px); gap: 12px; align-items: start; }
+.rec > * { min-width: 0; }
+.tl { position: sticky; top: 0; max-height: calc(100vh - 90px); overflow: auto; }
+.ed { position: sticky; top: 0; max-height: calc(100vh - 90px); overflow: auto; }
+@media (max-width: 1100px) {
+  .rec { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .tl { grid-column: 1 / -1; position: static; max-height: none; display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
+  .tl .ev { flex: none; width: 150px; margin: 0; }
+  .tl .ev.br { margin-left: 0; width: 150px; }
+  .tl .tlh { display: none; }
+}
+@media (max-width: 720px) { .rec { grid-template-columns: 1fr; } .ed { position: static; max-height: none; } }
+
+.tlh { font: 600 10px Jost; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 2px 0 6px; }
+.ev { display: block; width: 100%; text-align: left; border: 1px solid var(--line); border-left: 5px solid var(--teal); background: #fff; border-radius: 9px; padding: 7px 9px; margin-bottom: 6px; cursor: pointer; }
+.ev.br { margin-left: 14px; width: calc(100% - 14px); border-left-color: var(--orange); border-style: dashed; border-left-style: solid; }
+.ev.draft { border-left-color: var(--ink); background: var(--soft); border-style: dashed; border-left-style: solid; }
+.ev.on { box-shadow: 0 0 0 2px var(--ink); }
+.ev b { font: 600 13px Jost; } .ev .m { font-size: 11px; color: var(--muted); } .ev .c { font-size: 11px; color: #b45a1c; }
+
+/* scene */
+.scene-h { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; }
+.scene-h h2 { font-size: 22px; font-weight: 700; }
+.tag { font: 600 10px Jost; letter-spacing: .1em; text-transform: uppercase; border-radius: 5px; padding: 2px 7px; background: #eceef1; color: var(--ink-2); }
+.tag.draft { background: var(--ink); color: #fff; }
+.tag.br { background: var(--orange-tint); color: #b45a1c; }
+.cond { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: var(--orange-tint); border-radius: 10px; padding: 8px 10px; margin-bottom: 8px; font-size: 13px; }
+.cond b { font: 600 10px Jost; letter-spacing: .12em; text-transform: uppercase; color: #b45a1c; }
+.hint { font-size: 12.5px; color: var(--ink-2); background: #fffbef; border: 1px solid #f0dfa8; border-radius: 9px; padding: 7px 10px; margin-bottom: 8px; }
+.ent { position: relative; background: #fff; border: 1px solid var(--line); border-left: 5px solid var(--teal); border-radius: 11px; padding: 9px 44px 9px 11px; margin-bottom: 7px; cursor: pointer; }
+.ent.sp { border-left-color: var(--violet); }
+.ent.none { border-left-color: #c3c9d0; }
+.ent.on { box-shadow: 0 0 0 2px var(--ink); }
+.ent.chg { background: #fffcf1; }
+.ent .x { position: absolute; top: 6px; right: 6px; width: 34px; min-height: 34px; padding: 0; }
+.ent-h { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.ent-h .act { font: 600 15px Jost; }
+.kd { font: 600 9px Jost; letter-spacing: .12em; padding: 1px 6px; border-radius: 4px; background: var(--teal-tint); color: var(--teal-deep); }
+.kd.sp { background: var(--lavender); color: #4b44a3; }
+.kd.chg { background: var(--chg); color: #8a6400; } .kd.car { background: #eceef1; color: var(--muted); }
+.ent-l { font-size: 12.5px; margin-top: 3px; color: var(--ink-2); }
+.ent-l .lb { font: 600 9.5px Jost; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
+.warn { font-size: 11.5px; color: var(--bad); margin-top: 3px; }
+.tok { display: inline-block; font-size: 12px; border-radius: 6px; padding: 1px 7px; margin: 1px 2px 1px 0; background: #f0f2f4; }
+.tok.r { background: #e9f4f2; }
+.tok.io-in { background: #e7f1fb; } .tok.io-out { background: #fcefe4; }
+.scene-f { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+.scene-f .grow { flex: 1; }
+textarea { width: 100%; min-height: 44px; border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; resize: vertical; background: #fff; }
+input[type=text], select { border: 1px solid var(--line); border-radius: 9px; min-height: 40px; padding: 0 10px; background: #fff; }
+
+/* editor */
+.ed .card { padding: 10px 12px; }
+.ed-h { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.ed-h h3 { font-size: 16px; flex: 1; }
+.sec { border-top: 1px solid var(--line); padding: 9px 0; }
+.sec:first-of-type { border-top: 0; }
+.sh { display: flex; align-items: center; gap: 7px; font: 600 11px Jost; letter-spacing: .12em; text-transform: uppercase; color: var(--teal-deep); margin-bottom: 6px; }
+.sh .n { width: 20px; height: 20px; border-radius: 50%; background: var(--teal-tint); display: grid; place-items: center; font-size: 11px; letter-spacing: 0; }
+.sh .ok { background: var(--teal); color: #fff; }
+.sh .r { margin-left: auto; text-transform: none; letter-spacing: 0; font: 400 11px Inter; color: var(--muted); }
+.seg { display: flex; gap: 6px; }
+.seg button { flex: 1; min-height: 44px; border: 1px solid var(--line); background: #fff; border-radius: 10px; cursor: pointer; font-weight: 600; }
+.seg button.on { background: var(--teal-deep); border-color: var(--teal-deep); color: #fff; }
+.seg button.on.sp { background: var(--violet); border-color: var(--violet); }
+.chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.chip { border: 1px solid var(--line); background: #fff; border-radius: 9px; min-height: 38px; padding: 4px 10px; cursor: pointer; text-align: left; font-size: 13px; }
+.chip i { font-style: normal; font: 600 9.5px Jost; color: var(--muted); margin-right: 4px; }
+.chip.on { background: var(--chg); border-color: var(--chg-line); box-shadow: inset 0 0 0 1px var(--chg-line); }
+.chip.sug { border-color: var(--teal); border-style: dashed; }
+.chip.sp { color: #1e63c4; border-style: dashed; border-color: #1e63c4; }
+.chip.add { color: var(--teal-deep); border-style: dashed; }
+.grp { font: 500 9.5px Jost; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); width: 100%; margin: 6px 0 1px; }
+.acts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.acts button { min-height: 52px; border: 1px solid var(--line); background: #fff; border-radius: 10px; cursor: pointer; text-align: left; padding: 6px 10px; }
+.acts button b { display: block; font: 600 14px Jost; }
+.acts button span { display: block; font-size: 11px; color: var(--muted); line-height: 1.25; }
+.acts button.on { background: var(--chg); border-color: var(--chg-line); box-shadow: inset 0 0 0 1px var(--chg-line); }
+.sel { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
+.stok { display: inline-flex; align-items: center; gap: 2px; background: var(--teal-tint); border-radius: 9px; padding: 2px 2px 2px 9px; font-size: 13px; }
+.stok button { border: 0; background: transparent; min-height: 34px; min-width: 32px; cursor: pointer; border-radius: 7px; }
+.stok button.inst { font: 600 12px Jost; background: #fff; }
+.iorow { display: flex; align-items: center; gap: 6px; padding: 3px 0; }
+.iorow .nm { flex: 1; font-size: 13px; }
+.iorow .seg button { min-height: 34px; flex: none; padding: 0 10px; font-weight: 500; font-size: 12.5px; }
+.iorow .seg button.on { background: #1e63c4; border-color: #1e63c4; }
+.iorow .seg button.on.out { background: var(--orange); border-color: var(--orange); }
+
+/* site diagram (reserved) */
+.dia { border: 2px dashed #c9d2d8; border-radius: 12px; background: var(--soft); margin-bottom: 8px; overflow: hidden; }
+.dia.empty { display: grid; place-items: center; min-height: 120px; text-align: center; padding: 12px; color: var(--muted); font-size: 12.5px; }
+.dia.empty b { display: block; font: 600 13px Jost; letter-spacing: .08em; color: var(--ink-2); margin-bottom: 2px; }
+.dia svg { display: block; width: 100%; height: auto; touch-action: manipulation; }
+.dia .pt { cursor: pointer; }
+.pm { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 12px; color: var(--muted); }
+.pm .seg button { min-height: 32px; flex: none; padding: 0 10px; font-size: 12px; }
+
+/* data + session */
+.tscroll { overflow-x: auto; background: #fff; border: 1px solid var(--line); border-radius: 12px; }
+table.dt { border-collapse: collapse; width: 100%; font-size: 12px; }
+table.dt th, table.dt td { text-align: left; vertical-align: top; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+table.dt th { font: 500 10px Jost; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); background: var(--soft); position: sticky; top: 0; }
+table.dt tr.br td { background: #fffaf4; }
+table.dt tr[data-go] { cursor: pointer; }
+table.dt td.y { background: var(--chg); font-weight: 600; }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; align-items: start; }
+.field { display: flex; flex-direction: column; gap: 4px; margin: 8px 0; }
+.field > span { font: 500 10.5px Jost; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 6px 0; }
+.srow { display: flex; gap: 8px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.srow .grow { flex: 1; min-width: 0; }
+.srow.on b { color: var(--teal-deep); }
+.prow { display: grid; grid-template-columns: 70px minmax(0, 1fr) 118px auto; gap: 6px; align-items: center; padding: 4px 0; }
+.prow code { font: 600 11px Jost; color: var(--ink-2); word-break: normal; }
+.prow input, .prow select { width: 100%; min-width: 0; }
+@media (max-width: 600px) { .prow { grid-template-columns: 70px minmax(0, 1fr); } }
+.card code { word-break: break-all; font-size: 11.5px; }
+.pill { display: inline-block; font-size: 11.5px; border-radius: 7px; padding: 3px 8px; background: #eceef1; }
+.pill.ok { background: #dff2e3; color: #2d7a3d; } .pill.warn { background: #fde3e3; color: var(--bad); }
+.welcome { max-width: 640px; margin: 20px auto; }
+.welcome h2 { font-size: 24px; margin-bottom: 4px; }
+
+/* dialogs + toast */
+.dlg-bg { position: fixed; inset: 0; background: rgba(20,24,30,.38); display: grid; place-items: center; z-index: 50; padding: 16px; }
+.dlg { background: #fff; border-radius: 14px; padding: 18px; width: min(480px, 100%); max-height: calc(100vh - 40px); overflow: auto; box-shadow: 0 18px 50px rgba(0,0,0,.25); }
+.dlg p { margin: 0 0 12px; font-size: 14px; line-height: 1.45; }
+.dlg input[type=text] { width: 100%; font-size: 15px; }
+.dlg .chips { margin-bottom: 8px; }
+.dlg-act { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+#toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 20px); background: #22252b; color: #fff; padding: 9px 16px; border-radius: 10px; font-size: 13px; opacity: 0; pointer-events: none; transition: .2s; z-index: 60; max-width: calc(100% - 32px); }
+#toast.on { opacity: 1; transform: translate(-50%, 0); }
+
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <h1>Walkthrough Recorder</h1>
+    <span class="sid" id="sid"></span>
+    <nav id="tabs"></nav>
+    <span class="saved" id="saved">—</span>
+  </header>
+  <main id="main"></main>
+</div>
+<input type="file" id="file-json" accept="application/json,.json" hidden>
+<script>
+/* Generated by tools/options_from_xlsx.py from observation_tool_option_sets_v3.xlsx — do not edit by hand. */
+window.OPTS = {
+ "source": "observation_tool_option_sets_v3.xlsx",
+ "sites": [
+  "LMH",
+  "WCM"
+ ],
+ "types": [
+  {
+   "id": "TY01",
+   "label": "Case",
+   "def": "Work done around patient cases"
+  },
+  {
+   "id": "TY02",
+   "label": "Spatial",
+   "def": "Work done for physical patient care in hospital"
+  }
+ ],
+ "roles": [
+  {
+   "id": "R01",
+   "label": "Patient",
+   "group": "Patient"
+  },
+  {
+   "id": "R02",
+   "label": "Family / caregiver",
+   "group": "Patient"
+  },
+  {
+   "id": "R03",
+   "label": "EMS",
+   "group": "Pre-hospital"
+  },
+  {
+   "id": "R04",
+   "label": "Triage-RN",
+   "group": "ED"
+  },
+  {
+   "id": "R05",
+   "label": "ED Attending",
+   "group": "ED"
+  },
+  {
+   "id": "R06",
+   "label": "ED resident / APP",
+   "group": "ED"
+  },
+  {
+   "id": "R07",
+   "label": "ED nurse",
+   "group": "ED"
+  },
+  {
+   "id": "R08",
+   "label": "Neuro Attending",
+   "group": "Neurology"
+  },
+  {
+   "id": "R09",
+   "label": "Neuro fellow / resident / PA",
+   "group": "Neurology"
+  },
+  {
+   "id": "R10",
+   "label": "Radiologist",
+   "group": "Imaging"
+  },
+  {
+   "id": "R11",
+   "label": "CT tech",
+   "group": "Imaging"
+  },
+  {
+   "id": "R12",
+   "label": "MRI tech",
+   "group": "Imaging"
+  },
+  {
+   "id": "R13",
+   "label": "Pharmacist",
+   "group": "Pharmacy"
+  },
+  {
+   "id": "R14",
+   "label": "Transporter",
+   "group": "Support"
+  },
+  {
+   "id": "R15",
+   "label": "Command / bed center staff",
+   "group": "Support"
+  },
+  {
+   "id": "R16",
+   "label": "Hospitalist",
+   "group": "Inpatient"
+  },
+  {
+   "id": "R17",
+   "label": "Inpatient nurse",
+   "group": "Inpatient"
+  },
+  {
+   "id": "R99",
+   "label": "Other (specify)",
+   "group": "Other"
+  }
+ ],
+ "actions": [
+  {
+   "id": "AC01",
+   "type": "TY01",
+   "label": "Receive",
+   "covers": "Alert, notification, page or message arrives (passive)",
+   "minWho": 1,
+   "toWhere": false,
+   "io": "Input",
+   "tech": [
+    "TC07",
+    "TC04",
+    "TC06"
+   ],
+   "tools": [
+    "TL01"
+   ]
+  },
+  {
+   "id": "AC02",
+   "type": "TY01",
+   "label": "Review",
+   "covers": "Look at images, notes, orders, results, handoff messages",
+   "minWho": 1,
+   "toWhere": false,
+   "io": "Input",
+   "tech": [
+    "TC08",
+    "TC09"
+   ],
+   "tools": []
+  },
+  {
+   "id": "AC03",
+   "type": "TY01",
+   "label": "Discuss",
+   "covers": "Talk with another person: clinician ↔ clinician, with patient / family, handoff, coordination",
+   "minWho": 2,
+   "toWhere": false,
+   "io": "Both",
+   "tech": [
+    "TC01",
+    "TC02",
+    "TC03"
+   ],
+   "tools": []
+  },
+  {
+   "id": "AC04",
+   "type": "TY01",
+   "label": "Order / request",
+   "covers": "Place order; request consult, bed, transport",
+   "minWho": 1,
+   "toWhere": false,
+   "io": "Output",
+   "tech": [
+    "TC08",
+    "TC12"
+   ],
+   "tools": []
+  },
+  {
+   "id": "AC05",
+   "type": "TY01",
+   "label": "Document",
+   "covers": "Write note, recommendation, report, screen result, MAR",
+   "minWho": 1,
+   "toWhere": false,
+   "io": "Output",
+   "tech": [
+    "TC08"
+   ],
+   "tools": []
+  },
+  {
+   "id": "AC06",
+   "type": "TY01",
+   "label": "Notify",
+   "covers": "Send message / page, activate alert",
+   "minWho": 1,
+   "toWhere": false,
+   "io": "Output",
+   "tech": [
+    "TC04",
+    "TC02",
+    "TC06"
+   ],
+   "tools": [
+    "TL01"
+   ]
+  },
+  {
+   "id": "AC07",
+   "type": "TY01",
+   "label": "Decide / verify",
+   "covers": "Treatment, imaging, disposition decision; pharmacist verifies order",
+   "minWho": 1,
+   "toWhere": false,
+   "io": "Both",
+   "tech": [],
+   "tools": []
+  },
+  {
+   "id": "AS01",
+   "type": "TY02",
+   "label": "Move patient",
+   "covers": "Patient moves from → to; every role in who moves with the patient",
+   "minWho": 1,
+   "toWhere": true,
+   "io": "None",
+   "tech": [],
+   "tools": [
+    "TL06"
+   ]
+  },
+  {
+   "id": "AS02",
+   "type": "TY02",
+   "label": "Go to",
+   "covers": "Staff travels without the patient (to see patient, fetch, deliver)",
+   "minWho": 1,
+   "toWhere": true,
+   "io": "None",
+   "tech": [],
+   "tools": []
+  },
+  {
+   "id": "AS03",
+   "type": "TY02",
+   "label": "Assess",
+   "covers": "Exam / NIHSS, triage screen, swallow screen, vitals",
+   "minWho": 1,
+   "toWhere": false,
+   "io": "Output",
+   "tech": [
+    "TC01",
+    "TC03"
+   ],
+   "tools": [
+    "TL05",
+    "TL03"
+   ]
+  },
+  {
+   "id": "AS04",
+   "type": "TY02",
+   "label": "Treat",
+   "covers": "Give medication, IV, other bedside care",
+   "minWho": 1,
+   "toWhere": false,
+   "io": "Input",
+   "tech": [
+    "TC01"
+   ],
+   "tools": [
+    "TL03",
+    "TL02"
+   ]
+  },
+  {
+   "id": "AS05",
+   "type": "TY02",
+   "label": "Image",
+   "covers": "Position patient on scanner table + acquire CT / MRI (scanner = fixed tool picked at where)",
+   "minWho": 1,
+   "toWhere": false,
+   "io": "Output",
+   "tech": [],
+   "tools": [
+    "TL06"
+   ]
+  },
+  {
+   "id": "AS06",
+   "type": "TY02",
+   "label": "Fetch",
+   "covers": "Retrieve medication / supplies / tele-cart at a point (ADC, supply room, pharmacy pickup)",
+   "minWho": 1,
+   "toWhere": false,
+   "io": "Input",
+   "tech": [
+    "TC11"
+   ],
+   "tools": [
+    "TL05",
+    "TL03"
+   ]
+  },
+  {
+   "id": "AS07",
+   "type": "TY02",
+   "label": "Prepare",
+   "covers": "Set up supplies, prepare / dispense meds, clean room or scanner",
+   "minWho": 1,
+   "toWhere": false,
+   "io": "None",
+   "tech": [],
+   "tools": [
+    "TL03"
+   ]
+  },
+  {
+   "id": "A99",
+   "type": "both",
+   "label": "Other",
+   "covers": "Anything else; type a note",
+   "minWho": 1,
+   "toWhere": false,
+   "io": "None",
+   "tech": [],
+   "tools": []
+  }
+ ],
+ "tools": [
+  {
+   "id": "TL01",
+   "label": "Personal mobile phone",
+   "mobility": "Portable"
+  },
+  {
+   "id": "TL02",
+   "label": "Barcode scanner",
+   "mobility": "Portable"
+  },
+  {
+   "id": "TL03",
+   "label": "Supplies(Medcup/ Water/ Syringes/tubing/Smart IV Pump)",
+   "mobility": "Portable"
+  },
+  {
+   "id": "TL04",
+   "label": "WOW (workstation on wheels)",
+   "mobility": "Mobile"
+  },
+  {
+   "id": "TL05",
+   "label": "Tele-cart",
+   "mobility": "Mobile"
+  },
+  {
+   "id": "TL06",
+   "label": "Stretcher / bed",
+   "mobility": "Mobile"
+  },
+  {
+   "id": "TL07",
+   "label": "Workstation",
+   "mobility": "Fixed"
+  },
+  {
+   "id": "TL08",
+   "label": "ADC (Pyxis / Omnicell)",
+   "mobility": "Fixed"
+  },
+  {
+   "id": "TL09",
+   "label": "Badge / biometric reader",
+   "mobility": "Fixed"
+  },
+  {
+   "id": "TL10",
+   "label": "CT",
+   "mobility": "Fixed"
+  },
+  {
+   "id": "TL11",
+   "label": "MRI",
+   "mobility": "Fixed"
+  },
+  {
+   "id": "TL99",
+   "label": "Other (specify)",
+   "mobility": "—"
+  }
+ ],
+ "tech": [
+  {
+   "id": "TC01",
+   "label": "In-person",
+   "LMH": "",
+   "WCM": ""
+  },
+  {
+   "id": "TC02",
+   "label": "Phone call",
+   "LMH": "",
+   "WCM": ""
+  },
+  {
+   "id": "TC03",
+   "label": "Video call",
+   "LMH": "",
+   "WCM": ""
+  },
+  {
+   "id": "TC04",
+   "label": "Message",
+   "LMH": "",
+   "WCM": ""
+  },
+  {
+   "id": "TC05",
+   "label": "Email",
+   "LMH": "",
+   "WCM": ""
+  },
+  {
+   "id": "TC06",
+   "label": "Overhead page",
+   "LMH": "",
+   "WCM": ""
+  },
+  {
+   "id": "TC07",
+   "label": "System Notification Center",
+   "LMH": "",
+   "WCM": ""
+  },
+  {
+   "id": "TC08",
+   "label": "EPIC-EHR",
+   "LMH": "",
+   "WCM": ""
+  },
+  {
+   "id": "TC09",
+   "label": "EPIC-PACS / image viewer",
+   "LMH": "",
+   "WCM": ""
+  },
+  {
+   "id": "TC10",
+   "label": "Interpreter system",
+   "LMH": "",
+   "WCM": ""
+  },
+  {
+   "id": "TC11",
+   "label": "ADC system",
+   "LMH": "",
+   "WCM": ""
+  },
+  {
+   "id": "TC12",
+   "label": "Bed / transport management system",
+   "LMH": "",
+   "WCM": ""
+  },
+  {
+   "id": "TC99",
+   "label": "Other (specify)",
+   "LMH": "",
+   "WCM": ""
+  }
+ ],
+ "info": [
+  {
+   "id": "IA01",
+   "label": "Stroke alert"
+  },
+  {
+   "id": "IA02",
+   "label": "Imaging order"
+  },
+  {
+   "id": "IA03",
+   "label": "Imaging Result"
+  },
+  {
+   "id": "IA04",
+   "label": "Consult note / recommendation"
+  },
+  {
+   "id": "IA05",
+   "label": "Medication order"
+  },
+  {
+   "id": "IA06",
+   "label": "Dysphagia screen result"
+  },
+  {
+   "id": "IA07",
+   "label": "Medication administration record"
+  },
+  {
+   "id": "IA08",
+   "label": "Admission / bed request"
+  },
+  {
+   "id": "IA09",
+   "label": "Bed assignment"
+  },
+  {
+   "id": "IA10",
+   "label": "Transport request"
+  },
+  {
+   "id": "IA11",
+   "label": "Handoff note / message"
+  },
+  {
+   "id": "IA12",
+   "label": "Patient history / last known well"
+  },
+  {
+   "id": "IA13",
+   "label": "Discharge instructions"
+  },
+  {
+   "id": "IA99",
+   "label": "Other (specify)"
+  }
+ ],
+ "conditions": [
+  {
+   "id": "C01",
+   "category": "Time",
+   "label": "Time block",
+   "values": [
+    "Weekday day",
+    "Weekday afternoon",
+    "Night",
+    "Weekend"
+   ],
+   "typical": "Tele vs on-site neuro; scanner closed; different staff"
+  },
+  {
+   "id": "C02",
+   "category": "Labor",
+   "label": "Shift handoff happening",
+   "values": [
+    "Yes",
+    "No"
+   ],
+   "typical": "Adds handoff action; incoming clinician becomes Who"
+  },
+  {
+   "id": "C03",
+   "category": "Labor",
+   "label": "Neurology mode",
+   "values": [
+    "On-site",
+    "Tele"
+   ],
+   "typical": "Who → tele-neurologist; Where → Off-site; channel → Video; device → Tele-cart"
+  },
+  {
+   "id": "C04",
+   "category": "Labor",
+   "label": "Clinician handling other",
+   "values": [
+    "seeing patient",
+    "in office"
+   ],
+   "typical": "starting point change"
+  },
+  {
+   "id": "C05",
+   "category": "Facility",
+   "label": "CT availability",
+   "values": [
+    "Open",
+    "In use",
+    "Down"
+   ],
+   "typical": "Wait location or alternate scanner"
+  },
+  {
+   "id": "C06",
+   "category": "Facility",
+   "label": "MRI availability",
+   "values": [
+    "Open",
+    "In use",
+    "Closed"
+   ],
+   "typical": "Wait location; admission to get MRI"
+  },
+  {
+   "id": "C07",
+   "category": "Facility",
+   "label": "Bed availability",
+   "values": [
+    "Available",
+    "Not available"
+   ],
+   "typical": "Patient stays in ED; different destination"
+  },
+  {
+   "id": "C08",
+   "category": "Facility",
+   "label": "Tele-cart availability",
+   "values": [
+    "Open",
+    "Down",
+    "In use"
+   ],
+   "typical": "Adds Carry item (tele-cart)"
+  },
+  {
+   "id": "C09",
+   "category": "Clinical",
+   "label": "Severity",
+   "values": [
+    "A",
+    "B",
+    "C"
+   ],
+   "typical": "Severe → different team and pathway"
+  },
+  {
+   "id": "C10",
+   "category": "Clinical",
+   "label": "Admitted",
+   "values": [
+    "Yes",
+    "No"
+   ],
+   "typical": "Admission order, transport to unit vs discharge"
+  },
+  {
+   "id": "C11",
+   "category": "Clinical",
+   "label": "Main problem is neuro (if admitted)",
+   "values": [
+    "Yes",
+    "No"
+   ],
+   "typical": "Neuro unit vs medicine ward; admitting team"
+  },
+  {
+   "id": "C12",
+   "category": "Clinical",
+   "label": "Swallow screen result",
+   "values": [
+    "Pass",
+    "Fail"
+   ],
+   "typical": "Oral meds held / alternate route"
+  },
+  {
+   "id": "C99",
+   "category": "Other",
+   "label": "Other (specify)",
+   "values": [],
+   "typical": ""
+  }
+ ]
+};
+
+</script>
+<script>
+/* Walkthrough Recorder v4 — snapshot model (option sets v3, pilot-validated).
+   Session → Event (one snapshot, saved by Next) → Entry. Every entry is carried into the next snapshot;
+   the observer edits only what changed. Branch = copy of a snapshot under a condition.
+   Standalone: no site library import needed. Site bubble diagram is reserved (import later). */
+(() => {
+'use strict';
+const O = window.OPTS;
+const KEY = 'wtrec-v4';
+const SPECIAL = { DIGITAL: 'Digital (no physical spot)', TRANSIT: 'In transit (with patient)' };
+const byId = {};
+['types', 'roles', 'actions', 'tools', 'tech', 'info', 'conditions'].forEach(k => O[k].forEach(x => { byId[x.id] = x; }));
+const OTHER = id => /99$/.test(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const iso = () => new Date().toISOString();
+const pad = (n, w) => String(n).padStart(w, '0');
+const clone = o => JSON.parse(JSON.stringify(o));
+
+/* ---------- storage (IndexedDB, localStorage fallback) ---------- */
+const store = (() => {
+  let dbp;
+  const open = () => dbp || (dbp = new Promise((res, rej) => { try { const r = indexedDB.open('wtrec', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); } catch (e) { rej(e); } }));
+  return {
+    async get(k) { try { const db = await open(); return await new Promise((res, rej) => { const q = db.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }); } catch (e) { try { return JSON.parse(localStorage.getItem(k)); } catch (e2) { return null; } } },
+    async set(k, v) { try { const db = await open(); await new Promise((res, rej) => { const t = db.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, k); t.oncomplete = res; t.onerror = () => rej(t.error); }); return true; } catch (e) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e2) { return false; } } }
+  };
+})();
+
+let S = { v: 4, sessions: [], cur: null, observers: [], points: { LMH: [], WCM: [] }, diagrams: { LMH: null, WCM: null } };
+const ui = { view: 'record', sel: 'draft', ei: -1, pm: 'where' };
+let saveT;
+function save() {
+  clearTimeout(saveT);
+  saveT = setTimeout(async () => {
+    const ok = await store.set(KEY, S);
+    document.getElementById('saved').textContent = ok ? 'Saved on this device ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '⚠ Not saved';
+  }, 250);
+}
+
+/* ---------- helpers ---------- */
+const sess = () => S.sessions.find(s => s.session_id === S.cur) || null;
+const evs = () => (sess() ? sess().events : []);
+const findEv = id => evs().find(e => e.event_id === id);
+const allEntries = () => evs().flatMap(e => e.entries);
+function snap() {
+  const s = sess(); if (!s) return null;
+  if (ui.sel === 'draft') return { draft: true, entries: s.draft.entries, obj: s.draft };
+  const e = findEv(ui.sel); if (!e) { ui.sel = 'draft'; return snap(); }
+  return { draft: false, entries: e.entries, obj: e, ev: e };
+}
+const curEntry = () => { const sn = snap(); return sn && sn.entries[ui.ei] || null; };
+const roleKeyLabel = k => { const [rid, n] = k.split('#'); return (byId[rid] ? byId[rid].label : rid) + ' #' + n; };
+function sitePoints(site) {
+  const d = S.diagrams[site];
+  return [...((d && d.points) || []).map(p => ({ ...p, fromDiagram: true })), ...(S.points[site] || [])];
+}
+function ptLabel(id) {
+  if (!id) return '';
+  if (SPECIAL[id]) return id === 'DIGITAL' ? 'Digital' : 'In transit';
+  const s = sess(); const p = s && sitePoints(s.site).find(p => p.id === id);
+  return p ? p.label : id;
+}
+function lbl(id, e) {
+  if (!id) return '';
+  const base = byId[id] ? byId[id].label : id;
+  return OTHER(id) && e && e.other && e.other[id] ? base.replace(/ \(specify\)/, '') + ': ' + e.other[id] : base;
+}
+function sig(e) {
+  return JSON.stringify([e.type, e.where_point_id, [...e.who].sort(), e.action_id, e.to_point_id, [...e.tool_ids].sort(), [...e.technology_ids].sort(),
+    e.info.map(i => i.id + ':' + i.io).sort(), Object.entries(e.other || {}).sort(), e.note || '']);
+}
+const srcOf = e => (e.carried_from_entry_id ? allEntries().find(x => x.entry_id === e.carried_from_entry_id) : null);
+function touch(e) { const s = srcOf(e); e.changed = !s || sig(s) !== sig(e) ? 'Y' : 'N'; save(); }
+function issues(e) {
+  const out = [];
+  if (!e.type) out.push('type');
+  if (!e.where_point_id) out.push('where');
+  if (!e.who.length) out.push('who');
+  if (!e.action_id) out.push('action');
+  const a = byId[e.action_id];
+  if (a && e.who.length < a.minWho) out.push(a.label + ' needs 2+ roles');
+  if (a && a.toWhere && !e.to_point_id) out.push('to where');
+  [...e.who.map(k => k.split('#')[0]), e.action_id, ...e.tool_ids, ...e.technology_ids, ...e.info.map(i => i.id)]
+    .filter(id => id && OTHER(id) && !(e.other && e.other[id])).forEach(id => out.push('specify "Other"'));
+  return [...new Set(out)];
+}
+function blankEntry(id) {
+  return { entry_id: id, carried_from_entry_id: '', changed: 'Y', type: '', where_point_id: '', who: [], action_id: '', to_point_id: '', tool_ids: [], technology_ids: [], info: [], other: {}, note: '' };
+}
+/* main-path events before the given snapshot (for "last spot" defaults) */
+function eventsBefore(sn) {
+  const main = evs().filter(e => !e.branch_of_event_id);
+  if (sn.draft) return main;
+  const ev = sn.ev; const anchor = ev.branch_of_event_id ? findEv(rootOf(ev)) : ev;
+  const list = main.filter(e => e.seq < anchor.seq);
+  if (ev.branch_of_event_id) list.push(findEv(ev.branch_of_event_id));
+  return list.filter(Boolean);
+}
+function rootOf(ev) { let e = ev; while (e && e.branch_of_event_id) e = findEv(e.branch_of_event_id); return e ? e.event_id : ev.event_id; }
+function lastSpot(sn, key) {
+  const list = eventsBefore(sn);
+  for (let i = list.length - 1; i >= 0; i--) {
+    const hit = [...list[i].entries].reverse().find(x => x.who.includes(key));
+    if (hit) return hit.to_point_id || hit.where_point_id;
+  }
+  return '';
+}
+function nextEntryId(sn) {
+  if (sn.draft) { sess().draft.n = (sess().draft.n || 0) + 1; return 'D' + sess().draft.n; }
+  const nums = sn.entries.map(x => +((x.entry_id.match(/-N(\d+)$/) || [])[1] || 0));
+  return sn.ev.event_id + '-N' + pad(Math.max(0, ...nums) + 1, 2);
+}
+function sessionId(site) {
+  const d = new Date(); const day = d.getFullYear() + pad(d.getMonth() + 1, 2) + pad(d.getDate(), 2);
+  const pre = site + '-' + day + '-';
+  const n = S.sessions.filter(s => s.session_id.startsWith(pre)).length + 1;
+  return pre + pad(n, 2);
+}
+
+/* ---------- dialogs ---------- */
+function toast(msg) { let t = document.getElementById('toast'); if (!t) { t = document.createElement('div'); t.id = 'toast'; document.body.appendChild(t); } t.textContent = msg; t.className = 'on'; clearTimeout(t._h); t._h = setTimeout(() => { t.className = ''; }, 2600); }
+function dialog(html, onMount) {
+  return new Promise(res => {
+    const bg = document.createElement('div'); bg.className = 'dlg-bg'; bg.innerHTML = '<div class="dlg">' + html + '</div>';
+    document.body.appendChild(bg);
+    const done = v => { bg.remove(); res(v); };
+    bg.addEventListener('click', ev => { if (ev.target === bg) done(null); });
+    onMount(bg.querySelector('.dlg'), done);
+  });
+}
+function ask(text, value = '', ph = '') {
+  return dialog(`<p>${esc(text)}</p><input type="text" value="${esc(value)}" placeholder="${esc(ph)}"><div class="dlg-act"><button class="btn" data-x>Cancel</button><button class="btn primary" data-ok>OK</button></div>`, (d, done) => {
+    const i = d.querySelector('input'); setTimeout(() => i.focus(), 30);
+    d.querySelector('[data-x]').onclick = () => done(null);
+    d.querySelector('[data-ok]').onclick = () => done(i.value.trim() || null);
+    i.onkeydown = ev => { if (ev.key === 'Enter') done(i.value.trim() || null); };
+  });
+}
+function confirmDlg(text, ok = 'OK', danger = false) {
+  return dialog(`<p>${esc(text)}</p><div class="dlg-act"><button class="btn" data-x>Cancel</button><button class="btn primary${danger ? ' danger' : ''}" data-ok>${esc(ok)}</button></div>`, (d, done) => {
+    d.querySelector('[data-x]').onclick = () => done(false); d.querySelector('[data-ok]').onclick = () => done(true);
+  });
+}
+function condDlg(init = {}) {
+  let cid = init.condition_id || '', val = init.condition_value || '';
+  const body = () => {
+    const c = byId[cid];
+    const groups = [...new Set(O.conditions.map(c => c.category))];
+    return `<p><b>Branch condition</b><br><span class="small muted">Which condition makes this snapshot differ? Pick one, then its value.</span></p>`
+      + groups.map(g => `<div class="grp">${esc(g)}</div><div class="chips">` + O.conditions.filter(c => c.category === g).map(c => `<button class="chip${c.id === cid ? ' on' : ''}" data-c="${c.id}"><i>${c.id}</i>${esc(c.label)}</button>`).join('') + '</div>').join('')
+      + (c ? `<div class="grp">Value</div><div class="chips">` + c.values.map(v => `<button class="chip${v === val ? ' on' : ''}" data-v="${esc(v)}">${esc(v)}</button>`).join('')
+        + `</div><input type="text" data-free placeholder="${c.values.length ? 'or type another value' : 'type the condition and value'}" value="${esc(c.values.includes(val) ? '' : val)}">`
+        + (c.typical ? `<p class="small muted" style="margin-top:8px">Typical adjustment: ${esc(c.typical)}</p>` : '') : '')
+      + `<div class="dlg-act"><button class="btn" data-x>Cancel</button><button class="btn primary" data-ok ${cid && val ? '' : 'disabled'}>Save</button></div>`;
+  };
+  return dialog(body(), (d, done) => {
+    const wire = () => {
+      d.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { cid = b.dataset.c; val = ''; d.innerHTML = body(); wire(); });
+      d.querySelectorAll('[data-v]').forEach(b => b.onclick = () => { val = b.dataset.v; d.innerHTML = body(); wire(); });
+      const f = d.querySelector('[data-free]'); if (f) f.oninput = () => { val = f.value.trim(); d.querySelector('[data-ok]').disabled = !(cid && val); };
+      d.querySelector('[data-x]').onclick = () => done(null);
+      d.querySelector('[data-ok]').onclick = () => done({ condition_id: cid, condition_value: val });
+    };
+    wire();
+  });
+}
+
+/* ---------- render ---------- */
+const $main = () => document.getElementById('main');
+function render() {
+  const s = sess();
+  document.getElementById('sid').textContent = s ? s.session_id + ' · ' + s.observer : '';
+  document.getElementById('tabs').innerHTML = [['record', 'Record'], ['data', 'Data'], ['session', 'Session & export']]
+    .map(([k, l]) => `<button class="${ui.view === k ? 'on' : ''}" data-act="view" data-v="${k}">${l}</button>`).join('');
+  if (!s && ui.view !== 'session') ui.view = 'session';
+  $main().innerHTML = ui.view === 'record' ? vRecord() : ui.view === 'data' ? vData() : vSession();
+}
+
+function vRecord() {
+  const s = sess(), sn = snap();
+  return `<div class="rec"><aside class="tl">${vTimeline()}</aside><section>${vScene(sn)}</section><aside class="ed">${vEditor(sn)}</aside></div>`;
+}
+function evCard(e) {
+  const n = e.entries.length, c = e.entries.filter(x => x.changed === 'Y').length;
+  const cond = e.branch_of_event_id ? `<div class="c">${esc(e.condition_id)} ${esc(byId[e.condition_id] ? byId[e.condition_id].label : '')} = ${esc(e.condition_value)}</div>` : '';
+  return `<button class="ev${e.branch_of_event_id ? ' br' : ''}${ui.sel === e.event_id ? ' on' : ''}" data-act="sel" data-v="${e.event_id}"><b>${esc(e.event_id.replace(sess().session_id + '-', ''))}</b><div class="m">${n} entr${n === 1 ? 'y' : 'ies'} · ${c} changed</div>${cond}</button>`;
+}
+function vTimeline() {
+  const s = sess(); const main = s.events.filter(e => !e.branch_of_event_id);
+  const kids = id => s.events.filter(e => e.branch_of_event_id === id);
+  const walk = e => evCard(e) + kids(e.event_id).map(walk).join('');
+  const dn = s.draft.entries.length;
+  return `<div class="tlh">Snapshots</div>` + main.map(walk).join('')
+    + `<button class="ev draft${ui.sel === 'draft' ? ' on' : ''}" data-act="sel" data-v="draft"><b>Now · E${pad(main.length + 1, 3)}</b><div class="m">draft · ${dn} entr${dn === 1 ? 'y' : 'ies'}</div></button>`;
+}
+function vScene(sn) {
+  const s = sess();
+  const main = s.events.filter(e => !e.branch_of_event_id);
+  const title = sn.draft ? 'E' + pad(main.length + 1, 3) : sn.ev.event_id.replace(s.session_id + '-', '');
+  const tags = sn.draft ? '<span class="tag draft">draft · not saved yet</span>' : sn.ev.branch_of_event_id ? `<span class="tag br">branch of ${esc(sn.ev.branch_of_event_id.replace(s.session_id + '-', ''))}</span>` : '<span class="tag">saved</span>';
+  let h = `<div class="scene-h"><h2>${esc(title)}</h2>${tags}<span class="small muted">${sn.entries.length} entries happen at the same time</span></div>`;
+  if (!sn.draft && sn.ev.branch_of_event_id) {
+    const c = byId[sn.ev.condition_id];
+    h += `<div class="cond"><b>Condition</b><span>${esc(sn.ev.condition_id)} ${esc(c ? c.label : '')} = <b style="color:inherit;letter-spacing:0;text-transform:none;font:600 13px Inter">${esc(sn.ev.condition_value)}</b></span><button class="btn sm" data-act="cond-edit">Change</button></div>`;
+  }
+  if (sn.draft && !main.length && !sn.entries.length) h += `<div class="hint">Describe the first scene. One entry per person (or group) doing one thing: <b>+ Entry</b>, then Type → Where → Who → Action. <b>Next</b> saves the snapshot and carries every entry forward, so next time you only edit what changed.</div>`;
+  else if (sn.draft && main.length) h += `<div class="hint">Carried from the last snapshot. Edit only what changed, remove entries that ended, add new ones. Edited entries are marked <span class="kd chg">CHANGED</span>.</div>`;
+  if (!sn.draft && sn.ev.branch_of_event_id) h += `<div class="hint">Copy of the parent snapshot. Edit only what differs under this condition.</div>`;
+  h += sn.entries.map((e, i) => entCard(e, i)).join('') || '<p class="muted small">No entries yet.</p>';
+  h += `<div class="scene-f"><button class="btn" data-act="add">+ Entry</button>`;
+  if (sn.draft) h += `<span class="grow"></span><button class="btn br" data-act="branch">Branch…</button><button class="btn primary big" data-act="next">Next ▸</button>`;
+  else h += `<button class="btn br" data-act="branch">Branch…</button><span class="grow"></span><button class="btn danger" data-act="del-ev">Delete snapshot</button><button class="btn dark" data-act="sel" data-v="draft">Back to now</button>`;
+  h += `</div><label class="field"><span>Snapshot note</span><textarea data-in="snote" placeholder="Anything about this moment that has no field (expert's words, uncertainty)">${esc(sn.obj.note || '')}</textarea></label>`;
+  return h;
+}
+function entCard(e, i) {
+  const a = byId[e.action_id], t = e.type;
+  const cls = t === 'TY02' ? ' sp' : t ? '' : ' none';
+  const kd = t ? `<span class="kd${t === 'TY02' ? ' sp' : ''}">${t === 'TY02' ? 'SPATIAL' : 'CASE'}</span>` : '';
+  const st = e.changed === 'Y' ? (e.carried_from_entry_id ? '<span class="kd chg">CHANGED</span>' : '<span class="kd chg">NEW</span>') : '<span class="kd car">carried</span>';
+  const who = e.who.map(k => `<span class="tok r">${esc(OTHER(k.split('#')[0]) && e.other[k.split('#')[0]] ? e.other[k.split('#')[0]] + ' #' + k.split('#')[1] : roleKeyLabel(k))}</span>`).join('');
+  const where = esc(ptLabel(e.where_point_id)) + (e.to_point_id ? ' → ' + esc(ptLabel(e.to_point_id)) : '');
+  const tt = [...e.tool_ids, ...e.technology_ids].map(id => `<span class="tok">${esc(lbl(id, e))}</span>`).join('');
+  const inf = e.info.map(x => `<span class="tok ${x.io === 'Output' ? 'io-out' : 'io-in'}">${x.io === 'Output' ? '↗' : '↘'} ${esc(lbl(x.id, e))}</span>`).join('');
+  const iss = issues(e);
+  return `<div class="ent${cls}${ui.ei === i ? ' on' : ''}${e.changed === 'Y' ? ' chg' : ''}" data-act="edit" data-v="${i}">
+    <div class="ent-h">${kd}<span class="act">${a ? esc(lbl(a.id, e)) : '<span class="muted">No action yet</span>'}</span>${st}</div>
+    <div class="ent-l">${who || '<span class="muted">who?</span>'}</div>
+    <div class="ent-l"><span class="lb">where</span>${where || '<span class="muted">—</span>'}</div>
+    ${tt ? `<div class="ent-l"><span class="lb">tools · tech</span>${tt}</div>` : ''}${inf ? `<div class="ent-l"><span class="lb">info</span>${inf}</div>` : ''}
+    ${e.note ? `<div class="ent-l small muted">“${esc(e.note)}”</div>` : ''}
+    ${iss.length ? `<div class="warn">Missing: ${esc(iss.join(', '))}</div>` : ''}
+    <button class="btn x danger" data-act="del-ent" data-v="${i}" title="Remove entry">×</button></div>`;
+}
+
+function vDiagram(site, e, needTo) {
+  const d = S.diagrams[site];
+  const pmRow = needTo ? `<div class="pm">Tap on diagram sets <div class="seg"><button class="${ui.pm === 'where' ? 'on' : ''}" data-act="pm" data-v="where">Where</button><button class="${ui.pm === 'to' ? 'on' : ''}" data-act="pm" data-v="to">To</button></div></div>` : '';
+  const pts = d && d.points ? d.points.filter(p => p.x != null && p.y != null) : [];
+  if (!d || !(pts.length || (d.bubbles || []).length)) {
+    return `<div class="dia empty"><div><b>SITE BUBBLE DIAGRAM · ${esc(site)}</b>Reserved. The diagram data is still being prepared.<br>Pick a point from the list below for now; points you add here will be mapped onto the diagram later.</div></div>`;
+  }
+  const W = d.width || 1000, H = d.height || 620;
+  const bub = (d.bubbles || []).map(b => `<g><rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="${Math.min(b.w, b.h) / 2.6}" fill="${b.kind === 'corridor' ? '#e4e7eb' : '#fff'}" stroke="#b9c2ca" stroke-width="2"/><text x="${b.x + b.w / 2}" y="${b.y + b.h / 2 + 5}" text-anchor="middle" font-size="15" fill="#4a5661" font-family="Inter">${esc(b.label || '')}</text></g>`).join('');
+  const lk = (d.links || []).map(l => { const a = (d.bubbles || []).find(b => b.id === l.from), b = (d.bubbles || []).find(b => b.id === l.to); return a && b ? `<line x1="${a.x + a.w / 2}" y1="${a.y + a.h / 2}" x2="${b.x + b.w / 2}" y2="${b.y + b.h / 2}" stroke="#9aa4ae" stroke-width="3" ${l.restricted ? 'stroke-dasharray="8 6"' : ''}/>` : ''; }).join('');
+  const dots = pts.map(p => { const on = e && (e.where_point_id === p.id || e.to_point_id === p.id); const tool = p.tool_id; return `<g class="pt" data-act="dpt" data-v="${esc(p.id)}"><circle cx="${p.x}" cy="${p.y}" r="22" fill="transparent"/>${tool ? `<rect x="${p.x - 9}" y="${p.y - 9}" width="18" height="18" rx="3" fill="${on ? '#d9a520' : '#6b63c4'}"/>` : `<circle cx="${p.x}" cy="${p.y}" r="10" fill="${on ? '#d9a520' : '#1c9c8c'}"/>`}<text x="${p.x}" y="${p.y - 15}" text-anchor="middle" font-size="13" fill="#1f2a33" font-family="Inter">${esc(p.label)}</text>${e && e.to_point_id === p.id ? `<text x="${p.x}" y="${p.y + 28}" text-anchor="middle" font-size="12" font-weight="600" fill="#b45a1c">TO</text>` : ''}</g>`; }).join('');
+  return pmRow + `<div class="dia"><svg viewBox="0 0 ${W} ${H}">${lk}${bub}${dots}</svg></div>`;
+}
+function pointChips(site, cur, act) {
+  const pts = sitePoints(site);
+  return `<div class="chips">` + Object.keys(SPECIAL).map(k => `<button class="chip sp${cur === k ? ' on' : ''}" data-act="${act}" data-v="${k}">${esc(SPECIAL[k])}</button>`).join('')
+    + pts.map(p => `<button class="chip${cur === p.id ? ' on' : ''}" data-act="${act}" data-v="${esc(p.id)}">${p.tool_id ? '<i>' + esc(p.tool_id) + '</i>' : ''}${esc(p.label)}${p.provisional ? ' <i>temp</i>' : ''}</button>`).join('')
+    + `<button class="chip add" data-act="new-pt" data-v="${act}">+ New point</button></div>`;
+}
+function vEditor(sn) {
+  const e = curEntry(), s = sess();
+  if (!e) return `<div class="card"><p class="muted">Tap an entry to edit it, or <b>+ Entry</b> to add one.</p><p class="small muted">Entry = who is where, doing which action, with which tools, technology and information.</p></div>`;
+  const a = byId[e.action_id];
+  const done = { 1: !!e.type, 2: !!e.where_point_id, 3: e.who.length > 0, 4: !!e.action_id && (!a || !a.toWhere || !!e.to_point_id), 5: e.tool_ids.length + e.technology_ids.length > 0, 6: e.info.length > 0 };
+  const sh = (n, t, r = '') => `<div class="sh"><span class="n${done[n] ? ' ok' : ''}">${n}</span>${t}${r ? `<span class="r">${r}</span>` : ''}</div>`;
+  let h = `<div class="card"><div class="ed-h"><h3>Entry ${ui.ei + 1}</h3>${e.changed === 'Y' ? '<span class="kd chg">' + (e.carried_from_entry_id ? 'CHANGED' : 'NEW') + '</span>' : '<span class="kd car">carried, unchanged</span>'}</div>`;
+  // 1 type
+  h += `<div class="sec">${sh(1, 'Type')}<div class="seg">` + O.types.map(t => `<button class="${e.type === t.id ? 'on' + (t.id === 'TY02' ? ' sp' : '') : ''}" data-act="type" data-v="${t.id}">${esc(t.label)}</button>`).join('') + `</div></div>`;
+  // 2 where
+  h += `<div class="sec">${sh(2, 'Where', 'space or fixed tool')}${vDiagram(s.site, e, a && a.toWhere)}${pointChips(s.site, e.where_point_id, 'where')}</div>`;
+  // 3 who
+  const groups = [...new Set(O.roles.map(r => r.group))];
+  h += `<div class="sec">${sh(3, 'Who', '2+ roles = interaction')}<div class="sel">` + e.who.map(k => { const rid = k.split('#')[0]; return `<span class="stok">${esc(OTHER(rid) && e.other[rid] ? e.other[rid] : byId[rid].label)}<button class="inst" data-act="who-cyc" data-v="${k}" title="Change person number">#${k.split('#')[1]}</button><button data-act="who-del" data-v="${k}">×</button></span>`; }).join('')
+    + (e.who.length ? '' : '<span class="small muted">Tap roles below. Tap #1 to switch to #2 for a second person with the same role.</span>') + `</div><div class="chips">`
+    + groups.map(g => `<div class="grp">${esc(g)}</div>` + O.roles.filter(r => r.group === g).map(r => `<button class="chip${e.who.some(k => k.startsWith(r.id + '#')) ? ' on' : ''}" data-act="who-add" data-v="${r.id}">${esc(r.label)}</button>`).join('')).join('') + `</div></div>`;
+  // 4 action
+  const acts = O.actions.filter(x => x.type === e.type || x.type === 'both');
+  h += `<div class="sec">${sh(4, 'Action')}` + (e.type ? `<div class="acts">` + acts.map(x => `<button class="${e.action_id === x.id ? 'on' : ''}" data-act="action" data-v="${x.id}"><b>${esc(x.id === e.action_id ? lbl(x.id, e) : x.label)}</b><span>${esc(x.covers)}</span></button>`).join('') + `</div>` : '<p class="small muted">Pick a type first.</p>');
+  if (a && a.toWhere) h += `<div class="grp" style="margin-top:8px">To where (from = where)</div>${pointChips(s.site, e.to_point_id, 'to')}`;
+  h += `</div>`;
+  // 5 tools + tech
+  const sugT = a ? a.tools : [], sugC = a ? a.tech : [];
+  h += `<div class="sec">${sh(5, 'Tools + technology', 'dashed = suggested by action')}<div class="grp">Portable / mobile tools</div><div class="chips">`
+    + O.tools.filter(t => t.mobility !== 'Fixed').map(t => `<button class="chip${e.tool_ids.includes(t.id) ? ' on' : sugT.includes(t.id) ? ' sug' : ''}" data-act="tool" data-v="${t.id}">${esc(lbl(t.id, e.tool_ids.includes(t.id) ? e : null))}</button>`).join('')
+    + `</div><div class="grp">Communication</div><div class="chips">`
+    + O.tech.filter(t => +t.id.slice(2) <= 6).map(t => `<button class="chip${e.technology_ids.includes(t.id) ? ' on' : sugC.includes(t.id) ? ' sug' : ''}" data-act="tech" data-v="${t.id}">${esc(techLabel(t))}</button>`).join('')
+    + `</div><div class="grp">Systems</div><div class="chips">`
+    + O.tech.filter(t => +t.id.slice(2) > 6).map(t => `<button class="chip${e.technology_ids.includes(t.id) ? ' on' : sugC.includes(t.id) ? ' sug' : ''}" data-act="tech" data-v="${t.id}">${esc(t.id === 'TC99' ? lbl(t.id, e.technology_ids.includes(t.id) ? e : null) : techLabel(t))}</button>`).join('')
+    + `</div><p class="small muted" style="margin:6px 0 0">Fixed tools (workstation, ADC, CT, MRI, badge reader) are picked as Where.</p></div>`;
+  // 6 info
+  h += `<div class="sec">${sh(6, 'Information', 'each one Input or Output')}`
+    + e.info.map(x => `<div class="iorow"><span class="nm">${esc(lbl(x.id, e))}</span><div class="seg"><button class="${x.io === 'Input' ? 'on' : ''}" data-act="io" data-v="${x.id}" data-io="Input">↘ Input</button><button class="${x.io === 'Output' ? 'on out' : ''}" data-act="io" data-v="${x.id}" data-io="Output">↗ Output</button></div><button class="btn sm danger" data-act="info-del" data-v="${x.id}">×</button></div>`).join('')
+    + `<div class="chips" style="margin-top:4px">` + O.info.filter(x => !e.info.some(i => i.id === x.id)).map(x => `<button class="chip" data-act="info" data-v="${x.id}">${esc(x.label)}</button>`).join('') + `</div>`
+    + `<p class="small muted" style="margin:6px 0 0">Output here + Input in a later snapshot = asynchronous hand-over.</p></div>`;
+  h += `<div class="sec"><div class="sh">Note</div><textarea data-in="enote" placeholder="Expert's words, uncertainty, anything without a field">${esc(e.note)}</textarea></div>`;
+  h += `<div class="row"><button class="btn" data-act="dup">Duplicate entry</button><span style="flex:1"></span><button class="btn dark" data-act="close-ed">Done</button></div></div>`;
+  return h;
+}
+function techLabel(t) { const s = sess(); const site = s && s.site; return t[site] ? t.label + ' (' + t[site] + ')' : t.label; }
+
+function vData() {
+  const s = sess(); if (!s) return '';
+  const rows = s.events.flatMap(ev => ev.entries.map(e => ({ ev, e })));
+  if (!rows.length) return `<div class="card"><p class="muted">No saved snapshots yet. Use <b>Next</b> on the Record tab to save one.</p></div>`;
+  const cell = (v, cls = '') => `<td class="${cls}">${v}</td>`;
+  return `<p class="small muted">Saved snapshots only (the current draft is not included). Tap a row to open it.</p><div class="tscroll"><table class="dt"><thead><tr>
+    <th>Snapshot</th><th>Condition</th><th>Entry</th><th>Chg</th><th>Type</th><th>Where</th><th>Who</th><th>Action</th><th>To</th><th>Tools</th><th>Technology</th><th>Info</th><th>Note</th></tr></thead><tbody>`
+    + rows.map(({ ev, e }, i) => `<tr class="${ev.branch_of_event_id ? 'br' : ''}" data-go="${esc(ev.event_id)}|${ev.entries.indexOf(e)}">`
+      + cell(esc(ev.event_id.replace(s.session_id + '-', ''))) + cell(ev.branch_of_event_id ? esc(ev.condition_id + ' = ' + ev.condition_value) : '')
+      + cell(esc(e.entry_id.replace(ev.event_id + '-', ''))) + cell(e.changed, e.changed === 'Y' ? 'y' : '')
+      + cell(esc(byId[e.type] ? byId[e.type].label : '')) + cell(esc(ptLabel(e.where_point_id))) + cell(esc(e.who.map(roleKeyLabel).join(', ')))
+      + cell(esc(lbl(e.action_id, e))) + cell(esc(ptLabel(e.to_point_id))) + cell(esc(e.tool_ids.map(x => lbl(x, e)).join(', ')))
+      + cell(esc(e.technology_ids.map(x => lbl(x, e)).join(', '))) + cell(esc(e.info.map(x => lbl(x.id, e) + ' (' + (x.io === 'Output' ? 'out' : 'in') + ')').join(', '))) + cell(esc(e.note)) + '</tr>').join('')
+    + `</tbody></table></div>`;
+}
+
+function vSession() {
+  const s = sess();
+  const obsList = `<datalist id="obs">${S.observers.map(o => `<option value="${esc(o)}">`).join('')}</datalist>`;
+  const start = `<div class="card"><h3>New session</h3>
+    <div class="field"><span>Site</span><div class="seg" id="site-seg">${O.sites.map(x => `<button data-act="pick-site" data-v="${x}" class="${ui.newSite === x ? 'on' : ''}">${x}</button>`).join('')}</div></div>
+    <label class="field"><span>Observer (researcher code, not a participant)</span><input type="text" list="obs" data-in="newobs" value="${esc(ui.newObs || '')}" placeholder="e.g. IZ">${obsList}</label>
+    <p class="small muted">Session ID is generated: site-date-number. Roles only, no names. Records stay on this device until you export.</p>
+    <button class="btn primary big" data-act="start" ${ui.newSite && ui.newObs ? '' : 'disabled'}>Start session</button></div>`;
+  if (!s) return `<div class="welcome"><h2>Walkthrough Recorder</h2><p class="muted">Snapshot model · option sets v3 (${esc(O.source)}). Start a session to begin.</p>${start}${vDevice()}</div>`;
+  const nEv = s.events.length, nEn = s.events.reduce((n, e) => n + e.entries.length, 0);
+  const d = S.diagrams[s.site];
+  const pts = S.points[s.site] || [];
+  const used = new Set(S.sessions.filter(x => x.site === s.site).flatMap(x => [...x.events.flatMap(e => e.entries), ...x.draft.entries]).flatMap(e => [e.where_point_id, e.to_point_id]));
+  return `<div class="cols">
+    <div class="card"><h3>Current session</h3>
+      <p><b>${esc(s.session_id)}</b><br><span class="small muted">Site ${esc(s.site)} · observer ${esc(s.observer)} · ${nEv} snapshots · ${nEn} entries</span></p>
+      <div class="row"><button class="btn primary" data-act="export">Export this session</button><button class="btn" data-act="export-all">Back up everything (JSON)</button></div>
+      <p class="small muted">Export = one JSON + events.csv + entries.csv (share sheet → Save to Files). The current draft is not included; press Next first if it holds new work.</p>
+    </div>
+    ${start}
+    <div class="card"><h3>Site points · ${esc(s.site)}</h3>
+      <p class="small muted">Temporary points until the bubble diagram is ready. IDs ${esc(s.site)}-P901… are kept, so records stay valid when the diagram arrives. Set a fixed-tool type for points like CT or a workstation.</p>
+      ${pts.map(p => `<div class="prow"><code>${esc(p.id)}</code><input type="text" data-in="ptlabel" data-v="${esc(p.id)}" value="${esc(p.label)}"><select data-in="pttool" data-v="${esc(p.id)}"><option value="">Space</option>${O.tools.filter(t => t.mobility === 'Fixed').map(t => `<option value="${t.id}" ${p.tool_id === t.id ? 'selected' : ''}>${esc(t.label)}</option>`).join('')}</select><button class="btn sm danger" data-act="pt-del" data-v="${esc(p.id)}" ${used.has(p.id) ? 'disabled title="Used in records"' : ''}>×</button></div>`).join('') || '<p class="small muted">None yet. Add them while recording (+ New point).</p>'}
+      <div class="row"><button class="btn sm" data-act="new-pt" data-v="">+ Add point</button></div>
+    </div>
+    <div class="card"><h3>Site bubble diagram · ${esc(s.site)}</h3>
+      <p>${d ? `<span class="pill ok">Loaded: ${esc(d.name || 'diagram')}</span> ${(d.points || []).length} points, ${(d.bubbles || []).length} bubbles` : '<span class="pill">Reserved, not loaded</span>'}</p>
+      <p class="small muted">The diagram is still being prepared. When ready, import it as JSON: <code>{"site":"${esc(s.site)}","name":"…","width":1000,"height":620,"bubbles":[{"id","label","x","y","w","h","kind"}],"links":[{"from","to","restricted"}],"points":[{"id":"${esc(s.site)}-P001","label","x","y","tool_id"}]}</code></p>
+      <div class="row"><button class="btn" data-act="import-dia">Import diagram JSON</button>${d ? '<button class="btn danger" data-act="clear-dia">Remove</button>' : ''}</div>
+    </div>
+    ${vDevice()}
+  </div>`;
+}
+function vDevice() {
+  return `<div class="card"><h3>Sessions on this device</h3>
+    ${S.sessions.map(x => `<div class="srow${x.session_id === S.cur ? ' on' : ''}"><div class="grow"><b>${esc(x.session_id)}</b><br><span class="small muted">${esc(x.observer)} · ${x.events.length} snapshots${x.exported_at ? ' · exported' : ' · <span style="color:#a32b2b">not exported</span>'}</span></div>${x.session_id === S.cur ? '<span class="pill ok">open</span>' : `<button class="btn sm" data-act="open-s" data-v="${esc(x.session_id)}">Open</button>`}<button class="btn sm danger" data-act="del-s" data-v="${esc(x.session_id)}">Delete</button></div>`).join('') || '<p class="small muted">None.</p>'}
+    <div class="row"><button class="btn" data-act="import">Import JSON (session or backup)</button></div></div>`;
+}
+
+/* ---------- actions ---------- */
+function applyActionDefaults(e, prev, next) {
+  const pa = byId[prev], na = byId[next];
+  const one = arr => (arr && arr.length === 1 ? [...arr] : []);
+  const untouched = (cur, def) => cur.length === 0 || JSON.stringify([...cur].sort()) === JSON.stringify([...one(def)].sort());
+  if (untouched(e.tool_ids, pa && pa.tools)) e.tool_ids = one(na && na.tools);
+  if (untouched(e.technology_ids, pa && pa.tech)) e.technology_ids = one(na && na.tech);
+  if (na && !na.toWhere) e.to_point_id = '';
+}
+const defaultIO = e => { const a = byId[e.action_id]; return a && a.io === 'Output' ? 'Output' : 'Input'; };
+async function needOther(e, id) {
+  if (!OTHER(id)) return true;
+  const t = await ask('Specify “Other”', e.other[id] || '', 'short description');
+  if (!t) return false; e.other[id] = t; return true;
+}
+async function newPoint(site) {
+  const label = await ask('Name the point (space or fixed tool) at ' + site, '', 'e.g. CT 1 control room, triage room 2');
+  if (!label) return null;
+  const list = S.points[site] || (S.points[site] = []);
+  const nums = list.map(p => +p.id.split('-P')[1]);
+  const id = site + '-P' + pad(Math.max(900, ...nums) + 1, 3);
+  list.push({ id, label, tool_id: '', provisional: true });
+  return id;
+}
+function saveSnapshot() {
+  const s = sess(), main = s.events.filter(e => !e.branch_of_event_id);
+  const seq = main.length + 1, id = s.session_id + '-E' + pad(seq, 3);
+  const ev = { event_id: id, session_id: s.session_id, seq, saved_at: iso(), branch_of_event_id: '', condition_id: '', condition_value: '', note: s.draft.note || '', entries: [] };
+  ev.entries = s.draft.entries.map((e, i) => ({ ...clone(e), entry_id: id + '-N' + pad(i + 1, 2), event_id: id }));
+  s.events.push(ev);
+  s.draft = { note: '', n: 0, entries: ev.entries.map(e => ({ ...clone(e), entry_id: 'D' + e.entry_id.slice(-2), event_id: '', carried_from_entry_id: e.entry_id, changed: 'N' })) };
+  s.draft.n = s.draft.entries.length;
+  return ev;
+}
+async function makeBranch(parent) {
+  const s = sess();
+  const init = parent.branch_of_event_id ? { condition_id: parent.condition_id } : {};
+  const c = await condDlg(init); if (!c) return;
+  const n = s.events.filter(e => e.branch_of_event_id === parent.event_id).length + 1;
+  const id = parent.event_id + '-B' + n;
+  const ev = { event_id: id, session_id: s.session_id, seq: parent.seq, saved_at: iso(), branch_of_event_id: parent.event_id, condition_id: c.condition_id, condition_value: c.condition_value, note: '', entries: [] };
+  ev.entries = parent.entries.map((e, i) => ({ ...clone(e), entry_id: id + '-N' + pad(i + 1, 2), event_id: id, carried_from_entry_id: e.entry_id, changed: 'N' }));
+  // insert after the parent's subtree
+  const sub = new Set([parent.event_id]); s.events.forEach(e => { if (sub.has(e.branch_of_event_id)) sub.add(e.event_id); });
+  let at = -1; s.events.forEach((e, i) => { if (sub.has(e.event_id)) at = i; });
+  s.events.splice(at + 1, 0, ev);
+  ui.sel = id; ui.ei = -1; save(); render();
+  toast('Branch ' + id.replace(s.session_id + '-', '') + ' created. Edit only what differs.');
+}
+
+async function onAct(act, v, el) {
+  const s = sess(), sn = snap(), e = curEntry();
+  switch (act) {
+    case 'view': ui.view = v; break;
+    case 'sel': ui.sel = v; ui.ei = -1; break;
+    case 'add': { const ne = blankEntry(nextEntryId(sn)); if (!sn.draft) ne.event_id = sn.ev.event_id; sn.entries.push(ne); ui.ei = sn.entries.length - 1; save(); break; }
+    case 'edit': ui.ei = +v; break;
+    case 'close-ed': ui.ei = -1; break;
+    case 'del-ent': { const x = sn.entries[+v]; if (x.changed === 'Y' || !x.carried_from_entry_id) { if (!(await confirmDlg('Remove this entry from the snapshot?', 'Remove', true))) return; } sn.entries.splice(+v, 1); ui.ei = -1; save(); break; }
+    case 'dup': { const ne = { ...clone(e), entry_id: nextEntryId(sn), carried_from_entry_id: '', changed: 'Y' }; if (!sn.draft) ne.event_id = sn.ev.event_id; sn.entries.splice(ui.ei + 1, 0, ne); ui.ei++; save(); break; }
+    case 'next': {
+      if (!sn.entries.length) { toast('Add at least one entry first.'); return; }
+      const bad = sn.entries.map((x, i) => [i, issues(x)]).filter(([, l]) => l.length);
+      if (bad.length && !(await confirmDlg(`${bad.length} entr${bad.length === 1 ? 'y has' : 'ies have'} missing fields (${bad.map(([i]) => 'entry ' + (i + 1)).join(', ')}). Save the snapshot anyway?`, 'Save anyway'))) return;
+      const ev = saveSnapshot(); ui.ei = -1; save(); toast(ev.event_id.replace(s.session_id + '-', '') + ' saved. Entries carried into the next snapshot.'); break;
+    }
+    case 'branch': {
+      if (sn.draft) {
+        if (!sn.entries.length) { toast('Add at least one entry first.'); return; }
+        if (!(await confirmDlg('Branch saves this snapshot first (like Next), then opens a copy of it under a condition. Continue?', 'Save and branch'))) return;
+        const ev = saveSnapshot(); save(); await makeBranch(ev); return;
+      }
+      await makeBranch(sn.ev); return;
+    }
+    case 'cond-edit': { const c = await condDlg(sn.ev); if (!c) return; Object.assign(sn.ev, c); save(); break; }
+    case 'del-ev': {
+      const kids = s.events.filter(x => x.branch_of_event_id === sn.ev.event_id).length;
+      if (!(await confirmDlg(`Delete snapshot ${sn.ev.event_id.replace(s.session_id + '-', '')}${kids ? ' and its ' + kids + ' branch(es)' : ''}? This cannot be undone.`, 'Delete', true))) return;
+      const gone = new Set([sn.ev.event_id]); s.events.forEach(x => { if (gone.has(x.branch_of_event_id)) gone.add(x.event_id); });
+      s.events = s.events.filter(x => !gone.has(x.event_id)); ui.sel = 'draft'; ui.ei = -1; save(); break;
+    }
+    case 'type': if (e.type !== v) { e.type = v; const a = byId[e.action_id]; if (a && a.type !== v && a.type !== 'both') { applyActionDefaults(e, e.action_id, ''); e.action_id = ''; } touch(e); } break;
+    case 'where': e.where_point_id = e.where_point_id === v ? '' : v; touch(e); break;
+    case 'to': e.to_point_id = e.to_point_id === v ? '' : v; touch(e); break;
+    case 'pm': ui.pm = v; break;
+    case 'dpt': { const a = byId[e.action_id]; if (a && a.toWhere && ui.pm === 'to') e.to_point_id = v; else e.where_point_id = v; touch(e); break; }
+    case 'new-pt': { const id = await newPoint(s.site); if (!id) return; if (e && (v === 'where' || v === 'to')) { if (v === 'where') e.where_point_id = id; else e.to_point_id = id; touch(e); } save(); break; }
+    case 'who-add': {
+      const used = e.who.filter(k => k.startsWith(v + '#')).map(k => +k.split('#')[1]);
+      if (used.length) { e.who = e.who.filter(k => !k.startsWith(v + '#')); touch(e); break; }
+      if (!(await needOther(e, v))) return;
+      const key = v + '#1'; e.who.push(key);
+      if (!e.where_point_id) { const sp = lastSpot(sn, key); if (sp) e.where_point_id = sp; }
+      touch(e); break;
+    }
+    case 'who-cyc': { const [rid, n] = v.split('#'); let m = +n; do { m = m >= 6 ? 1 : m + 1; } while (e.who.includes(rid + '#' + m) && m !== +n); e.who = e.who.map(k => (k === v ? rid + '#' + m : k)); touch(e); break; }
+    case 'who-del': e.who = e.who.filter(k => k !== v); if (OTHER(v.split('#')[0]) && !e.who.some(k => k.startsWith(v.split('#')[0]))) delete e.other[v.split('#')[0]]; touch(e); break;
+    case 'action': {
+      if (e.action_id === v && !OTHER(v)) break;
+      if (!(await needOther(e, v))) return;
+      const prev = e.action_id; e.action_id = v; applyActionDefaults(e, prev, v);
+      e.info.forEach(x => { if (!x._set) x.io = defaultIO(e); });
+      touch(e); break;
+    }
+    case 'tool': case 'tech': {
+      const k = act === 'tool' ? 'tool_ids' : 'technology_ids';
+      if (e[k].includes(v)) { e[k] = e[k].filter(x => x !== v); if (OTHER(v)) delete e.other[v]; }
+      else { if (!(await needOther(e, v))) return; e[k].push(v); }
+      touch(e); break;
+    }
+    case 'info': if (!(await needOther(e, v))) return; e.info.push({ id: v, io: defaultIO(e) }); touch(e); break;
+    case 'io': { const x = e.info.find(i => i.id === v); x.io = el.dataset.io; x._set = 1; touch(e); break; }
+    case 'info-del': e.info = e.info.filter(i => i.id !== v); if (OTHER(v)) delete e.other[v]; touch(e); break;
+    /* session */
+    case 'pick-site': ui.newSite = v; break;
+    case 'start': {
+      const obs = (ui.newObs || '').trim(); if (!ui.newSite || !obs) return;
+      const sid = sessionId(ui.newSite);
+      S.sessions.push({ session_id: sid, site: ui.newSite, observer: obs, started_at: iso(), source: O.source, events: [], draft: { note: '', n: 0, entries: [] } });
+      if (!S.observers.includes(obs)) S.observers.push(obs);
+      S.cur = sid; ui.view = 'record'; ui.sel = 'draft'; ui.ei = -1; ui.newSite = ''; save(); toast('Session ' + sid + ' started.'); break;
+    }
+    case 'open-s': S.cur = v; ui.sel = 'draft'; ui.ei = -1; save(); break;
+    case 'del-s': {
+      const x = S.sessions.find(q => q.session_id === v);
+      if (!(await confirmDlg(`Delete session ${v} (${x.events.length} snapshots)${x.exported_at ? '' : '? It has NOT been exported'}? This cannot be undone.`, 'Delete', true))) return;
+      S.sessions = S.sessions.filter(q => q.session_id !== v); if (S.cur === v) S.cur = S.sessions.length ? S.sessions[S.sessions.length - 1].session_id : null; save(); break;
+    }
+    case 'pt-del': S.points[s.site] = S.points[s.site].filter(p => p.id !== v); save(); break;
+    case 'export': await exportSession(s); break;
+    case 'export-all': await download('walkthrough-backup-' + new Date().toISOString().slice(0, 10) + '.json', JSON.stringify(S, null, 1), 'application/json'); return;
+    case 'import': pickFile('data'); return;
+    case 'import-dia': pickFile('dia'); return;
+    case 'clear-dia': if (await confirmDlg('Remove the loaded diagram? Records keep their point IDs.', 'Remove', true)) { S.diagrams[s.site] = null; save(); } break;
+    default: return;
+  }
+  render();
+}
+
+/* ---------- export / import ---------- */
+const csvq = v => { const t = v == null ? '' : String(v); return /[",\n\r]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+const csv = rows => rows.map(r => r.map(csvq).join(',')).join('\r\n') + '\r\n';
+function sessionPayload(s) {
+  const ids = new Set(s.events.flatMap(e => e.entries).flatMap(e => [e.where_point_id, e.to_point_id]));
+  return { format: 'walkthrough-recorder/v4', option_sets: O.source, exported_at: iso(),
+    session: { session_id: s.session_id, site: s.site, observer: s.observer, started_at: s.started_at },
+    points: sitePoints(s.site).filter(p => ids.has(p.id)).map(p => ({ id: p.id, label: p.label, tool_id: p.tool_id || '', provisional: !!p.provisional })),
+    events: s.events.map(ev => ({ ...ev, entries: ev.entries.map(e => { const o = clone(e); o.info.forEach(i => delete i._set); return o; }) })) };
+}
+async function exportSession(s) {
+  if (!s.events.length) { toast('No saved snapshots yet.'); return; }
+  const p = sessionPayload(s);
+  const evRows = [['session_id', 'site', 'observer', 'event_id', 'seq', 'saved_at', 'branch_of_event_id', 'condition_id', 'condition', 'condition_value', 'n_entries', 'note']]
+    .concat(s.events.map(ev => [s.session_id, s.site, s.observer, ev.event_id, ev.seq, ev.saved_at, ev.branch_of_event_id, ev.condition_id, byId[ev.condition_id] ? byId[ev.condition_id].label : '', ev.condition_value, ev.entries.length, ev.note]));
+  const enRows = [['session_id', 'event_id', 'seq', 'branch_of_event_id', 'condition_id', 'condition_value', 'entry_id', 'carried_from_entry_id', 'changed', 'type', 'where_point_id', 'where_label', 'who', 'who_labels', 'action_id', 'action', 'to_point_id', 'to_label', 'tool_ids', 'technology_ids', 'info', 'other_specified', 'note']]
+    .concat(s.events.flatMap(ev => ev.entries.map(e => [s.session_id, ev.event_id, ev.seq, ev.branch_of_event_id, ev.condition_id, ev.condition_value, e.entry_id, e.carried_from_entry_id, e.changed,
+      byId[e.type] ? byId[e.type].label : '', e.where_point_id, ptLabel(e.where_point_id), e.who.join(';'), e.who.map(roleKeyLabel).join(';'), e.action_id, lbl(e.action_id, e), e.to_point_id, ptLabel(e.to_point_id),
+      e.tool_ids.join(';'), e.technology_ids.join(';'), e.info.map(i => i.id + ':' + i.io).join(';'), Object.entries(e.other || {}).map(([k, v]) => k + '=' + v).join(';'), e.note])));
+  const files = [[s.session_id + '.json', JSON.stringify(p, null, 1), 'application/json'], [s.session_id + '_events.csv', csv(evRows), 'text/csv'], [s.session_id + '_entries.csv', csv(enRows), 'text/csv']];
+  const ok = await downloadMany(files);
+  if (ok) { s.exported_at = iso(); save(); render(); }
+}
+async function downloadMany(files) {
+  try {
+    const fs = files.map(([n, t, ty]) => new File([t], n, { type: ty }));
+    if (navigator.canShare && navigator.canShare({ files: fs }) && 'ontouchend' in document) { await navigator.share({ files: fs }); toast('Shared ' + fs.length + ' files'); return true; }
+  } catch (err) { if (err && err.name === 'AbortError') { toast('Not saved.'); return false; } }
+  for (const [n, t, ty] of files) await download(n, t, ty, true);
+  toast('Downloaded ' + files.length + ' files'); return true;
+}
+async function download(name, text, type, quiet) {
+  if (!quiet) { try { const f = new File([text], name, { type }); if (navigator.canShare && navigator.canShare({ files: [f] }) && 'ontouchend' in document) { await navigator.share({ files: [f] }); toast('Shared ' + name); return; } } catch (e) { if (e && e.name === 'AbortError') { toast('Not saved.'); return; } } }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  if (!quiet) toast('Downloaded ' + name);
+  await new Promise(r => setTimeout(r, 300));
+}
+let pickMode = '';
+function pickFile(mode) { pickMode = mode; const f = document.getElementById('file-json'); f.value = ''; f.click(); }
+document.getElementById('file-json').addEventListener('change', async ev => {
+  const f = ev.target.files[0]; if (!f) return;
+  try {
+    const j = JSON.parse(await f.text());
+    if (pickMode === 'dia') {
+      const s = sess(); const site = j.site || s.site;
+      if (site !== s.site && !(await confirmDlg(`This diagram is for ${site}, the session is ${s.site}. Load it for ${site}?`, 'Load'))) return;
+      if (!Array.isArray(j.points) && !Array.isArray(j.bubbles)) throw new Error('needs "points" or "bubbles"');
+      S.diagrams[site] = { name: j.name || f.name, width: j.width, height: j.height, bubbles: j.bubbles || [], links: j.links || [], points: (j.points || []).map(p => ({ id: p.id, label: p.label || p.id, x: p.x, y: p.y, tool_id: p.tool_id || '' })) };
+      toast('Diagram loaded for ' + site);
+    } else if (j.v === 4 && Array.isArray(j.sessions)) {
+      let n = 0;
+      j.sessions.forEach(x => { if (!S.sessions.some(q => q.session_id === x.session_id)) { S.sessions.push(x); n++; } });
+      ['LMH', 'WCM'].forEach(site => (j.points && j.points[site] || []).forEach(p => { if (!(S.points[site] || []).some(q => q.id === p.id)) (S.points[site] = S.points[site] || []).push(p); }));
+      toast(`Backup imported: ${n} new session(s); existing ones left as they are.`);
+    } else if (j.format === 'walkthrough-recorder/v4') {
+      const sid = j.session.session_id;
+      if (S.sessions.some(q => q.session_id === sid) && !(await confirmDlg(`Session ${sid} already exists on this device. Replace it with the file?`, 'Replace', true))) return;
+      S.sessions = S.sessions.filter(q => q.session_id !== sid);
+      S.sessions.push({ ...j.session, source: j.option_sets, events: j.events, draft: { note: '', n: 0, entries: [] }, exported_at: j.exported_at });
+      (j.points || []).forEach(p => { const L = S.points[j.session.site] = S.points[j.session.site] || []; if (!L.some(q => q.id === p.id) && p.provisional) L.push(p); });
+      S.cur = sid; toast('Session ' + sid + ' imported.');
+    } else throw new Error('not a recorder v4 file');
+    save(); render();
+  } catch (err) { toast('Could not read this file: ' + err.message); }
+});
+
+/* ---------- events ---------- */
+document.addEventListener('click', ev => {
+  const go = ev.target.closest('tr[data-go]');
+  if (go) { const [id, i] = go.dataset.go.split('|'); ui.view = 'record'; ui.sel = id; ui.ei = +i; render(); return; }
+  const b = ev.target.closest('[data-act]'); if (!b || b.disabled) return;
+  if (b.dataset.act === 'edit' && ev.target.closest('button') && ev.target.closest('button') !== b) return;
+  ev.stopPropagation();
+  onAct(b.dataset.act, b.dataset.v, b);
+});
+document.addEventListener('input', ev => {
+  const t = ev.target, k = t.dataset.in; if (!k) return;
+  if (k === 'snote') { snap().obj.note = t.value; save(); }
+  else if (k === 'enote') { const e = curEntry(); e.note = t.value; touch(e); const card = document.querySelector('.ent.on .kd.chg, .ent.on .kd.car'); if (card) card.outerHTML = e.changed === 'Y' ? '<span class="kd chg">' + (e.carried_from_entry_id ? 'CHANGED' : 'NEW') + '</span>' : '<span class="kd car">carried</span>'; }
+  else if (k === 'newobs') { ui.newObs = t.value; const b = document.querySelector('[data-act=start]'); if (b) b.disabled = !(ui.newSite && t.value.trim()); }
+  else if (k === 'ptlabel') { const p = S.points[sess().site].find(p => p.id === t.dataset.v); p.label = t.value; save(); }
+});
+document.addEventListener('change', ev => {
+  const t = ev.target;
+  if (t.dataset.in === 'pttool') { const p = S.points[sess().site].find(p => p.id === t.dataset.v); p.tool_id = t.value; save(); }
+});
+
+/* ---------- boot ---------- */
+(async () => {
+  const saved = await store.get(KEY);
+  if (saved && saved.v === 4) S = Object.assign(S, saved);
+  if (S.cur && !sess()) S.cur = S.sessions.length ? S.sessions[0].session_id : null;
+  ui.view = sess() ? 'record' : 'session';
+  render();
+  if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+})();
+window.__wt = { S: () => S, ui };
+})();
+
+</script>
+<script>if ('serviceWorker' in navigator && location.protocol !== 'file:') addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));</script>
+</body>
+</html>
