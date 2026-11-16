@@ -183,6 +183,111 @@ table.dt td.y { background: var(--chg); font-weight: 600; }
 #toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 20px); background: #22252b; color: #fff; padding: 9px 16px; border-radius: 10px; font-size: 13px; opacity: 0; pointer-events: none; transition: .2s; z-index: 60; max-width: calc(100% - 32px); }
 #toast.on { opacity: 1; transform: translate(-50%, 0); }
 
+/* entry editor: 3 steps, swipe left/right between steps, scroll up/down inside a step */
+.ed { overflow: visible; max-height: none; }
+.edc { display: flex; flex-direction: column; height: calc(100vh - 92px); height: calc(100dvh - 92px); padding: 10px 0 0; overflow: hidden; }
+.edc .ed-h { padding: 0 12px; }
+.edc .ed-h .btn.cl { width: 36px; padding: 0; }
+.stabs { display: flex; gap: 4px; padding: 4px 12px 8px; border-bottom: 1px solid var(--line); }
+.stabs button { flex: 1; min-height: 40px; border: 1px solid var(--line); background: #fff; border-radius: 9px; cursor: pointer; font-size: 12px; padding: 2px 4px; color: var(--ink-2); }
+.stabs button b { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--teal-tint); color: var(--teal-deep); font: 600 11px Jost; margin-right: 4px; }
+.stabs button.ok b { background: var(--teal); color: #fff; }
+.stabs button.on { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); color: var(--ink); font-weight: 600; }
+.steps { flex: 1; min-height: 0; display: flex; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.steps::-webkit-scrollbar { display: none; }
+.step { flex: 0 0 100%; min-width: 0; overflow-y: auto; overscroll-behavior-y: contain; scroll-snap-align: start; scroll-snap-stop: always; padding: 4px 12px 12px; -webkit-overflow-scrolling: touch; }
+.stepnav { display: flex; gap: 8px; align-items: center; padding-top: 12px; margin-top: 4px; border-top: 1px solid var(--line); }
+@media (max-width: 720px) { .edc { height: 78vh; } }
+
+/* v5 layout: narrow entry list left, the entry editor takes the rest */
+.rec { grid-template-columns: 250px minmax(0, 1fr); gap: 14px; }
+.list { position: sticky; top: 0; max-height: calc(100vh - 92px); max-height: calc(100dvh - 92px); overflow-y: auto; padding-right: 2px; }
+.ed { position: static; }
+.ed-h h3 { flex: none; font-size: 18px; }
+.ed-h .warn { margin: 0; }
+.lh { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; } .lh b { font: 600 15px Jost; }
+.ec { display: block; width: 100%; text-align: left; background: #fff; border: 1px solid var(--line); border-left: 4px solid var(--teal); border-radius: 10px; padding: 7px 9px; margin-bottom: 6px; cursor: pointer; }
+.ec.sp { border-left-color: var(--violet); } .ec.none { border-left-color: #c3c9d0; }
+.ec.brv { margin-left: 14px; width: calc(100% - 14px); border-left-color: var(--orange); border-style: dashed; border-left-style: solid; }
+.ec.on { box-shadow: 0 0 0 2px var(--ink); }
+.ec-h { display: flex; align-items: center; gap: 6px; }
+.ec-h .act { font: 600 14px Jost; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ec-l { display: block; font-size: 12px; line-height: 1.35; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ec-l.brc { color: #b45a1c; } .ec-l.io { color: #1e63c4; }
+.eid { font: 600 11px Jost; color: var(--muted); background: #f0f2f4; border-radius: 5px; padding: 1px 5px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--bad); flex: none; }
+.add-wide { width: 100%; border-style: dashed; color: var(--teal-deep); }
+.empty-ed { min-height: 50vh; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 10px; padding: 32px; }
+.empty-ed h2 { font-size: 24px; } .empty-ed p { max-width: 560px; line-height: 1.5; margin: 0; }
+.edc { height: calc(100vh - 92px); height: calc(100dvh - 92px); }
+.step { padding: 6px 18px 16px; }
+.edc .ed-h, .stabs { padding-left: 18px; padding-right: 18px; }
+.stabs button { font-size: 13.5px; min-height: 44px; }
+.acts { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+.chip.on.out { background: var(--orange-tint); border-color: var(--orange); box-shadow: inset 0 0 0 1px var(--orange); }
+.chip.all { border-color: #1e63c4; }
+.stok.in { background: #e7f1fb; }
+.prod { border: 1px solid var(--line); border-radius: 10px; padding: 7px 9px; margin: 6px 0; }
+.prod-h { font-size: 12.5px; color: var(--ink-2); margin-bottom: 5px; }
+.vgrp { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 3px; border: 1px dashed #b9c9e6; border-radius: 10px; }
+details.outside { margin-top: 8px; } details.outside summary { cursor: pointer; font-size: 12.5px; color: var(--ink-2); min-height: 36px; display: flex; align-items: center; }
+.ent.brv { border-left-color: var(--orange); }
+@media (max-width: 760px) {
+  .rec { grid-template-columns: 1fr; }
+  .list { position: static; max-height: none; display: flex; gap: 6px; overflow-x: auto; }
+  .list .lh, .list .add-wide { display: none; }
+  .ec { flex: none; width: 170px; margin: 0; } .ec.brv { margin: 0; width: 170px; }
+  .edc { height: 80vh; }
+}
+
+/* site diagrams: sheets, tappable spaces, added-point pins */
+.shtabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 6px; }
+.shtabs button { border: 1px solid var(--line); background: #fff; border-radius: 8px; min-height: 36px; padding: 0 12px; cursor: pointer; font-size: 13px; }
+.shtabs button.on { background: var(--teal-deep); border-color: var(--teal-deep); color: #fff; }
+.dia { border-style: solid; border-width: 1px; background: #fff; }
+.dia svg { max-height: 62vh; }
+.dia .np { pointer-events: none; }
+.dia .pt { cursor: pointer; }
+.dia .pt:hover rect { stroke-width: 2.5; }
+.dia.placing-on { box-shadow: 0 0 0 3px #1e63c4; cursor: crosshair; }
+.dia.placing-on .pt { cursor: crosshair; }
+.placing { display: flex; align-items: center; gap: 8px; background: #e7f1fb; color: #1e4f99; border-radius: 9px; padding: 6px 10px; margin-bottom: 6px; font-size: 13px; }
+.placing .btn { margin-left: auto; }
+.chip.unpl { border-style: dashed; color: #8a6400; }
+.chip.tmp { border-style: dashed; border-color: #1e63c4; color: #1e4f99; }
+details.plist { margin-top: 6px; } details.plist summary { cursor: pointer; font-size: 12.5px; color: var(--ink-2); min-height: 34px; display: flex; align-items: center; }
+details.plist .chips { margin-top: 4px; }
+.prow2 { display: grid; grid-template-columns: 70px minmax(0, 1fr) 118px auto; gap: 6px; align-items: center; padding: 6px 0; border-bottom: 1px dashed var(--line); }
+.prow2 .wide { grid-column: 2 / -1; }
+.prow2 code { font: 600 11px Jost; color: var(--ink-2); word-break: normal; }
+.prow2 input, .prow2 select { width: 100%; min-width: 0; }
+.dia { overflow-x: auto; overflow-y: hidden; }
+.dia svg { max-height: none; max-width: none; }
+.shtabs .zl { font: 600 12px Jost; color: var(--muted); align-self: center; min-width: 40px; text-align: center; }
+.shtabs button[disabled] { opacity: .35; }
+
+/* map window: fixed size, pinch / drag inside; floor picker + zoom overlaid (indoor-map style) */
+.dwrap { position: relative; margin-bottom: 6px; }
+.dwrap .dia { height: min(56vh, 560px); overflow: hidden; margin: 0; background: #F1F4F3; }
+.dwrap .dia svg { width: 100%; height: 100%; touch-action: none; user-select: none; -webkit-user-select: none; }
+.floors { position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 0; background: #fff; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.12); max-width: 46%; }
+.floors button { border: 0; border-bottom: 1px solid var(--line); background: #fff; min-height: 40px; padding: 0 12px; cursor: pointer; font-size: 12.5px; text-align: left; }
+.floors button:last-child { border-bottom: 0; }
+.floors button.on { background: var(--teal-deep); color: #fff; font-weight: 600; }
+.zooms { position: absolute; right: 10px; bottom: 10px; display: flex; flex-direction: column; background: #fff; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+.zooms button { border: 0; border-bottom: 1px solid var(--line); background: #fff; width: 44px; height: 42px; font-size: 20px; cursor: pointer; }
+.zooms button.fit { font-size: 11.5px; font-weight: 600; border-bottom: 0; }
+.dia.routing { box-shadow: 0 0 0 3px #D81B60; }
+.dia.routing .pt, .dia.routing svg { cursor: crosshair; }
+.pm span { font-size: 11.5px; }
+.route { border: 1px solid #f2b7cb; background: #fff7fa; border-radius: 10px; padding: 7px 9px; margin: 4px 0 6px; }
+.route-h { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; } .route-h b { font: 600 13px Jost; color: #b0124f; }
+.route .arr { color: #c98aa2; align-self: center; }
+.chip.rtp { border-color: #f2b7cb; } .chip.rtp i { color: #b0124f; }
+.chip.rtp.stop { background: #fcefe4; border-color: var(--orange); }
+.chip.rtp b { font-weight: 600; color: #b45a1c; }
+.ec-l.rt { color: #b0124f; }
+
 </style>
 </head>
 <body>
@@ -324,7 +429,8 @@ window.OPTS = {
    ],
    "tools": [
     "TL01"
-   ]
+   ],
+   "outState": ""
   },
   {
    "id": "AC02",
@@ -338,7 +444,8 @@ window.OPTS = {
     "TC08",
     "TC09"
    ],
-   "tools": []
+   "tools": [],
+   "outState": ""
   },
   {
    "id": "AC03",
@@ -353,7 +460,8 @@ window.OPTS = {
     "TC02",
     "TC03"
    ],
-   "tools": []
+   "tools": [],
+   "outState": ""
   },
   {
    "id": "AC04",
@@ -367,7 +475,8 @@ window.OPTS = {
     "TC08",
     "TC12"
    ],
-   "tools": []
+   "tools": [],
+   "outState": ""
   },
   {
    "id": "AC05",
@@ -380,7 +489,8 @@ window.OPTS = {
    "tech": [
     "TC08"
    ],
-   "tools": []
+   "tools": [],
+   "outState": ""
   },
   {
    "id": "AC06",
@@ -397,7 +507,8 @@ window.OPTS = {
    ],
    "tools": [
     "TL01"
-   ]
+   ],
+   "outState": ""
   },
   {
    "id": "AC07",
@@ -408,7 +519,8 @@ window.OPTS = {
    "toWhere": false,
    "io": "Both",
    "tech": [],
-   "tools": []
+   "tools": [],
+   "outState": ""
   },
   {
    "id": "AS01",
@@ -421,7 +533,8 @@ window.OPTS = {
    "tech": [],
    "tools": [
     "TL06"
-   ]
+   ],
+   "outState": "ST01"
   },
   {
    "id": "AS02",
@@ -432,7 +545,8 @@ window.OPTS = {
    "toWhere": true,
    "io": "None",
    "tech": [],
-   "tools": []
+   "tools": [],
+   "outState": "ST02"
   },
   {
    "id": "AS03",
@@ -449,7 +563,8 @@ window.OPTS = {
    "tools": [
     "TL05",
     "TL03"
-   ]
+   ],
+   "outState": ""
   },
   {
    "id": "AS04",
@@ -465,7 +580,8 @@ window.OPTS = {
    "tools": [
     "TL03",
     "TL02"
-   ]
+   ],
+   "outState": "ST05"
   },
   {
    "id": "AS05",
@@ -478,7 +594,8 @@ window.OPTS = {
    "tech": [],
    "tools": [
     "TL06"
-   ]
+   ],
+   "outState": ""
   },
   {
    "id": "AS06",
@@ -494,7 +611,8 @@ window.OPTS = {
    "tools": [
     "TL05",
     "TL03"
-   ]
+   ],
+   "outState": "ST03"
   },
   {
    "id": "AS07",
@@ -507,7 +625,8 @@ window.OPTS = {
    "tech": [],
    "tools": [
     "TL03"
-   ]
+   ],
+   "outState": "ST04"
   },
   {
    "id": "A99",
@@ -518,7 +637,8 @@ window.OPTS = {
    "toWhere": false,
    "io": "None",
    "tech": [],
-   "tools": []
+   "tools": [],
+   "outState": ""
   }
  ],
  "tools": [
@@ -721,6 +841,38 @@ window.OPTS = {
    "label": "Other (specify)"
   }
  ],
+ "states": [
+  {
+   "id": "ST01",
+   "label": "Patient arrived",
+   "action": "AS01"
+  },
+  {
+   "id": "ST02",
+   "label": "Staff arrived",
+   "action": "AS02"
+  },
+  {
+   "id": "ST03",
+   "label": "Item / medication retrieved",
+   "action": "AS06"
+  },
+  {
+   "id": "ST04",
+   "label": "Room / equipment ready",
+   "action": "AS07"
+  },
+  {
+   "id": "ST05",
+   "label": "Treatment given",
+   "action": "AS04"
+  },
+  {
+   "id": "ST99",
+   "label": "Other state (specify)",
+   "action": ""
+  }
+ ],
  "conditions": [
   {
    "id": "C01",
@@ -855,23 +1007,26 @@ window.OPTS = {
    "values": [],
    "typical": ""
   }
- ]
+ ],
+ "states_source": "recorder defaults (not yet in the workbook)"
 };
 
 </script>
 <script>
-/* Walkthrough Recorder v4 — snapshot model (option sets v3, pilot-validated).
-   Session → Event (one snapshot, saved by Next) → Entry. Every entry is carried into the next snapshot;
-   the observer edits only what changed. Branch = copy of a snapshot under a condition.
-   Standalone: no site library import needed. Site bubble diagram is reserved (import later). */
+/* Walkthrough Recorder v5 — entry model (option sets v3, pilot-validated).
+   Session → Entry. No snapshots: sequence comes only from input → output links.
+   An entry's inputs are outputs of other entries (info artifacts or state artifacts), possibly several.
+   Branch version = copy of an entry under a condition; a later input can take one version's output or all versions.
+   Standalone: no site library import. Site bubble diagrams: loaded from data/diagrams/site_diagrams.json on each device (not bundled). */
 (() => {
 'use strict';
 const O = window.OPTS;
-const KEY = 'wtrec-v4';
+const KEY = 'wtrec-v5';
 const SPECIAL = { DIGITAL: 'Digital (no physical spot)', TRANSIT: 'In transit (with patient)' };
 const byId = {};
-['types', 'roles', 'actions', 'tools', 'tech', 'info', 'conditions'].forEach(k => O[k].forEach(x => { byId[x.id] = x; }));
+['types', 'roles', 'actions', 'tools', 'tech', 'info', 'states', 'conditions'].forEach(k => O[k].forEach(x => { byId[x.id] = x; }));
 const OTHER = id => /99$/.test(id);
+const isState = id => /^ST/.test(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const iso = () => new Date().toISOString();
 const pad = (n, w) => String(n).padStart(w, '0');
@@ -887,8 +1042,8 @@ const store = (() => {
   };
 })();
 
-let S = { v: 4, sessions: [], cur: null, observers: [], points: { LMH: [], WCM: [] }, diagrams: { LMH: null, WCM: null } };
-const ui = { view: 'record', sel: 'draft', ei: -1, pm: 'where' };
+let S = { v: 5, sessions: [], cur: null, points: { LMH: [], WCM: [] }, diagrams: { LMH: null, WCM: null } };
+const ui = { view: 'record', ei: null, pm: 'where', step: 0, edKey: '', sheet: {}, placing: null, vb: {}, noClick: 0 };
 let saveT;
 function save() {
   clearTimeout(saveT);
@@ -900,20 +1055,27 @@ function save() {
 
 /* ---------- helpers ---------- */
 const sess = () => S.sessions.find(s => s.session_id === S.cur) || null;
-const evs = () => (sess() ? sess().events : []);
-const findEv = id => evs().find(e => e.event_id === id);
-const allEntries = () => evs().flatMap(e => e.entries);
-function snap() {
-  const s = sess(); if (!s) return null;
-  if (ui.sel === 'draft') return { draft: true, entries: s.draft.entries, obj: s.draft };
-  const e = findEv(ui.sel); if (!e) { ui.sel = 'draft'; return snap(); }
-  return { draft: false, entries: e.entries, obj: e, ev: e };
+const ents = () => (sess() ? sess().entries : []);
+const findE = id => ents().find(e => e.entry_id === id);
+const baseOf = e => (e.branch_of_entry_id ? findE(e.branch_of_entry_id) || e : e);
+const versionsOf = base => [base, ...ents().filter(x => x.branch_of_entry_id === base.entry_id)];
+const short = id => (id || '').replace((sess() ? sess().session_id : '') + '-', '');
+const curEntry = () => (ui.ei ? findE(ui.ei) : null);
+/* display order: base entries by seq, each followed by its branch versions */
+function ordered() {
+  const all = ents(), bases = all.filter(e => !e.branch_of_entry_id).sort((a, b) => a.seq - b.seq);
+  return bases.flatMap(b => [b, ...all.filter(x => x.branch_of_entry_id === b.entry_id)]);
 }
-const curEntry = () => { const sn = snap(); return sn && sn.entries[ui.ei] || null; };
 const roleKeyLabel = k => { const [rid, n] = k.split('#'); return (byId[rid] ? byId[rid].label : rid) + ' #' + n; };
 function sitePoints(site) {
   const d = S.diagrams[site];
-  return [...((d && d.points) || []).map(p => ({ ...p, fromDiagram: true })), ...(S.points[site] || [])];
+  return [...((d && d.points) || []), ...(S.points[site] || [])];
+}
+const sheetsOf = site => (S.diagrams[site] && S.diagrams[site].sheets) || [];
+const sheetName = (site, id) => { const sh = sheetsOf(site).find(x => x.id === id); return sh ? sh.name : ''; };
+function curSheet(site) {
+  const sh = sheetsOf(site); if (!sh.length) return null;
+  return sh.find(x => x.id === ui.sheet[site]) || sh[0];
 }
 function ptLabel(id) {
   if (!id) return '';
@@ -926,12 +1088,29 @@ function lbl(id, e) {
   const base = byId[id] ? byId[id].label : id;
   return OTHER(id) && e && e.other && e.other[id] ? base.replace(/ \(specify\)/, '') + ': ' + e.other[id] : base;
 }
-function sig(e) {
-  return JSON.stringify([e.type, e.where_point_id, [...e.who].sort(), e.action_id, e.to_point_id, [...e.tool_ids].sort(), [...e.technology_ids].sort(),
-    e.info.map(i => i.id + ':' + i.io).sort(), Object.entries(e.other || {}).sort(), e.note || '']);
+/* output label: a state artifact names where it ends (to-where, else where) */
+function outLabel(e, aid) {
+  const l = lbl(aid, e);
+  if (!isState(aid) || !e) return l;
+  const at = e.to_point_id || e.where_point_id;
+  return at ? l + ' · ' + ptLabel(at) : l;
 }
-const srcOf = e => (e.carried_from_entry_id ? allEntries().find(x => x.entry_id === e.carried_from_entry_id) : null);
-function touch(e) { const s = srcOf(e); e.changed = !s || sig(s) !== sig(e) ? 'Y' : 'N'; save(); }
+function condText(e) { const c = byId[e.condition_id]; return e.condition_id ? (c ? c.label : e.condition_id) + ' = ' + e.condition_value : ''; }
+function inLabel(i, consumer) {
+  if (!i.from) return lbl(i.artifact, consumer) + ' (from outside)';
+  const p = findE(i.from); if (!p) return lbl(i.artifact) + ' (missing ' + short(i.from) + ')';
+  const ver = i.all ? ' · all versions' : p.branch_of_entry_id ? ' · ' + condText(p) : versionsOf(baseOf(p)).length > 1 ? ' · usual' : '';
+  return short(baseOf(p).entry_id) + ' ' + outLabel(p, i.artifact) + ver;
+}
+const FIELDS = { type: e => e.type, where: e => e.where_point_id, who: e => [...e.who].sort(), action: e => e.action_id, to: e => e.to_point_id,
+  tools: e => [...e.tool_ids].sort(), technology: e => [...e.technology_ids].sort(), inputs: e => e.inputs.map(i => i.from + '|' + i.artifact + '|' + !!i.all).sort(),
+  route: e => (e.route || []).map(w => (w.point_id || w.sheet + ':' + w.x + ',' + w.y) + (w.stop ? '!' + (w.stop_note || '') : '')),
+  outputs: e => [...e.outputs].sort(), other: e => Object.entries(e.other || {}).sort(), note: e => e.note || '' };
+function differs(e) {
+  if (!e.branch_of_entry_id) return [];
+  const b = findE(e.branch_of_entry_id); if (!b) return [];
+  return Object.keys(FIELDS).filter(k => JSON.stringify(FIELDS[k](e)) !== JSON.stringify(FIELDS[k](b)));
+}
 function issues(e) {
   const out = [];
   if (!e.type) out.push('type');
@@ -941,41 +1120,34 @@ function issues(e) {
   const a = byId[e.action_id];
   if (a && e.who.length < a.minWho) out.push(a.label + ' needs 2+ roles');
   if (a && a.toWhere && !e.to_point_id) out.push('to where');
-  [...e.who.map(k => k.split('#')[0]), e.action_id, ...e.tool_ids, ...e.technology_ids, ...e.info.map(i => i.id)]
-    .filter(id => id && OTHER(id) && !(e.other && e.other[id])).forEach(id => out.push('specify "Other"'));
+  [...e.who.map(k => k.split('#')[0]), e.action_id, ...e.tool_ids, ...e.technology_ids, ...e.outputs, ...e.inputs.filter(i => !i.from).map(i => i.artifact)]
+    .filter(id => id && OTHER(id) && !(e.other && e.other[id])).forEach(() => out.push('specify "Other"'));
+  if (e.inputs.some(i => i.from && !findE(i.from))) out.push('an input points to a deleted entry');
   return [...new Set(out)];
 }
-function blankEntry(id) {
-  return { entry_id: id, carried_from_entry_id: '', changed: 'Y', type: '', where_point_id: '', who: [], action_id: '', to_point_id: '', tool_ids: [], technology_ids: [], info: [], other: {}, note: '' };
+function blankEntry() {
+  const s = sess(); s.n = (s.n || 0) + 1;
+  return { entry_id: s.session_id + '-N' + pad(s.n, 3), seq: s.n, branch_of_entry_id: '', condition_id: '', condition_value: '',
+    type: '', where_point_id: '', who: [], action_id: '', to_point_id: '', route: [], tool_ids: [], technology_ids: [], inputs: [], outputs: [], other: {}, note: '' };
 }
-/* main-path events before the given snapshot (for "last spot" defaults) */
-function eventsBefore(sn) {
-  const main = evs().filter(e => !e.branch_of_event_id);
-  if (sn.draft) return main;
-  const ev = sn.ev; const anchor = ev.branch_of_event_id ? findEv(rootOf(ev)) : ev;
-  const list = main.filter(e => e.seq < anchor.seq);
-  if (ev.branch_of_event_id) list.push(findEv(ev.branch_of_event_id));
-  return list.filter(Boolean);
+/* role's latest spot = to-where (else where) of its most recent base entry before this one */
+function lastSpot(e, key) {
+  const before = ents().filter(x => !x.branch_of_entry_id && x.seq < baseOf(e).seq && x.who.includes(key)).sort((a, b) => b.seq - a.seq)[0];
+  return before ? before.to_point_id || before.where_point_id : '';
 }
-function rootOf(ev) { let e = ev; while (e && e.branch_of_event_id) e = findEv(e.branch_of_event_id); return e ? e.event_id : ev.event_id; }
-function lastSpot(sn, key) {
-  const list = eventsBefore(sn);
-  for (let i = list.length - 1; i >= 0; i--) {
-    const hit = [...list[i].entries].reverse().find(x => x.who.includes(key));
-    if (hit) return hit.to_point_id || hit.where_point_id;
+/* cycle guard on base entries: adding producer → consumer must not let consumer reach producer */
+function reaches(fromBase, toBase) {
+  const seen = new Set(), stack = [fromBase];
+  while (stack.length) {
+    const id = stack.pop(); if (id === toBase) return true; if (seen.has(id)) continue; seen.add(id);
+    ents().filter(c => c.inputs.some(i => i.from && baseOf(findE(i.from) || c).entry_id === id)).forEach(c => stack.push(baseOf(c).entry_id));
   }
-  return '';
-}
-function nextEntryId(sn) {
-  if (sn.draft) { sess().draft.n = (sess().draft.n || 0) + 1; return 'D' + sess().draft.n; }
-  const nums = sn.entries.map(x => +((x.entry_id.match(/-N(\d+)$/) || [])[1] || 0));
-  return sn.ev.event_id + '-N' + pad(Math.max(0, ...nums) + 1, 2);
+  return false;
 }
 function sessionId(site) {
   const d = new Date(); const day = d.getFullYear() + pad(d.getMonth() + 1, 2) + pad(d.getDate(), 2);
   const pre = site + '-' + day + '-';
-  const n = S.sessions.filter(s => s.session_id.startsWith(pre)).length + 1;
-  return pre + pad(n, 2);
+  return pre + pad(S.sessions.filter(s => s.session_id.startsWith(pre)).length + 1, 2);
 }
 
 /* ---------- dialogs ---------- */
@@ -1007,7 +1179,7 @@ function condDlg(init = {}) {
   const body = () => {
     const c = byId[cid];
     const groups = [...new Set(O.conditions.map(c => c.category))];
-    return `<p><b>Branch condition</b><br><span class="small muted">Which condition makes this snapshot differ? Pick one, then its value.</span></p>`
+    return `<p><b>Branch version: condition</b><br><span class="small muted">Under which condition does this step run differently? Pick one, then its value. The original entry stays as the usual case.</span></p>`
       + groups.map(g => `<div class="grp">${esc(g)}</div><div class="chips">` + O.conditions.filter(c => c.category === g).map(c => `<button class="chip${c.id === cid ? ' on' : ''}" data-c="${c.id}"><i>${c.id}</i>${esc(c.label)}</button>`).join('') + '</div>').join('')
       + (c ? `<div class="grp">Value</div><div class="chips">` + c.values.map(v => `<button class="chip${v === val ? ' on' : ''}" data-v="${esc(v)}">${esc(v)}</button>`).join('')
         + `</div><input type="text" data-free placeholder="${c.values.length ? 'or type another value' : 'type the condition and value'}" value="${esc(c.values.includes(val) ? '' : val)}">`
@@ -1030,182 +1202,314 @@ function condDlg(init = {}) {
 const $main = () => document.getElementById('main');
 function render() {
   const s = sess();
-  document.getElementById('sid').textContent = s ? s.session_id + ' · ' + s.observer : '';
+  document.getElementById('sid').textContent = s ? s.session_id : '';
   document.getElementById('tabs').innerHTML = [['record', 'Record'], ['data', 'Data'], ['session', 'Session & export']]
     .map(([k, l]) => `<button class="${ui.view === k ? 'on' : ''}" data-act="view" data-v="${k}">${l}</button>`).join('');
   if (!s && ui.view !== 'session') ui.view = 'session';
+  if (ui.ei && !findE(ui.ei)) ui.ei = null;
+  const key = ui.view + '|' + ui.ei;
+  const keep = key === ui.edKey ? [...document.querySelectorAll('#steps .step')].map(x => x.scrollTop) : null;
+  if (key !== ui.edKey) ui.step = 0;
+  ui.edKey = key;
   $main().innerHTML = ui.view === 'record' ? vRecord() : ui.view === 'data' ? vData() : vSession();
+  document.querySelectorAll('.dia svg.pz').forEach(bindPanZoom);
+  const st = document.getElementById('steps');
+  if (st) {
+    st.scrollLeft = ui.step * st.clientWidth;
+    if (keep) st.querySelectorAll('.step').forEach((x, i) => { x.scrollTop = keep[i] || 0; });
+    let t;
+    st.addEventListener('scroll', () => {
+      clearTimeout(t);
+      t = setTimeout(() => {
+        const i = Math.round(st.scrollLeft / st.clientWidth);
+        if (i !== ui.step) { ui.step = i; document.querySelectorAll('.stabs button').forEach((b, j) => b.classList.toggle('on', j === i)); }
+      }, 60);
+    }, { passive: true });
+  }
+}
+/* route waypoint: a tapped named space, or any spot (label = the space it falls in) */
+function addWaypoint(svg, ev) {
+  const e = curEntry(); if (!e) return;
+  const site = svg.dataset.site, sheet = svg.dataset.sheet;
+  const pt = svg.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY;
+  const c = pt.matrixTransform(svg.getScreenCTM().inverse());
+  const g = ev.target.closest('[data-act=dpt]');
+  const sh = sheetsOf(site).find(x => x.id === sheet);
+  let w;
+  if (g) { const p = sitePoints(site).find(q => q.id === g.dataset.v); w = { point_id: g.dataset.v, sheet, label: p ? p.label : g.dataset.v }; }
+  else {
+    const inside = sh.spaces.filter(sp => !sp.zone && c.x >= sp.x && c.x <= sp.x + sp.w && c.y >= sp.y && c.y <= sp.y + sp.h)[0];
+    const nm = inside ? (inside.name !== 'Unidentified context' ? inside.name : inside.kind === 'corridor' ? 'Corridor (unnamed)' : 'Room (unnamed)') : 'Open spot';
+    w = { point_id: '', sheet, x: Math.round(c.x), y: Math.round(c.y), label: nm };
+  }
+  e.route = e.route || []; e.route.push(w);
+  if (e.route.length === 1 && !e.where_point_id && w.point_id) e.where_point_id = w.point_id;
+  const a = byId[e.action_id];
+  if (e.route.length > 1 && w.point_id && a && a.toWhere) e.to_point_id = w.point_id;
+  save(); render();
+}
+/* diagram pan + pinch zoom: the window stays fixed, the viewBox moves */
+function zoomVB(v, base, f, cx, cy) {
+  const w = Math.min(base[2] * 1.2, Math.max(base[2] / 10, v[2] * f)); f = w / v[2];
+  return [cx - (cx - v[0]) * f, cy - (cy - v[1]) * f, v[2] * f, v[3] * f];
+}
+function bindPanZoom(svg) {
+  const key = svg.dataset.key, base = svg.dataset.base.split(' ').map(Number);
+  const pts = new Map(); let moved = 0;
+  const vbOf = () => svg.getAttribute('viewBox').split(' ').map(Number);
+  const setVB = v => { svg.setAttribute('viewBox', v.join(' ')); ui.vb[key] = v; };
+  const toSvg = (x, y) => { const p = svg.createSVGPoint(); p.x = x; p.y = y; return p.matrixTransform(svg.getScreenCTM().inverse()); };
+  const perPx = () => { const r = svg.getBoundingClientRect(), v = vbOf(); return Math.max(v[2] / r.width, v[3] / r.height); };
+  svg.addEventListener('pointerdown', e => { pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (pts.size === 1) moved = 0; });
+  svg.addEventListener('pointermove', e => {
+    const prev = pts.get(e.pointerId); if (!prev) return;
+    if (pts.size === 1) {
+      const dx = e.clientX - prev.x, dy = e.clientY - prev.y; moved += Math.abs(dx) + Math.abs(dy);
+      if (moved > 6) { const u = perPx(), v = vbOf(); setVB([v[0] - dx * u, v[1] - dy * u, v[2], v[3]]); }
+    } else if (pts.size === 2) {
+      const [a, b] = [...pts.entries()].map(([id, q]) => (id === e.pointerId ? { x: e.clientX, y: e.clientY } : q));
+      const [a0, b0] = [...pts.values()];
+      const d0 = Math.hypot(a0.x - b0.x, a0.y - b0.y), d1 = Math.hypot(a.x - b.x, a.y - b.y);
+      if (d0 > 0 && d1 > 0) {
+        const m0 = toSvg((a0.x + b0.x) / 2, (a0.y + b0.y) / 2);
+        let v = zoomVB(vbOf(), base, d0 / d1, m0.x, m0.y); setVB(v);
+        const u = perPx(), mx = (a.x + b.x) / 2 - (a0.x + b0.x) / 2, my = (a.y + b.y) / 2 - (a0.y + b0.y) / 2;
+        v = vbOf(); setVB([v[0] - mx * u, v[1] - my * u, v[2], v[3]]);
+      }
+      moved += 99;
+    }
+    pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  });
+  const end = e => { if (pts.delete(e.pointerId) && moved > 6) ui.noClick = Date.now(); };
+  svg.addEventListener('pointerup', end); svg.addEventListener('pointercancel', end); svg.addEventListener('pointerleave', end);
+  svg.addEventListener('wheel', e => { e.preventDefault(); const p = toSvg(e.clientX, e.clientY); setVB(zoomVB(vbOf(), base, e.deltaY > 0 ? 1.12 : 1 / 1.12, p.x, p.y)); }, { passive: false });
+}
+function goStep(i) {
+  ui.step = i; const st = document.getElementById('steps'); if (!st) return;
+  st.scrollTo({ left: i * st.clientWidth, behavior: 'smooth' });
+  document.querySelectorAll('.stabs button').forEach((b, j) => b.classList.toggle('on', j === i));
 }
 
 function vRecord() {
-  const s = sess(), sn = snap();
-  return `<div class="rec"><aside class="tl">${vTimeline()}</aside><section>${vScene(sn)}</section><aside class="ed">${vEditor(sn)}</aside></div>`;
+  return `<div class="rec"><section class="list">${vList()}</section><aside class="ed">${vEditor()}</aside></div>`;
 }
-function evCard(e) {
-  const n = e.entries.length, c = e.entries.filter(x => x.changed === 'Y').length;
-  const cond = e.branch_of_event_id ? `<div class="c">${esc(e.condition_id)} ${esc(byId[e.condition_id] ? byId[e.condition_id].label : '')} = ${esc(e.condition_value)}</div>` : '';
-  return `<button class="ev${e.branch_of_event_id ? ' br' : ''}${ui.sel === e.event_id ? ' on' : ''}" data-act="sel" data-v="${e.event_id}"><b>${esc(e.event_id.replace(sess().session_id + '-', ''))}</b><div class="m">${n} entr${n === 1 ? 'y' : 'ies'} · ${c} changed</div>${cond}</button>`;
-}
-function vTimeline() {
-  const s = sess(); const main = s.events.filter(e => !e.branch_of_event_id);
-  const kids = id => s.events.filter(e => e.branch_of_event_id === id);
-  const walk = e => evCard(e) + kids(e.event_id).map(walk).join('');
-  const dn = s.draft.entries.length;
-  return `<div class="tlh">Snapshots</div>` + main.map(walk).join('')
-    + `<button class="ev draft${ui.sel === 'draft' ? ' on' : ''}" data-act="sel" data-v="draft"><b>Now · E${pad(main.length + 1, 3)}</b><div class="m">draft · ${dn} entr${dn === 1 ? 'y' : 'ies'}</div></button>`;
-}
-function vScene(sn) {
-  const s = sess();
-  const main = s.events.filter(e => !e.branch_of_event_id);
-  const title = sn.draft ? 'E' + pad(main.length + 1, 3) : sn.ev.event_id.replace(s.session_id + '-', '');
-  const tags = sn.draft ? '<span class="tag draft">draft · not saved yet</span>' : sn.ev.branch_of_event_id ? `<span class="tag br">branch of ${esc(sn.ev.branch_of_event_id.replace(s.session_id + '-', ''))}</span>` : '<span class="tag">saved</span>';
-  let h = `<div class="scene-h"><h2>${esc(title)}</h2>${tags}<span class="small muted">${sn.entries.length} entries happen at the same time</span></div>`;
-  if (!sn.draft && sn.ev.branch_of_event_id) {
-    const c = byId[sn.ev.condition_id];
-    h += `<div class="cond"><b>Condition</b><span>${esc(sn.ev.condition_id)} ${esc(c ? c.label : '')} = <b style="color:inherit;letter-spacing:0;text-transform:none;font:600 13px Inter">${esc(sn.ev.condition_value)}</b></span><button class="btn sm" data-act="cond-edit">Change</button></div>`;
-  }
-  if (sn.draft && !main.length && !sn.entries.length) h += `<div class="hint">Describe the first scene. One entry per person (or group) doing one thing: <b>+ Entry</b>, then Type → Where → Who → Action. <b>Next</b> saves the snapshot and carries every entry forward, so next time you only edit what changed.</div>`;
-  else if (sn.draft && main.length) h += `<div class="hint">Carried from the last snapshot. Edit only what changed, remove entries that ended, add new ones. Edited entries are marked <span class="kd chg">CHANGED</span>.</div>`;
-  if (!sn.draft && sn.ev.branch_of_event_id) h += `<div class="hint">Copy of the parent snapshot. Edit only what differs under this condition.</div>`;
-  h += sn.entries.map((e, i) => entCard(e, i)).join('') || '<p class="muted small">No entries yet.</p>';
-  h += `<div class="scene-f"><button class="btn" data-act="add">+ Entry</button>`;
-  if (sn.draft) h += `<span class="grow"></span><button class="btn br" data-act="branch">Branch…</button><button class="btn primary big" data-act="next">Next ▸</button>`;
-  else h += `<button class="btn br" data-act="branch">Branch…</button><span class="grow"></span><button class="btn danger" data-act="del-ev">Delete snapshot</button><button class="btn dark" data-act="sel" data-v="draft">Back to now</button>`;
-  h += `</div><label class="field"><span>Snapshot note</span><textarea data-in="snote" placeholder="Anything about this moment that has no field (expert's words, uncertainty)">${esc(sn.obj.note || '')}</textarea></label>`;
+function vList() {
+  const list = ordered();
+  let h = `<div class="lh"><b>Entries</b><span class="muted small">${list.length}</span><span style="flex:1"></span><button class="btn primary sm" data-act="add">+ Entry</button></div>`;
+  h += list.map(entCard).join('') || `<p class="small muted" style="padding:4px 2px">No entries yet.</p>`;
+  if (list.length) h += `<button class="btn add-wide" data-act="add">+ Entry</button>`;
   return h;
 }
-function entCard(e, i) {
+function entCard(e) {
   const a = byId[e.action_id], t = e.type;
-  const cls = t === 'TY02' ? ' sp' : t ? '' : ' none';
-  const kd = t ? `<span class="kd${t === 'TY02' ? ' sp' : ''}">${t === 'TY02' ? 'SPATIAL' : 'CASE'}</span>` : '';
-  const st = e.changed === 'Y' ? (e.carried_from_entry_id ? '<span class="kd chg">CHANGED</span>' : '<span class="kd chg">NEW</span>') : '<span class="kd car">carried</span>';
-  const who = e.who.map(k => `<span class="tok r">${esc(OTHER(k.split('#')[0]) && e.other[k.split('#')[0]] ? e.other[k.split('#')[0]] + ' #' + k.split('#')[1] : roleKeyLabel(k))}</span>`).join('');
-  const where = esc(ptLabel(e.where_point_id)) + (e.to_point_id ? ' → ' + esc(ptLabel(e.to_point_id)) : '');
-  const tt = [...e.tool_ids, ...e.technology_ids].map(id => `<span class="tok">${esc(lbl(id, e))}</span>`).join('');
-  const inf = e.info.map(x => `<span class="tok ${x.io === 'Output' ? 'io-out' : 'io-in'}">${x.io === 'Output' ? '↗' : '↘'} ${esc(lbl(x.id, e))}</span>`).join('');
+  const cls = (t === 'TY02' ? ' sp' : t ? '' : ' none') + (e.branch_of_entry_id ? ' brv' : '');
+  const who = e.who.map(k => { const rid = k.split('#')[0]; return OTHER(rid) && e.other[rid] ? e.other[rid] + ' #' + k.split('#')[1] : roleKeyLabel(k); }).join(', ');
+  const where = ptLabel(e.where_point_id) + (e.to_point_id ? ' → ' + ptLabel(e.to_point_id) : '');
+  const ins = [...new Set(e.inputs.map(i => (i.from ? short(baseOf(findE(i.from) || e).entry_id) : 'outside')))];
   const iss = issues(e);
-  return `<div class="ent${cls}${ui.ei === i ? ' on' : ''}${e.changed === 'Y' ? ' chg' : ''}" data-act="edit" data-v="${i}">
-    <div class="ent-h">${kd}<span class="act">${a ? esc(lbl(a.id, e)) : '<span class="muted">No action yet</span>'}</span>${st}</div>
-    <div class="ent-l">${who || '<span class="muted">who?</span>'}</div>
-    <div class="ent-l"><span class="lb">where</span>${where || '<span class="muted">—</span>'}</div>
-    ${tt ? `<div class="ent-l"><span class="lb">tools · tech</span>${tt}</div>` : ''}${inf ? `<div class="ent-l"><span class="lb">info</span>${inf}</div>` : ''}
-    ${e.note ? `<div class="ent-l small muted">“${esc(e.note)}”</div>` : ''}
-    ${iss.length ? `<div class="warn">Missing: ${esc(iss.join(', '))}</div>` : ''}
-    <button class="btn x danger" data-act="del-ent" data-v="${i}" title="Remove entry">×</button></div>`;
+  return `<button class="ec${cls}${ui.ei === e.entry_id ? ' on' : ''}" data-act="edit" data-v="${e.entry_id}">
+    <span class="ec-h"><span class="eid">${esc(short(e.entry_id))}</span><span class="act">${a ? esc(lbl(a.id, e)) : '<span class="muted">No action</span>'}</span>${iss.length ? '<span class="dot" title="Missing fields"></span>' : ''}</span>
+    ${e.branch_of_entry_id ? `<span class="ec-l brc">if ${esc(condText(e))}</span>` : ''}
+    <span class="ec-l">${esc(who) || '<span class="muted">who?</span>'}</span>
+    ${where ? `<span class="ec-l muted">${esc(where)}</span>` : ''}${(e.route || []).length ? `<span class="ec-l rt">route ${e.route.length} pts${e.route.some(w => w.stop) ? ' · ' + e.route.filter(w => w.stop).length + ' stop' : ''}</span>` : ''}
+    ${ins.length || e.outputs.length ? `<span class="ec-l io">${ins.length ? '↘ ' + esc(ins.join(', ')) : ''}${ins.length && e.outputs.length ? ' · ' : ''}${e.outputs.length ? '↗ ' + e.outputs.length : ''}</span>` : ''}
+  </button>`;
 }
 
 function vDiagram(site, e, needTo) {
-  const d = S.diagrams[site];
-  const pmRow = needTo ? `<div class="pm">Tap on diagram sets <div class="seg"><button class="${ui.pm === 'where' ? 'on' : ''}" data-act="pm" data-v="where">Where</button><button class="${ui.pm === 'to' ? 'on' : ''}" data-act="pm" data-v="to">To</button></div></div>` : '';
-  const pts = d && d.points ? d.points.filter(p => p.x != null && p.y != null) : [];
-  if (!d || !(pts.length || (d.bubbles || []).length)) {
-    return `<div class="dia empty"><div><b>SITE BUBBLE DIAGRAM · ${esc(site)}</b>Reserved. The diagram data is still being prepared.<br>Pick a point from the list below for now; points you add here will be mapped onto the diagram later.</div></div>`;
-  }
-  const W = d.width || 1000, H = d.height || 620;
-  const bub = (d.bubbles || []).map(b => `<g><rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="${Math.min(b.w, b.h) / 2.6}" fill="${b.kind === 'corridor' ? '#e4e7eb' : '#fff'}" stroke="#b9c2ca" stroke-width="2"/><text x="${b.x + b.w / 2}" y="${b.y + b.h / 2 + 5}" text-anchor="middle" font-size="15" fill="#4a5661" font-family="Inter">${esc(b.label || '')}</text></g>`).join('');
-  const lk = (d.links || []).map(l => { const a = (d.bubbles || []).find(b => b.id === l.from), b = (d.bubbles || []).find(b => b.id === l.to); return a && b ? `<line x1="${a.x + a.w / 2}" y1="${a.y + a.h / 2}" x2="${b.x + b.w / 2}" y2="${b.y + b.h / 2}" stroke="#9aa4ae" stroke-width="3" ${l.restricted ? 'stroke-dasharray="8 6"' : ''}/>` : ''; }).join('');
-  const dots = pts.map(p => { const on = e && (e.where_point_id === p.id || e.to_point_id === p.id); const tool = p.tool_id; return `<g class="pt" data-act="dpt" data-v="${esc(p.id)}"><circle cx="${p.x}" cy="${p.y}" r="22" fill="transparent"/>${tool ? `<rect x="${p.x - 9}" y="${p.y - 9}" width="18" height="18" rx="3" fill="${on ? '#d9a520' : '#6b63c4'}"/>` : `<circle cx="${p.x}" cy="${p.y}" r="10" fill="${on ? '#d9a520' : '#1c9c8c'}"/>`}<text x="${p.x}" y="${p.y - 15}" text-anchor="middle" font-size="13" fill="#1f2a33" font-family="Inter">${esc(p.label)}</text>${e && e.to_point_id === p.id ? `<text x="${p.x}" y="${p.y + 28}" text-anchor="middle" font-size="12" font-weight="600" fill="#b45a1c">TO</text>` : ''}</g>`; }).join('');
-  return pmRow + `<div class="dia"><svg viewBox="0 0 ${W} ${H}">${lk}${bub}${dots}</svg></div>`;
+  const sh = curSheet(site);
+  if (!sh) return `<div class="dia empty"><div><b>SITE BUBBLE DIAGRAM · ${esc(site)}</b>Not loaded on this device yet.<br><button class="btn sm" data-act="import-dia" style="margin-top:8px">Load site diagrams…</button><br><span class="small">Until then, pick or add a point below.</span></div></div>`;
+  const key = site + '|' + sh.id, vb = ui.vb[key] || sh.viewBox;
+  const floors = `<div class="floors">` + sheetsOf(site).map(x => `<button class="${x.id === sh.id ? 'on' : ''}" data-act="sheet" data-v="${x.id}">${esc(x.name)}</button>`).join('') + `</div>`;
+  const zooms = `<div class="zooms"><button data-act="zoom" data-v="1" title="Zoom in">+</button><button data-act="zoom" data-v="-1" title="Zoom out">−</button><button data-act="zoom" data-v="0" title="Fit whole sheet" class="fit">Fit</button></div>`;
+  const modes = [['where', 'Where'], ...(needTo ? [['to', 'To']] : []), ...(e && (e.type === 'TY02' || needTo) ? [['route', 'Route']] : [])];
+  const pm = modes.some(m => m[0] === ui.pm) ? ui.pm : 'where';
+  const pmRow = modes.length > 1 ? `<div class="pm">Tap on diagram sets <div class="seg">${modes.map(([k, l]) => `<button class="${pm === k ? 'on' : ''}" data-act="pm" data-v="${k}">${l}</button>`).join('')}</div>${pm === 'route' ? '<span>tap spaces in order (any spot counts, e.g. an unnamed corridor)</span>' : ''}</div>` : '';
+  const placing = ui.placing && sitePoints(site).find(p => p.id === ui.placing);
+  const banner = placing ? `<div class="placing">Tap the diagram where <b>${esc(placing.label)}</b> roughly is <button class="btn sm" data-act="place-cancel">Cancel</button></div>` : '';
+  const [vx, vy, vw, vh] = sh.viewBox, fs = Math.max(9, vw / 75);
+  const wh = e && e.where_point_id, to = e && e.to_point_id;
+  const pid = {}; sitePoints(site).forEach(p => { pid[p.id] = p; });
+  const rect = sp => {
+    const id = sp.point_id, on = id && (id === wh || id === to);
+    const fill = sp.zone ? 'rgba(164,146,185,.10)' : on ? '#FFE7A3' : sp.fill;
+    const stroke = on ? (id === to ? '#E8843C' : '#D9A520') : sp.zone ? '#A492B9' : sp.kind === 'context' ? '#BBC4C9' : '#40565E';
+    const sw = on ? fs / 3 : sp.zone ? 1.6 : 1.2;
+    const lab = id ? (pid[id] ? pid[id].label : sp.name) : '';
+    const vert = sp.h > sp.w * 1.8 && sp.w < fs * 5;
+    const cx = sp.x + sp.w / 2, cy = sp.y + sp.h / 2;
+    const text = lab && !sp.zone ? `<text x="${cx}" y="${cy}" font-size="${Math.min(fs, (vert ? sp.h : sp.w) / Math.max(4, lab.length * 0.62))}" text-anchor="middle" dominant-baseline="middle" fill="${sp.fill === '#6E8997' && !on ? '#fff' : '#283F48'}"${vert ? ` transform="rotate(-90 ${cx} ${cy})"` : ''}>${esc(lab)}</text>` : '';
+    const zt = sp.zone ? `<text x="${sp.x + fs * 0.8}" y="${sp.y + fs * 1.6}" font-size="${fs}" font-weight="700" fill="${on ? '#8a6400' : '#6b5b86'}">${esc(lab.toUpperCase())}</text>` : '';
+    const tag = id === to && to ? `<text x="${cx}" y="${sp.y - fs * 0.4}" font-size="${fs}" font-weight="700" text-anchor="middle" fill="#B45A1C">TO</text>` : '';
+    return `<g${id ? ` class="pt" data-act="dpt" data-v="${esc(id)}"` : ' class="np"'}><rect x="${sp.x}" y="${sp.y}" width="${sp.w}" height="${sp.h}" rx="${sp.zone ? 9 : 6}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"${sp.zone ? ' stroke-dasharray="6 4"' : ''}/>${text}${zt}${tag}</g>`;
+  };
+  const zonesFirst = [...sh.spaces.filter(x => x.zone), ...sh.spaces.filter(x => !x.zone)];
+  const deco = sh.zones.filter(z => !z.name).map(z => `<rect x="${z.x}" y="${z.y}" width="${z.w}" height="${z.h}" fill="${z.fill || 'none'}" stroke="#BAC7C5" stroke-dasharray="5 4" class="np"/>`).join('')
+    + sh.titles.filter(t => !(t.zone && sh.spaces.some(x => x.zone && x.name.toUpperCase() === t.text.toUpperCase()))).map(t => `<text x="${t.x}" y="${t.y}" font-size="${t.zone ? fs : fs * 1.05}" ${t.zone ? 'font-weight="700"' : 'text-anchor="middle"'} fill="#8A9896" class="np">${esc(t.text)}</text>`).join('');
+  const links = sh.links.map(l => `<path d="${l.d}" fill="none" stroke="#253B43" stroke-width="${fs / 6}" opacity=".55"${l.inferred ? ' stroke-dasharray="5 4"' : ''} class="np"/>`).join('');
+  const temp = (S.points[site] || []).filter(p => p.sheet === sh.id && p.x != null).map(p => { const on = p.id === wh || p.id === to; return `<g class="pt" data-act="dpt" data-v="${esc(p.id)}"><circle cx="${p.x}" cy="${p.y}" r="${fs * 1.1}" fill="${on ? '#FFE7A3' : '#fff'}" stroke="${on ? (p.id === to ? '#E8843C' : '#D9A520') : '#1e63c4'}" stroke-width="${fs / 5}" stroke-dasharray="4 3"/><text x="${p.x}" y="${p.y + fs * 0.35}" font-size="${fs}" font-weight="700" text-anchor="middle" fill="#1e63c4">?</text><text x="${p.x}" y="${p.y - fs * 1.5}" font-size="${fs}" text-anchor="middle" fill="#1e63c4" font-weight="600">${esc(p.label)}</text></g>`; }).join('');
+  // route: polyline through waypoints on this sheet; stops drawn larger
+  const route = (e && e.route) || [];
+  const pos = w => { const q = w.point_id && pid[w.point_id]; return q && q.x != null && (q.sheet || '') === w.sheet ? [q.x, q.y] : [w.x, w.y]; };
+  let rsvg = '';
+  route.forEach((w, i) => {
+    if (w.sheet !== sh.id) return;
+    const [x, y] = pos(w), prev = route[i - 1], next = route[i + 1];
+    if (prev && prev.sheet === sh.id) { const [x0, y0] = pos(prev); rsvg += `<line x1="${x0}" y1="${y0}" x2="${x}" y2="${y}" stroke="#D81B60" stroke-width="${fs / 2.6}" stroke-linecap="round" marker-end="url(#rarr)" class="np"/>`; }
+    if (prev && prev.sheet !== sh.id) rsvg += `<text x="${x}" y="${y + fs * 2.6}" font-size="${fs}" text-anchor="middle" fill="#D81B60" font-weight="700" class="np">from ${esc(sheetName(site, prev.sheet))}</text>`;
+    if (next && next.sheet !== sh.id) rsvg += `<text x="${x}" y="${y + fs * 2.6}" font-size="${fs}" text-anchor="middle" fill="#D81B60" font-weight="700" class="np">to ${esc(sheetName(site, next.sheet))} →</text>`;
+  });
+  route.forEach((w, i) => {
+    if (w.sheet !== sh.id) return;
+    const [x, y] = pos(w), r = w.stop ? fs * 1.25 : fs * 0.85;
+    rsvg += `<g class="np"><circle cx="${x}" cy="${y}" r="${r}" fill="${w.stop ? '#E8843C' : '#D81B60'}" stroke="#fff" stroke-width="${fs / 6}"/><text x="${x}" y="${y + fs * 0.36}" font-size="${fs * 0.95}" font-weight="700" text-anchor="middle" fill="#fff">${i + 1}</text></g>`;
+  });
+  const defs = `<defs><marker id="rarr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M1 1L9 5L1 9z" fill="#D81B60"/></marker></defs>`;
+  return pmRow + banner + `<div class="dwrap"><div class="dia${placing ? ' placing-on' : ''}${pm === 'route' ? ' routing' : ''}"><svg class="pz" viewBox="${vb.join(' ')}" data-key="${esc(key)}" data-base="${sh.viewBox.join(' ')}" data-site="${esc(site)}" data-sheet="${esc(sh.id)}">${defs}${deco}${zonesFirst.map(rect).join('')}${links}${temp}${rsvg}</svg></div>${floors}${zooms}</div>`
+    + (route.length || pm === 'route' ? vRoute(site, e) : '')
+    + `<p class="small muted" style="margin:4px 0 6px">Schematic, not to scale. Pinch or drag to zoom and move. Dashed lines = relationship not confirmed. Dashed circles with ? = points you added.</p>`;
+}
+function vRoute(site, e) {
+  const route = e.route || [];
+  const chips = route.map((w, i) => `<button class="chip rtp${w.stop ? ' stop' : ''}" data-act="rt-stop" data-v="${i}" title="Tap to mark / unmark as a stop"><i>${i + 1}</i>${esc(w.label)}${w.sheet !== (route[i - 1] || w).sheet ? ` <i>${esc(sheetName(site, w.sheet))}</i>` : ''}${w.stop ? ` <b>⏸ stop</b>${w.stop_note ? ': ' + esc(w.stop_note) : ''}` : ''}</button>`).join('<span class="arr">→</span>');
+  const stops = route.filter(w => w.stop).length;
+  return `<div class="route"><div class="route-h"><b>Route</b><span class="small muted">${route.length ? route.length + ' points · ' + stops + ' stop' + (stops === 1 ? '' : 's') + ' · tap a point to mark it as a stop' : 'switch to Route, then tap the start, each space passed, and the end'}</span><span style="flex:1"></span><button class="btn sm" data-act="rt-undo" ${route.length ? '' : 'disabled'}>Undo</button><button class="btn sm danger" data-act="rt-clear" ${route.length ? '' : 'disabled'}>Clear</button></div><div class="chips">${chips}</div></div>`;
 }
 function pointChips(site, cur, act) {
-  const pts = sitePoints(site);
-  return `<div class="chips">` + Object.keys(SPECIAL).map(k => `<button class="chip sp${cur === k ? ' on' : ''}" data-act="${act}" data-v="${k}">${esc(SPECIAL[k])}</button>`).join('')
-    + pts.map(p => `<button class="chip${cur === p.id ? ' on' : ''}" data-act="${act}" data-v="${esc(p.id)}">${p.tool_id ? '<i>' + esc(p.tool_id) + '</i>' : ''}${esc(p.label)}${p.provisional ? ' <i>temp</i>' : ''}</button>`).join('')
-    + `<button class="chip add" data-act="new-pt" data-v="${act}">+ New point</button></div>`;
+  const sh = curSheet(site), all = sitePoints(site);
+  const curP = all.find(p => p.id === cur);
+  const onSheet = all.filter(p => !p.provisional && (!sh || p.sheet === sh.id));
+  const placed = onSheet.filter(p => !p.unplaced), unplaced = onSheet.filter(p => p.unplaced);
+  const temp = (S.points[site] || []);
+  const chip = p => `<button class="chip${cur === p.id ? ' on' : ''}${p.unplaced ? ' unpl' : ''}${p.provisional ? ' tmp' : ''}" data-act="${act}" data-v="${esc(p.id)}">${p.tool_id ? '<i>' + esc(p.tool_id) + '</i>' : ''}${esc(p.label)}${p.provisional ? ' <i>' + (p.x != null ? 'temp · ' + esc(sheetName(site, p.sheet)) : 'temp · not placed') + '</i>' : ''}</button>`;
+  const cur1 = curP && !(curP.sheet === (sh && sh.id) || curP.provisional || curP.unplaced) ? `<div class="grp">Selected (other sheet)</div><div class="chips">${chip(curP)}</div>` : '';
+  const tempBtn = curP && curP.provisional ? `<button class="chip add" data-act="place-start" data-v="${esc(curP.id)}">${curP.x != null ? 'Move pin of' : 'Place'} “${esc(curP.label)}” on diagram</button>` : '';
+  return cur1 + `<div class="chips">` + Object.keys(SPECIAL).map(k => `<button class="chip sp${cur === k ? ' on' : ''}" data-act="${act}" data-v="${k}">${esc(SPECIAL[k])}</button>`).join('')
+    + unplaced.map(chip).join('') + temp.map(chip).join('') + `<button class="chip add" data-act="new-pt" data-v="${act}">+ New point</button>${tempBtn}</div>`
+    + (placed.length ? `<details class="plist"><summary>List of points on this sheet (${placed.length})</summary><div class="chips">${placed.map(chip).join('')}</div></details>` : '');
 }
-function vEditor(sn) {
+function techLabel(t) { const s = sess(); const site = s && s.site; return t[site] ? t.label + ' (' + t[site] + ')' : t.label; }
+
+/* input picker: outputs of other entries, grouped by producer; versions shown when the producer has branches */
+function inputPicker(e) {
+  const me = baseOf(e).entry_id;
+  const has = (from, art, all) => e.inputs.some(i => i.from === from && i.artifact === art && !!i.all === !!all);
+  const bases = ordered().filter(x => !x.branch_of_entry_id && x.entry_id !== me);
+  const myseq = baseOf(e).seq;
+  const block = b => {
+    const vers = versionsOf(b).filter(v => v.outputs.length);
+    if (!vers.length) return '';
+    const arts = [...new Set(vers.flatMap(v => v.outputs))];
+    const multi = versionsOf(b).length > 1;
+    const chips = arts.map(art => {
+      if (!multi) return `<button class="chip${has(b.entry_id, art, false) ? ' on' : ''}" data-act="in-add" data-v="${b.entry_id}" data-art="${art}">${esc(outLabel(b, art))}</button>`;
+      const verChips = versionsOf(b).filter(v => v.outputs.includes(art)).map(v => `<button class="chip${has(v.entry_id, art, false) ? ' on' : ''}" data-act="in-add" data-v="${v.entry_id}" data-art="${art}"><i>${v.branch_of_entry_id ? esc(condText(v)) : 'usual'}</i>${esc(outLabel(v, art))}</button>`).join('');
+      return `<span class="vgrp"><button class="chip all${has(b.entry_id, art, true) ? ' on' : ''}" data-act="in-add" data-v="${b.entry_id}" data-art="${art}" data-all="1"><i>all versions</i>${esc(lbl(art, b))}</button>${verChips}</span>`;
+    }).join('');
+    return `<div class="prod"><div class="prod-h"><span class="eid">${esc(short(b.entry_id))}</span> ${esc(b.action_id ? lbl(b.action_id, b) : 'No action')} · ${esc(b.who.map(roleKeyLabel).join(', '))}</div><div class="chips">${chips}</div></div>`;
+  };
+  const earlier = bases.filter(b => b.seq < myseq).reverse().map(block).join('');
+  const later = bases.filter(b => b.seq > myseq).map(block).join('');
+  const outside = `<details class="outside"><summary>From outside the case (no earlier entry)</summary><div class="chips">` + [...O.info, ...O.states].map(x => `<button class="chip${has('', x.id, false) ? ' on' : ''}" data-act="in-add" data-v="" data-art="${x.id}">${esc(x.label)}</button>`).join('') + `</div></details>`;
+  return (earlier || '<p class="small muted">No earlier entry has an output yet.</p>') + (later ? `<div class="grp">Entries added later</div>${later}` : '') + outside;
+}
+
+function vEditor() {
   const e = curEntry(), s = sess();
-  if (!e) return `<div class="card"><p class="muted">Tap an entry to edit it, or <b>+ Entry</b> to add one.</p><p class="small muted">Entry = who is where, doing which action, with which tools, technology and information.</p></div>`;
-  const a = byId[e.action_id];
-  const done = { 1: !!e.type, 2: !!e.where_point_id, 3: e.who.length > 0, 4: !!e.action_id && (!a || !a.toWhere || !!e.to_point_id), 5: e.tool_ids.length + e.technology_ids.length > 0, 6: e.info.length > 0 };
-  const sh = (n, t, r = '') => `<div class="sh"><span class="n${done[n] ? ' ok' : ''}">${n}</span>${t}${r ? `<span class="r">${r}</span>` : ''}</div>`;
-  let h = `<div class="card"><div class="ed-h"><h3>Entry ${ui.ei + 1}</h3>${e.changed === 'Y' ? '<span class="kd chg">' + (e.carried_from_entry_id ? 'CHANGED' : 'NEW') + '</span>' : '<span class="kd car">carried, unchanged</span>'}</div>`;
-  // 1 type
-  h += `<div class="sec">${sh(1, 'Type')}<div class="seg">` + O.types.map(t => `<button class="${e.type === t.id ? 'on' + (t.id === 'TY02' ? ' sp' : '') : ''}" data-act="type" data-v="${t.id}">${esc(t.label)}</button>`).join('') + `</div></div>`;
-  // 2 where
-  h += `<div class="sec">${sh(2, 'Where', 'space or fixed tool')}${vDiagram(s.site, e, a && a.toWhere)}${pointChips(s.site, e.where_point_id, 'where')}</div>`;
-  // 3 who
+  if (!e) return `<div class="card empty-ed"><h2>${ents().length ? 'Pick an entry on the left' : 'Add the first entry'}</h2><p class="muted">One entry = one person (or group) doing one action: Type + where → Who + action → Tools · info.<br>In step 3, choose the entry's <b>inputs</b> from outputs of earlier entries (several allowed). Those links set the sequence; entries with no link between them can run in parallel.</p><button class="btn primary big" data-act="add">+ Entry</button></div>`;
+  const a = byId[e.action_id], dif = new Set(differs(e));
+  const done = { 1: !!e.type, 2: !!e.where_point_id, 3: e.who.length > 0, 4: !!e.action_id && (!a || !a.toWhere || !!e.to_point_id), 5: e.tool_ids.length + e.technology_ids.length > 0, 6: e.inputs.length + e.outputs.length > 0 };
+  const dtag = (...k) => (k.some(x => dif.has(x)) ? ' <span class="kd chg">DIFFERS</span>' : '');
+  const sh = (n, t, r = '', d = '') => `<div class="sh"><span class="n${done[n] ? ' ok' : ''}">${n}</span>${t}${d}${r ? `<span class="r">${r}</span>` : ''}</div>`;
+  // step 1: type + where
+  let P1 = `<div class="sec">${sh(1, 'Type', '', dtag('type'))}<div class="seg">` + O.types.map(t => `<button class="${e.type === t.id ? 'on' + (t.id === 'TY02' ? ' sp' : '') : ''}" data-act="type" data-v="${t.id}">${esc(t.label)}</button>`).join('') + `</div></div>`;
+  P1 += `<div class="sec">${sh(2, 'Where', 'space or fixed tool', dtag('where'))}${pointChips(s.site, e.where_point_id, 'where')}${vDiagram(s.site, e, a && a.toWhere)}</div>`;
+  // step 2: who + action
   const groups = [...new Set(O.roles.map(r => r.group))];
-  h += `<div class="sec">${sh(3, 'Who', '2+ roles = interaction')}<div class="sel">` + e.who.map(k => { const rid = k.split('#')[0]; return `<span class="stok">${esc(OTHER(rid) && e.other[rid] ? e.other[rid] : byId[rid].label)}<button class="inst" data-act="who-cyc" data-v="${k}" title="Change person number">#${k.split('#')[1]}</button><button data-act="who-del" data-v="${k}">×</button></span>`; }).join('')
+  let P2 = `<div class="sec">${sh(3, 'Who', '2+ roles = interaction', dtag('who'))}<div class="sel">` + e.who.map(k => { const rid = k.split('#')[0]; return `<span class="stok">${esc(OTHER(rid) && e.other[rid] ? e.other[rid] : byId[rid].label)}<button class="inst" data-act="who-cyc" data-v="${k}" title="Change person number">#${k.split('#')[1]}</button><button data-act="who-del" data-v="${k}">×</button></span>`; }).join('')
     + (e.who.length ? '' : '<span class="small muted">Tap roles below. Tap #1 to switch to #2 for a second person with the same role.</span>') + `</div><div class="chips">`
     + groups.map(g => `<div class="grp">${esc(g)}</div>` + O.roles.filter(r => r.group === g).map(r => `<button class="chip${e.who.some(k => k.startsWith(r.id + '#')) ? ' on' : ''}" data-act="who-add" data-v="${r.id}">${esc(r.label)}</button>`).join('')).join('') + `</div></div>`;
-  // 4 action
   const acts = O.actions.filter(x => x.type === e.type || x.type === 'both');
-  h += `<div class="sec">${sh(4, 'Action')}` + (e.type ? `<div class="acts">` + acts.map(x => `<button class="${e.action_id === x.id ? 'on' : ''}" data-act="action" data-v="${x.id}"><b>${esc(x.id === e.action_id ? lbl(x.id, e) : x.label)}</b><span>${esc(x.covers)}</span></button>`).join('') + `</div>` : '<p class="small muted">Pick a type first.</p>');
-  if (a && a.toWhere) h += `<div class="grp" style="margin-top:8px">To where (from = where)</div>${pointChips(s.site, e.to_point_id, 'to')}`;
-  h += `</div>`;
-  // 5 tools + tech
+  P2 += `<div class="sec">${sh(4, 'Action', '', dtag('action', 'to'))}` + (e.type ? `<div class="acts">` + acts.map(x => `<button class="${e.action_id === x.id ? 'on' : ''}" data-act="action" data-v="${x.id}"><b>${esc(x.id === e.action_id ? lbl(x.id, e) : x.label)}</b><span>${esc(x.covers)}</span></button>`).join('') + `</div>` : '<p class="small muted">Pick a type first (step 1).</p>');
+  if (a && a.toWhere) P2 += `<div class="grp" style="margin-top:8px">To where (from = where)</div>${pointChips(s.site, e.to_point_id, 'to')}`;
+  P2 += `</div>`;
+  // step 3: tools + tech, info (inputs, outputs), note
   const sugT = a ? a.tools : [], sugC = a ? a.tech : [];
-  h += `<div class="sec">${sh(5, 'Tools + technology', 'dashed = suggested by action')}<div class="grp">Portable / mobile tools</div><div class="chips">`
+  let P3 = `<div class="sec">${sh(5, 'Tools + technology', 'dashed = suggested', dtag('tools', 'technology'))}<div class="grp">Portable / mobile tools</div><div class="chips">`
     + O.tools.filter(t => t.mobility !== 'Fixed').map(t => `<button class="chip${e.tool_ids.includes(t.id) ? ' on' : sugT.includes(t.id) ? ' sug' : ''}" data-act="tool" data-v="${t.id}">${esc(lbl(t.id, e.tool_ids.includes(t.id) ? e : null))}</button>`).join('')
     + `</div><div class="grp">Communication</div><div class="chips">`
     + O.tech.filter(t => +t.id.slice(2) <= 6).map(t => `<button class="chip${e.technology_ids.includes(t.id) ? ' on' : sugC.includes(t.id) ? ' sug' : ''}" data-act="tech" data-v="${t.id}">${esc(techLabel(t))}</button>`).join('')
     + `</div><div class="grp">Systems</div><div class="chips">`
     + O.tech.filter(t => +t.id.slice(2) > 6).map(t => `<button class="chip${e.technology_ids.includes(t.id) ? ' on' : sugC.includes(t.id) ? ' sug' : ''}" data-act="tech" data-v="${t.id}">${esc(t.id === 'TC99' ? lbl(t.id, e.technology_ids.includes(t.id) ? e : null) : techLabel(t))}</button>`).join('')
     + `</div><p class="small muted" style="margin:6px 0 0">Fixed tools (workstation, ADC, CT, MRI, badge reader) are picked as Where.</p></div>`;
-  // 6 info
-  h += `<div class="sec">${sh(6, 'Information', 'each one Input or Output')}`
-    + e.info.map(x => `<div class="iorow"><span class="nm">${esc(lbl(x.id, e))}</span><div class="seg"><button class="${x.io === 'Input' ? 'on' : ''}" data-act="io" data-v="${x.id}" data-io="Input">↘ Input</button><button class="${x.io === 'Output' ? 'on out' : ''}" data-act="io" data-v="${x.id}" data-io="Output">↗ Output</button></div><button class="btn sm danger" data-act="info-del" data-v="${x.id}">×</button></div>`).join('')
-    + `<div class="chips" style="margin-top:4px">` + O.info.filter(x => !e.info.some(i => i.id === x.id)).map(x => `<button class="chip" data-act="info" data-v="${x.id}">${esc(x.label)}</button>`).join('') + `</div>`
-    + `<p class="small muted" style="margin:6px 0 0">Output here + Input in a later snapshot = asynchronous hand-over.</p></div>`;
-  h += `<div class="sec"><div class="sh">Note</div><textarea data-in="enote" placeholder="Expert's words, uncertainty, anything without a field">${esc(e.note)}</textarea></div>`;
-  h += `<div class="row"><button class="btn" data-act="dup">Duplicate entry</button><span style="flex:1"></span><button class="btn dark" data-act="close-ed">Done</button></div></div>`;
-  return h;
+  P3 += `<div class="sec">${sh(6, 'Inputs', 'outputs of other entries · several allowed', dtag('inputs'))}`
+    + (e.inputs.length ? `<div class="sel">` + e.inputs.map((i, k) => `<span class="stok in">↘ ${esc(inLabel(i, e))}<button data-act="in-del" data-v="${k}">×</button></span>`).join('') + `</div>` : '')
+    + inputPicker(e) + `</div>`;
+  const outState = a && a.outState;
+  P3 += `<div class="sec"><div class="sh">Outputs${dtag('outputs')}<span class="r">what this entry produces</span></div>`
+    + `<div class="grp">Information</div><div class="chips">` + O.info.map(x => `<button class="chip${e.outputs.includes(x.id) ? ' on out' : ''}" data-act="out" data-v="${x.id}">${esc(e.outputs.includes(x.id) ? lbl(x.id, e) : x.label)}</button>`).join('') + `</div>`
+    + `<div class="grp">State (for steps with no document: a move, a fetch…)</div><div class="chips">` + O.states.map(x => `<button class="chip${e.outputs.includes(x.id) ? ' on out' : x.id === outState ? ' sug' : ''}" data-act="out" data-v="${x.id}">${esc(e.outputs.includes(x.id) ? outLabel(e, x.id) : x.label)}</button>`).join('') + `</div></div>`;
+  P3 += `<div class="sec"><div class="sh">Note${dtag('note')}</div><textarea data-in="enote" placeholder="Expert's words, uncertainty, anything without a field">${esc(e.note)}</textarea></div>`;
+  const stepOk = [done[1] && done[2], done[3] && done[4], done[5] || done[6]];
+  const names = ['Type + where', 'Who + action', 'Tools · info'];
+  const nav = i => `<div class="stepnav">${i > 0 ? `<button class="btn" data-act="step" data-v="${i - 1}">‹ ${names[i - 1]}</button>` : ''}<span style="flex:1"></span>`
+    + (i < 2 ? `<button class="btn dark" data-act="step" data-v="${i + 1}">${names[i + 1]} ›</button>` : `<button class="btn" data-act="dup">Duplicate</button><button class="btn dark" data-act="close-ed">Done</button>`) + `</div>`;
+  const head = e.branch_of_entry_id
+    ? `<div class="cond"><b>Branch version</b><span>of ${esc(short(e.branch_of_entry_id))} · if ${esc(condText(e))}</span><button class="btn sm" data-act="cond-edit">Change</button></div>`
+    : '';
+  return `<div class="card edc"><div class="ed-h"><h3>${esc(short(e.entry_id))}</h3>${issues(e).length ? `<span class="warn">Missing: ${esc(issues(e).join(', '))}</span>` : ''}<span style="flex:1"></span><button class="btn sm br" data-act="branch">Branch version…</button><button class="btn sm danger" data-act="del-ent" data-v="${e.entry_id}">Delete</button><button class="btn sm cl" data-act="close-ed" title="Close">×</button></div>${head}`
+    + `<div class="stabs">` + names.map((n, i) => `<button class="${ui.step === i ? 'on' : ''}${stepOk[i] ? ' ok' : ''}" data-act="step" data-v="${i}"><b>${i + 1}</b>${n}</button>`).join('') + `</div>`
+    + `<div class="steps" id="steps">` + [P1, P2, P3].map((p, i) => `<section class="step" data-step="${i}">${p}${nav(i)}</section>`).join('') + `</div></div>`;
 }
-function techLabel(t) { const s = sess(); const site = s && s.site; return t[site] ? t.label + ' (' + t[site] + ')' : t.label; }
 
 function vData() {
   const s = sess(); if (!s) return '';
-  const rows = s.events.flatMap(ev => ev.entries.map(e => ({ ev, e })));
-  if (!rows.length) return `<div class="card"><p class="muted">No saved snapshots yet. Use <b>Next</b> on the Record tab to save one.</p></div>`;
+  const list = ordered();
+  if (!list.length) return `<div class="card"><p class="muted">No entries yet.</p></div>`;
   const cell = (v, cls = '') => `<td class="${cls}">${v}</td>`;
-  return `<p class="small muted">Saved snapshots only (the current draft is not included). Tap a row to open it.</p><div class="tscroll"><table class="dt"><thead><tr>
-    <th>Snapshot</th><th>Condition</th><th>Entry</th><th>Chg</th><th>Type</th><th>Where</th><th>Who</th><th>Action</th><th>To</th><th>Tools</th><th>Technology</th><th>Info</th><th>Note</th></tr></thead><tbody>`
-    + rows.map(({ ev, e }, i) => `<tr class="${ev.branch_of_event_id ? 'br' : ''}" data-go="${esc(ev.event_id)}|${ev.entries.indexOf(e)}">`
-      + cell(esc(ev.event_id.replace(s.session_id + '-', ''))) + cell(ev.branch_of_event_id ? esc(ev.condition_id + ' = ' + ev.condition_value) : '')
-      + cell(esc(e.entry_id.replace(ev.event_id + '-', ''))) + cell(e.changed, e.changed === 'Y' ? 'y' : '')
+  return `<p class="small muted">Tap a row to open it. Sequence = the Inputs column (which earlier output each entry takes).</p><div class="tscroll"><table class="dt"><thead><tr>
+    <th>Entry</th><th>Version</th><th>Type</th><th>Where</th><th>Who</th><th>Action</th><th>To</th><th>Route</th><th>Tools</th><th>Technology</th><th>Inputs</th><th>Outputs</th><th>Note</th></tr></thead><tbody>`
+    + list.map(e => `<tr class="${e.branch_of_entry_id ? 'br' : ''}" data-go="${esc(e.entry_id)}">`
+      + cell(esc(short(e.entry_id))) + cell(e.branch_of_entry_id ? esc('if ' + condText(e)) + (differs(e).length ? '<br><span class="muted">differs: ' + esc(differs(e).join(', ')) + '</span>' : '') : 'usual')
       + cell(esc(byId[e.type] ? byId[e.type].label : '')) + cell(esc(ptLabel(e.where_point_id))) + cell(esc(e.who.map(roleKeyLabel).join(', ')))
-      + cell(esc(lbl(e.action_id, e))) + cell(esc(ptLabel(e.to_point_id))) + cell(esc(e.tool_ids.map(x => lbl(x, e)).join(', ')))
-      + cell(esc(e.technology_ids.map(x => lbl(x, e)).join(', '))) + cell(esc(e.info.map(x => lbl(x.id, e) + ' (' + (x.io === 'Output' ? 'out' : 'in') + ')').join(', '))) + cell(esc(e.note)) + '</tr>').join('')
+      + cell(esc(lbl(e.action_id, e))) + cell(esc(ptLabel(e.to_point_id))) + cell(esc((e.route || []).map(w => w.label + (w.stop ? ' [stop' + (w.stop_note ? ': ' + w.stop_note : '') + ']' : '')).join(' → '))) + cell(esc(e.tool_ids.map(x => lbl(x, e)).join(', ')))
+      + cell(esc(e.technology_ids.map(x => lbl(x, e)).join(', '))) + cell(esc(e.inputs.map(i => inLabel(i, e)).join('; '))) + cell(esc(e.outputs.map(o => outLabel(e, o)).join('; '))) + cell(esc(e.note)) + '</tr>').join('')
     + `</tbody></table></div>`;
 }
 
 function vSession() {
   const s = sess();
-  const obsList = `<datalist id="obs">${S.observers.map(o => `<option value="${esc(o)}">`).join('')}</datalist>`;
   const start = `<div class="card"><h3>New session</h3>
-    <div class="field"><span>Site</span><div class="seg" id="site-seg">${O.sites.map(x => `<button data-act="pick-site" data-v="${x}" class="${ui.newSite === x ? 'on' : ''}">${x}</button>`).join('')}</div></div>
-    <label class="field"><span>Observer (researcher code, not a participant)</span><input type="text" list="obs" data-in="newobs" value="${esc(ui.newObs || '')}" placeholder="e.g. IZ">${obsList}</label>
+    <div class="field"><span>Site</span><div class="seg">${O.sites.map(x => `<button data-act="pick-site" data-v="${x}" class="${ui.newSite === x ? 'on' : ''}">${x}</button>`).join('')}</div></div>
     <p class="small muted">Session ID is generated: site-date-number. Roles only, no names. Records stay on this device until you export.</p>
-    <button class="btn primary big" data-act="start" ${ui.newSite && ui.newObs ? '' : 'disabled'}>Start session</button></div>`;
-  if (!s) return `<div class="welcome"><h2>Walkthrough Recorder</h2><p class="muted">Snapshot model · option sets v3 (${esc(O.source)}). Start a session to begin.</p>${start}${vDevice()}</div>`;
-  const nEv = s.events.length, nEn = s.events.reduce((n, e) => n + e.entries.length, 0);
-  const d = S.diagrams[s.site];
-  const pts = S.points[s.site] || [];
-  const used = new Set(S.sessions.filter(x => x.site === s.site).flatMap(x => [...x.events.flatMap(e => e.entries), ...x.draft.entries]).flatMap(e => [e.where_point_id, e.to_point_id]));
+    <button class="btn primary big" data-act="start" ${ui.newSite ? '' : 'disabled'}>Start session</button></div>`;
+  if (!s) return `<div class="welcome"><h2>Walkthrough Recorder</h2><p class="muted">Entry model · option sets v3 (${esc(O.source)}). Start a session to begin.</p>${start}${vDevice()}</div>`;
+  const d = S.diagrams[s.site], pts = S.points[s.site] || [];
+  const used = new Set(S.sessions.filter(x => x.site === s.site).flatMap(x => x.entries).flatMap(e => [e.where_point_id, e.to_point_id]));
   return `<div class="cols">
     <div class="card"><h3>Current session</h3>
-      <p><b>${esc(s.session_id)}</b><br><span class="small muted">Site ${esc(s.site)} · observer ${esc(s.observer)} · ${nEv} snapshots · ${nEn} entries</span></p>
+      <p><b>${esc(s.session_id)}</b><br><span class="small muted">Site ${esc(s.site)} · ${s.entries.length} entries</span></p>
       <div class="row"><button class="btn primary" data-act="export">Export this session</button><button class="btn" data-act="export-all">Back up everything (JSON)</button></div>
-      <p class="small muted">Export = one JSON + events.csv + entries.csv (share sheet → Save to Files). The current draft is not included; press Next first if it holds new work.</p>
+      <p class="small muted">Export = one JSON + entries.csv + links.csv (share sheet → Save to Files).</p>
     </div>
     ${start}
-    <div class="card"><h3>Site points · ${esc(s.site)}</h3>
-      <p class="small muted">Temporary points until the bubble diagram is ready. IDs ${esc(s.site)}-P901… are kept, so records stay valid when the diagram arrives. Set a fixed-tool type for points like CT or a workstation.</p>
-      ${pts.map(p => `<div class="prow"><code>${esc(p.id)}</code><input type="text" data-in="ptlabel" data-v="${esc(p.id)}" value="${esc(p.label)}"><select data-in="pttool" data-v="${esc(p.id)}"><option value="">Space</option>${O.tools.filter(t => t.mobility === 'Fixed').map(t => `<option value="${t.id}" ${p.tool_id === t.id ? 'selected' : ''}>${esc(t.label)}</option>`).join('')}</select><button class="btn sm danger" data-act="pt-del" data-v="${esc(p.id)}" ${used.has(p.id) ? 'disabled title="Used in records"' : ''}>×</button></div>`).join('') || '<p class="small muted">None yet. Add them while recording (+ New point).</p>'}
-      <div class="row"><button class="btn sm" data-act="new-pt" data-v="">+ Add point</button></div>
+    <div class="card"><h3>Site diagrams</h3>
+      <p>${['LMH', 'WCM'].map(x => S.diagrams[x] ? `<span class="pill ok">${x}: ${sheetsOf(x).map(sh => esc(sh.name)).join(' · ')} · ${S.diagrams[x].points.length} points</span>` : `<span class="pill">${x}: not loaded</span>`).join(' ')}</p>
+      <p class="small muted">Schematic bubble diagrams (not to scale), loaded from a file on this device, not from the website. File: <code>data/diagrams/site_diagrams.json</code> (made by tools/diagram_from_html.py). Loading again replaces the diagrams; your added points stay.</p>
+      <div class="row"><button class="btn" data-act="import-dia">Load site diagrams…</button>${S.diagrams.LMH || S.diagrams.WCM ? '<button class="btn danger" data-act="clear-dia">Remove</button>' : ''}</div>
     </div>
-    <div class="card"><h3>Site bubble diagram · ${esc(s.site)}</h3>
-      <p>${d ? `<span class="pill ok">Loaded: ${esc(d.name || 'diagram')}</span> ${(d.points || []).length} points, ${(d.bubbles || []).length} bubbles` : '<span class="pill">Reserved, not loaded</span>'}</p>
-      <p class="small muted">The diagram is still being prepared. When ready, import it as JSON: <code>{"site":"${esc(s.site)}","name":"…","width":1000,"height":620,"bubbles":[{"id","label","x","y","w","h","kind"}],"links":[{"from","to","restricted"}],"points":[{"id":"${esc(s.site)}-P001","label","x","y","tool_id"}]}</code></p>
-      <div class="row"><button class="btn" data-act="import-dia">Import diagram JSON</button>${d ? '<button class="btn danger" data-act="clear-dia">Remove</button>' : ''}</div>
+    <div class="card"><h3>Points you added · ${esc(s.site)}</h3>
+      <p class="small muted">Places missing from the diagram, added while recording. Review later: fix the name, add where it roughly is, set a fixed-tool type (e.g. CT). Pins can be placed or moved from the Where step.</p>
+      ${pts.map(p => `<div class="prow2"><code>${esc(p.id)}</code><input type="text" data-in="ptlabel" data-v="${esc(p.id)}" value="${esc(p.label)}"><select data-in="pttool" data-v="${esc(p.id)}"><option value="">Space</option>${O.tools.filter(t => t.mobility === 'Fixed').map(t => `<option value="${t.id}" ${p.tool_id === t.id ? 'selected' : ''}>${esc(t.label)}</option>`).join('')}</select><button class="btn sm danger" data-act="pt-del" data-v="${esc(p.id)}" ${used.has(p.id) ? 'disabled title="Used in records"' : ''}>×</button>
+        <input type="text" class="wide" data-in="ptnote" data-v="${esc(p.id)}" value="${esc(p.note || '')}" placeholder="Where roughly / relation to other spaces"><span class="small muted wide">${p.x != null ? 'Pin on ' + esc(sheetName(s.site, p.sheet) || p.sheet) : 'Not placed on a diagram'}</span></div>`).join('') || '<p class="small muted">None yet. Add them while recording (+ New point).</p>'}
+      <div class="row"><button class="btn sm" data-act="new-pt" data-v="">+ Add point</button></div>
     </div>
     ${vDevice()}
   </div>`;
 }
 function vDevice() {
   return `<div class="card"><h3>Sessions on this device</h3>
-    ${S.sessions.map(x => `<div class="srow${x.session_id === S.cur ? ' on' : ''}"><div class="grow"><b>${esc(x.session_id)}</b><br><span class="small muted">${esc(x.observer)} · ${x.events.length} snapshots${x.exported_at ? ' · exported' : ' · <span style="color:#a32b2b">not exported</span>'}</span></div>${x.session_id === S.cur ? '<span class="pill ok">open</span>' : `<button class="btn sm" data-act="open-s" data-v="${esc(x.session_id)}">Open</button>`}<button class="btn sm danger" data-act="del-s" data-v="${esc(x.session_id)}">Delete</button></div>`).join('') || '<p class="small muted">None.</p>'}
+    ${S.sessions.map(x => `<div class="srow${x.session_id === S.cur ? ' on' : ''}"><div class="grow"><b>${esc(x.session_id)}</b><br><span class="small muted">${x.entries.length} entries${x.exported_at ? ' · exported' : ' · <span style="color:#a32b2b">not exported</span>'}</span></div>${x.session_id === S.cur ? '<span class="pill ok">open</span>' : `<button class="btn sm" data-act="open-s" data-v="${esc(x.session_id)}">Open</button>`}<button class="btn sm danger" data-act="del-s" data-v="${esc(x.session_id)}">Delete</button></div>`).join('') || '<p class="small muted">None.</p>'}
     <div class="row"><button class="btn" data-act="import">Import JSON (session or backup)</button></div></div>`;
 }
 
@@ -1216,125 +1520,134 @@ function applyActionDefaults(e, prev, next) {
   const untouched = (cur, def) => cur.length === 0 || JSON.stringify([...cur].sort()) === JSON.stringify([...one(def)].sort());
   if (untouched(e.tool_ids, pa && pa.tools)) e.tool_ids = one(na && na.tools);
   if (untouched(e.technology_ids, pa && pa.tech)) e.technology_ids = one(na && na.tech);
+  if (pa && pa.outState) e.outputs = e.outputs.filter(o => o !== pa.outState);
+  if (na && na.outState && !e.outputs.includes(na.outState)) e.outputs.push(na.outState);
   if (na && !na.toWhere) e.to_point_id = '';
 }
-const defaultIO = e => { const a = byId[e.action_id]; return a && a.io === 'Output' ? 'Output' : 'Input'; };
 async function needOther(e, id) {
   if (!OTHER(id)) return true;
   const t = await ask('Specify “Other”', e.other[id] || '', 'short description');
   if (!t) return false; e.other[id] = t; return true;
 }
+function newPointDlg(site) {
+  const sh = curSheet(site);
+  return dialog(`<p><b>New point</b><br><span class="small muted">A place that is missing from the diagram. Write it down now; check how it relates to other spaces later.</span></p>
+    <input type="text" data-l placeholder="Name, e.g. Fast track, CT 2, side entrance">
+    <input type="text" data-n placeholder="Where roughly (optional), e.g. behind triage, near bed elevators" style="margin-top:8px">
+    ${sh ? `<p class="small muted" style="margin:8px 0 0">Sheet: ${esc(sh.name)}</p>` : ''}
+    <div class="dlg-act"><button class="btn" data-x>Cancel</button><button class="btn" data-ok>Save</button>${sh ? '<button class="btn primary" data-pl>Save + tap on diagram</button>' : ''}</div>`, (d, done) => {
+    const l = d.querySelector('[data-l]'), n = d.querySelector('[data-n]'); setTimeout(() => l.focus(), 30);
+    const go = place => { const label = l.value.trim(); if (!label) { l.focus(); return; } done({ label, note: n.value.trim(), place }); };
+    d.querySelector('[data-x]').onclick = () => done(null);
+    d.querySelector('[data-ok]').onclick = () => go(false);
+    const pl = d.querySelector('[data-pl]'); if (pl) pl.onclick = () => go(true);
+  });
+}
 async function newPoint(site) {
-  const label = await ask('Name the point (space or fixed tool) at ' + site, '', 'e.g. CT 1 control room, triage room 2');
-  if (!label) return null;
+  const r = await newPointDlg(site); if (!r) return null;
   const list = S.points[site] || (S.points[site] = []);
-  const nums = list.map(p => +p.id.split('-P')[1]);
-  const id = site + '-P' + pad(Math.max(900, ...nums) + 1, 3);
-  list.push({ id, label, tool_id: '', provisional: true });
+  const id = site + '-P' + pad(Math.max(900, ...list.map(p => +p.id.split('-P')[1])) + 1, 3);
+  const sh = curSheet(site);
+  list.push({ id, label: r.label, note: r.note, sheet: sh ? sh.id : '', tool_id: '', provisional: true });
+  if (r.place && sh) { ui.placing = id; toast('Tap the diagram where “' + r.label + '” roughly is.'); }
   return id;
 }
-function saveSnapshot() {
-  const s = sess(), main = s.events.filter(e => !e.branch_of_event_id);
-  const seq = main.length + 1, id = s.session_id + '-E' + pad(seq, 3);
-  const ev = { event_id: id, session_id: s.session_id, seq, saved_at: iso(), branch_of_event_id: '', condition_id: '', condition_value: '', note: s.draft.note || '', entries: [] };
-  ev.entries = s.draft.entries.map((e, i) => ({ ...clone(e), entry_id: id + '-N' + pad(i + 1, 2), event_id: id }));
-  s.events.push(ev);
-  s.draft = { note: '', n: 0, entries: ev.entries.map(e => ({ ...clone(e), entry_id: 'D' + e.entry_id.slice(-2), event_id: '', carried_from_entry_id: e.entry_id, changed: 'N' })) };
-  s.draft.n = s.draft.entries.length;
-  return ev;
-}
-async function makeBranch(parent) {
-  const s = sess();
-  const init = parent.branch_of_event_id ? { condition_id: parent.condition_id } : {};
-  const c = await condDlg(init); if (!c) return;
-  const n = s.events.filter(e => e.branch_of_event_id === parent.event_id).length + 1;
-  const id = parent.event_id + '-B' + n;
-  const ev = { event_id: id, session_id: s.session_id, seq: parent.seq, saved_at: iso(), branch_of_event_id: parent.event_id, condition_id: c.condition_id, condition_value: c.condition_value, note: '', entries: [] };
-  ev.entries = parent.entries.map((e, i) => ({ ...clone(e), entry_id: id + '-N' + pad(i + 1, 2), event_id: id, carried_from_entry_id: e.entry_id, changed: 'N' }));
-  // insert after the parent's subtree
-  const sub = new Set([parent.event_id]); s.events.forEach(e => { if (sub.has(e.branch_of_event_id)) sub.add(e.event_id); });
-  let at = -1; s.events.forEach((e, i) => { if (sub.has(e.event_id)) at = i; });
-  s.events.splice(at + 1, 0, ev);
-  ui.sel = id; ui.ei = -1; save(); render();
-  toast('Branch ' + id.replace(s.session_id + '-', '') + ' created. Edit only what differs.');
+async function makeBranch(e) {
+  const s = sess(), base = baseOf(e);
+  const c = await condDlg(e.branch_of_entry_id ? { condition_id: e.condition_id } : {}); if (!c) return;
+  const n = Math.max(0, ...versionsOf(base).map(v => +((v.entry_id.match(/-B(\d+)$/) || [])[1] || 0))) + 1;
+  const v = { ...clone(base), entry_id: base.entry_id + '-B' + n, branch_of_entry_id: base.entry_id, ...c };
+  const last = versionsOf(base).pop(); s.entries.splice(s.entries.indexOf(last) + 1, 0, v);
+  ui.ei = v.entry_id; save(); render();
+  toast('Branch version ' + short(v.entry_id) + ' created. Change only what differs.');
 }
 
 async function onAct(act, v, el) {
-  const s = sess(), sn = snap(), e = curEntry();
+  const s = sess(), e = curEntry();
   switch (act) {
     case 'view': ui.view = v; break;
-    case 'sel': ui.sel = v; ui.ei = -1; break;
-    case 'add': { const ne = blankEntry(nextEntryId(sn)); if (!sn.draft) ne.event_id = sn.ev.event_id; sn.entries.push(ne); ui.ei = sn.entries.length - 1; save(); break; }
-    case 'edit': ui.ei = +v; break;
-    case 'close-ed': ui.ei = -1; break;
-    case 'del-ent': { const x = sn.entries[+v]; if (x.changed === 'Y' || !x.carried_from_entry_id) { if (!(await confirmDlg('Remove this entry from the snapshot?', 'Remove', true))) return; } sn.entries.splice(+v, 1); ui.ei = -1; save(); break; }
-    case 'dup': { const ne = { ...clone(e), entry_id: nextEntryId(sn), carried_from_entry_id: '', changed: 'Y' }; if (!sn.draft) ne.event_id = sn.ev.event_id; sn.entries.splice(ui.ei + 1, 0, ne); ui.ei++; save(); break; }
-    case 'next': {
-      if (!sn.entries.length) { toast('Add at least one entry first.'); return; }
-      const bad = sn.entries.map((x, i) => [i, issues(x)]).filter(([, l]) => l.length);
-      if (bad.length && !(await confirmDlg(`${bad.length} entr${bad.length === 1 ? 'y has' : 'ies have'} missing fields (${bad.map(([i]) => 'entry ' + (i + 1)).join(', ')}). Save the snapshot anyway?`, 'Save anyway'))) return;
-      const ev = saveSnapshot(); ui.ei = -1; save(); toast(ev.event_id.replace(s.session_id + '-', '') + ' saved. Entries carried into the next snapshot.'); break;
+    case 'add': { const ne = blankEntry(); s.entries.push(ne); ui.ei = ne.entry_id; save(); break; }
+    case 'edit': { ui.ei = v; const x = findE(v), p = x && sitePoints(s.site).find(q => q.id === x.where_point_id); if (p && p.sheet) ui.sheet[s.site] = p.sheet; ui.placing = null; break; }
+    case 'close-ed': ui.ei = null; break;
+    case 'step': goStep(+v); return;
+    case 'del-ent': {
+      const x = findE(v); const vers = x.branch_of_entry_id ? [x] : versionsOf(x);
+      const ids = new Set(vers.map(q => q.entry_id));
+      const refs = ents().filter(c => !ids.has(c.entry_id) && c.inputs.some(i => ids.has(i.from))).length;
+      const msg = `Delete ${short(v)}${vers.length > 1 ? ' and its ' + (vers.length - 1) + ' branch version(s)' : ''}?` + (refs ? ` ${refs} other entr${refs === 1 ? 'y uses' : 'ies use'} its output; those input links will be removed.` : '') + ' This cannot be undone.';
+      if (!(await confirmDlg(msg, 'Delete', true))) return;
+      s.entries = s.entries.filter(q => !ids.has(q.entry_id));
+      s.entries.forEach(c => { c.inputs = c.inputs.filter(i => !ids.has(i.from)); });
+      if (ids.has(ui.ei)) ui.ei = null; save(); break;
     }
-    case 'branch': {
-      if (sn.draft) {
-        if (!sn.entries.length) { toast('Add at least one entry first.'); return; }
-        if (!(await confirmDlg('Branch saves this snapshot first (like Next), then opens a copy of it under a condition. Continue?', 'Save and branch'))) return;
-        const ev = saveSnapshot(); save(); await makeBranch(ev); return;
-      }
-      await makeBranch(sn.ev); return;
-    }
-    case 'cond-edit': { const c = await condDlg(sn.ev); if (!c) return; Object.assign(sn.ev, c); save(); break; }
-    case 'del-ev': {
-      const kids = s.events.filter(x => x.branch_of_event_id === sn.ev.event_id).length;
-      if (!(await confirmDlg(`Delete snapshot ${sn.ev.event_id.replace(s.session_id + '-', '')}${kids ? ' and its ' + kids + ' branch(es)' : ''}? This cannot be undone.`, 'Delete', true))) return;
-      const gone = new Set([sn.ev.event_id]); s.events.forEach(x => { if (gone.has(x.branch_of_event_id)) gone.add(x.event_id); });
-      s.events = s.events.filter(x => !gone.has(x.event_id)); ui.sel = 'draft'; ui.ei = -1; save(); break;
-    }
-    case 'type': if (e.type !== v) { e.type = v; const a = byId[e.action_id]; if (a && a.type !== v && a.type !== 'both') { applyActionDefaults(e, e.action_id, ''); e.action_id = ''; } touch(e); } break;
-    case 'where': e.where_point_id = e.where_point_id === v ? '' : v; touch(e); break;
-    case 'to': e.to_point_id = e.to_point_id === v ? '' : v; touch(e); break;
+    case 'dup': { const ne = { ...clone(e), ...blankEntryIds(), branch_of_entry_id: '', condition_id: '', condition_value: '', inputs: [] }; s.entries.push(ne); ui.ei = ne.entry_id; save(); toast('Duplicated as ' + short(ne.entry_id) + ' (inputs cleared).'); break; }
+    case 'branch': await makeBranch(e); return;
+    case 'cond-edit': { const c = await condDlg(e); if (!c) return; Object.assign(e, c); save(); break; }
+    case 'type': if (e.type !== v) { const a = byId[e.action_id]; e.type = v; if (a && a.type !== v && a.type !== 'both') { applyActionDefaults(e, e.action_id, ''); e.action_id = ''; } save(); } break;
+    case 'where': e.where_point_id = e.where_point_id === v ? '' : v; save(); break;
+    case 'to': e.to_point_id = e.to_point_id === v ? '' : v; save(); break;
     case 'pm': ui.pm = v; break;
-    case 'dpt': { const a = byId[e.action_id]; if (a && a.toWhere && ui.pm === 'to') e.to_point_id = v; else e.where_point_id = v; touch(e); break; }
-    case 'new-pt': { const id = await newPoint(s.site); if (!id) return; if (e && (v === 'where' || v === 'to')) { if (v === 'where') e.where_point_id = id; else e.to_point_id = id; touch(e); } save(); break; }
+    case 'sheet': ui.sheet[s.site] = v; break;
+    case 'rt-undo': (e.route || []).pop(); save(); break;
+    case 'rt-clear': if (!(await confirmDlg('Clear the whole route of this entry?', 'Clear', true))) return; e.route = []; save(); break;
+    case 'rt-stop': { const w = e.route[+v]; if (w.stop) { w.stop = false; delete w.stop_note; } else { const n = await ask('Stop at “' + w.label + '”. What happens here? (optional)', '', 'e.g. waits for CT, hands over, picks up tele-cart'); if (n === null && !(await confirmDlg('Mark as a stop without a note?', 'Mark stop'))) return; w.stop = true; if (n) w.stop_note = n; } save(); break; }
+    case 'zoom': { const sh = curSheet(s.site); if (!sh) break; const key = s.site + '|' + sh.id;
+      if (+v === 0) { delete ui.vb[key]; break; }
+      const cur = ui.vb[key] || sh.viewBox, f = +v > 0 ? 1 / 1.5 : 1.5;
+      ui.vb[key] = zoomVB(cur, sh.viewBox, f, cur[0] + cur[2] / 2, cur[1] + cur[3] / 2); break; }
+    case 'place-start': ui.placing = v; { const p = S.points[s.site].find(q => q.id === v); const sh = curSheet(s.site); if (p && p.sheet && p.sheet !== (sh && sh.id) && p.x != null) ui.sheet[s.site] = p.sheet; } break;
+    case 'place-cancel': ui.placing = null; break;
+    case 'dpt': { const a = byId[e.action_id]; if (a && a.toWhere && ui.pm === 'to') e.to_point_id = v; else e.where_point_id = v; save(); break; }
+    case 'new-pt': { const id = await newPoint(s.site); if (!id) return; if (e && v === 'where') e.where_point_id = id; if (e && v === 'to') e.to_point_id = id; save(); break; }
     case 'who-add': {
-      const used = e.who.filter(k => k.startsWith(v + '#')).map(k => +k.split('#')[1]);
-      if (used.length) { e.who = e.who.filter(k => !k.startsWith(v + '#')); touch(e); break; }
+      if (e.who.some(k => k.startsWith(v + '#'))) { e.who = e.who.filter(k => !k.startsWith(v + '#')); save(); break; }
       if (!(await needOther(e, v))) return;
       const key = v + '#1'; e.who.push(key);
-      if (!e.where_point_id) { const sp = lastSpot(sn, key); if (sp) e.where_point_id = sp; }
-      touch(e); break;
+      if (!e.where_point_id) { const sp = lastSpot(e, key); if (sp) e.where_point_id = sp; }
+      save(); break;
     }
-    case 'who-cyc': { const [rid, n] = v.split('#'); let m = +n; do { m = m >= 6 ? 1 : m + 1; } while (e.who.includes(rid + '#' + m) && m !== +n); e.who = e.who.map(k => (k === v ? rid + '#' + m : k)); touch(e); break; }
-    case 'who-del': e.who = e.who.filter(k => k !== v); if (OTHER(v.split('#')[0]) && !e.who.some(k => k.startsWith(v.split('#')[0]))) delete e.other[v.split('#')[0]]; touch(e); break;
+    case 'who-cyc': { const [rid, n] = v.split('#'); let m = +n; do { m = m >= 6 ? 1 : m + 1; } while (e.who.includes(rid + '#' + m) && m !== +n); e.who = e.who.map(k => (k === v ? rid + '#' + m : k)); save(); break; }
+    case 'who-del': e.who = e.who.filter(k => k !== v); if (OTHER(v.split('#')[0]) && !e.who.some(k => k.startsWith(v.split('#')[0]))) delete e.other[v.split('#')[0]]; save(); break;
     case 'action': {
       if (e.action_id === v && !OTHER(v)) break;
       if (!(await needOther(e, v))) return;
-      const prev = e.action_id; e.action_id = v; applyActionDefaults(e, prev, v);
-      e.info.forEach(x => { if (!x._set) x.io = defaultIO(e); });
-      touch(e); break;
+      const prev = e.action_id; e.action_id = v; applyActionDefaults(e, prev, v); save(); break;
     }
     case 'tool': case 'tech': {
       const k = act === 'tool' ? 'tool_ids' : 'technology_ids';
       if (e[k].includes(v)) { e[k] = e[k].filter(x => x !== v); if (OTHER(v)) delete e.other[v]; }
       else { if (!(await needOther(e, v))) return; e[k].push(v); }
-      touch(e); break;
+      save(); break;
     }
-    case 'info': if (!(await needOther(e, v))) return; e.info.push({ id: v, io: defaultIO(e) }); touch(e); break;
-    case 'io': { const x = e.info.find(i => i.id === v); x.io = el.dataset.io; x._set = 1; touch(e); break; }
-    case 'info-del': e.info = e.info.filter(i => i.id !== v); if (OTHER(v)) delete e.other[v]; touch(e); break;
+    case 'out': {
+      if (e.outputs.includes(v)) { e.outputs = e.outputs.filter(x => x !== v); if (OTHER(v)) delete e.other[v]; }
+      else { if (!(await needOther(e, v))) return; e.outputs.push(v); }
+      save(); break;
+    }
+    case 'in-add': {
+      const art = el.dataset.art, all = !!el.dataset.all;
+      const at = e.inputs.findIndex(i => i.from === v && i.artifact === art && !!i.all === all);
+      if (at >= 0) { e.inputs.splice(at, 1); save(); break; }
+      if (v) {
+        const prodBase = baseOf(findE(v)).entry_id, me = baseOf(e).entry_id;
+        if (reaches(me, prodBase)) { toast('That would make a loop: ' + short(prodBase) + ' already depends on this entry.'); return; }
+      } else if (!(await needOther(e, art))) return;
+      e.inputs.push(all ? { from: v, artifact: art, all: true } : { from: v, artifact: art });
+      save(); break;
+    }
+    case 'in-del': e.inputs.splice(+v, 1); save(); break;
     /* session */
     case 'pick-site': ui.newSite = v; break;
     case 'start': {
-      const obs = (ui.newObs || '').trim(); if (!ui.newSite || !obs) return;
+      if (!ui.newSite) return;
       const sid = sessionId(ui.newSite);
-      S.sessions.push({ session_id: sid, site: ui.newSite, observer: obs, started_at: iso(), source: O.source, events: [], draft: { note: '', n: 0, entries: [] } });
-      if (!S.observers.includes(obs)) S.observers.push(obs);
-      S.cur = sid; ui.view = 'record'; ui.sel = 'draft'; ui.ei = -1; ui.newSite = ''; save(); toast('Session ' + sid + ' started.'); break;
+      S.sessions.push({ session_id: sid, site: ui.newSite, observer: '', started_at: iso(), source: O.source, n: 0, entries: [] });
+      S.cur = sid; ui.view = 'record'; ui.ei = null; ui.newSite = ''; save(); toast('Session ' + sid + ' started.'); break;
     }
-    case 'open-s': S.cur = v; ui.sel = 'draft'; ui.ei = -1; save(); break;
+    case 'open-s': S.cur = v; ui.ei = null; save(); break;
     case 'del-s': {
       const x = S.sessions.find(q => q.session_id === v);
-      if (!(await confirmDlg(`Delete session ${v} (${x.events.length} snapshots)${x.exported_at ? '' : '? It has NOT been exported'}? This cannot be undone.`, 'Delete', true))) return;
+      if (!(await confirmDlg(`Delete session ${v} (${x.entries.length} entries)${x.exported_at ? '' : '? It has NOT been exported'}? This cannot be undone.`, 'Delete', true))) return;
       S.sessions = S.sessions.filter(q => q.session_id !== v); if (S.cur === v) S.cur = S.sessions.length ? S.sessions[S.sessions.length - 1].session_id : null; save(); break;
     }
     case 'pt-del': S.points[s.site] = S.points[s.site].filter(p => p.id !== v); save(); break;
@@ -1342,34 +1655,32 @@ async function onAct(act, v, el) {
     case 'export-all': await download('walkthrough-backup-' + new Date().toISOString().slice(0, 10) + '.json', JSON.stringify(S, null, 1), 'application/json'); return;
     case 'import': pickFile('data'); return;
     case 'import-dia': pickFile('dia'); return;
-    case 'clear-dia': if (await confirmDlg('Remove the loaded diagram? Records keep their point IDs.', 'Remove', true)) { S.diagrams[s.site] = null; save(); } break;
+    case 'clear-dia': if (await confirmDlg('Remove the site diagrams from this device? Records keep their point IDs; load the file again to see them.', 'Remove', true)) { S.diagrams = { LMH: null, WCM: null }; save(); } break;
     default: return;
   }
   render();
 }
+function blankEntryIds() { const b = blankEntry(); return { entry_id: b.entry_id, seq: b.seq }; }
 
 /* ---------- export / import ---------- */
 const csvq = v => { const t = v == null ? '' : String(v); return /[",\n\r]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
 const csv = rows => rows.map(r => r.map(csvq).join(',')).join('\r\n') + '\r\n';
-function sessionPayload(s) {
-  const ids = new Set(s.events.flatMap(e => e.entries).flatMap(e => [e.where_point_id, e.to_point_id]));
-  return { format: 'walkthrough-recorder/v4', option_sets: O.source, exported_at: iso(),
-    session: { session_id: s.session_id, site: s.site, observer: s.observer, started_at: s.started_at },
-    points: sitePoints(s.site).filter(p => ids.has(p.id)).map(p => ({ id: p.id, label: p.label, tool_id: p.tool_id || '', provisional: !!p.provisional })),
-    events: s.events.map(ev => ({ ...ev, entries: ev.entries.map(e => { const o = clone(e); o.info.forEach(i => delete i._set); return o; }) })) };
-}
 async function exportSession(s) {
-  if (!s.events.length) { toast('No saved snapshots yet.'); return; }
-  const p = sessionPayload(s);
-  const evRows = [['session_id', 'site', 'observer', 'event_id', 'seq', 'saved_at', 'branch_of_event_id', 'condition_id', 'condition', 'condition_value', 'n_entries', 'note']]
-    .concat(s.events.map(ev => [s.session_id, s.site, s.observer, ev.event_id, ev.seq, ev.saved_at, ev.branch_of_event_id, ev.condition_id, byId[ev.condition_id] ? byId[ev.condition_id].label : '', ev.condition_value, ev.entries.length, ev.note]));
-  const enRows = [['session_id', 'event_id', 'seq', 'branch_of_event_id', 'condition_id', 'condition_value', 'entry_id', 'carried_from_entry_id', 'changed', 'type', 'where_point_id', 'where_label', 'who', 'who_labels', 'action_id', 'action', 'to_point_id', 'to_label', 'tool_ids', 'technology_ids', 'info', 'other_specified', 'note']]
-    .concat(s.events.flatMap(ev => ev.entries.map(e => [s.session_id, ev.event_id, ev.seq, ev.branch_of_event_id, ev.condition_id, ev.condition_value, e.entry_id, e.carried_from_entry_id, e.changed,
-      byId[e.type] ? byId[e.type].label : '', e.where_point_id, ptLabel(e.where_point_id), e.who.join(';'), e.who.map(roleKeyLabel).join(';'), e.action_id, lbl(e.action_id, e), e.to_point_id, ptLabel(e.to_point_id),
-      e.tool_ids.join(';'), e.technology_ids.join(';'), e.info.map(i => i.id + ':' + i.io).join(';'), Object.entries(e.other || {}).map(([k, v]) => k + '=' + v).join(';'), e.note])));
-  const files = [[s.session_id + '.json', JSON.stringify(p, null, 1), 'application/json'], [s.session_id + '_events.csv', csv(evRows), 'text/csv'], [s.session_id + '_entries.csv', csv(enRows), 'text/csv']];
-  const ok = await downloadMany(files);
-  if (ok) { s.exported_at = iso(); save(); render(); }
+  if (!s.entries.length) { toast('No entries yet.'); return; }
+  const list = ordered();
+  const ids = new Set(list.flatMap(e => [e.where_point_id, e.to_point_id]));
+  const p = { format: 'walkthrough-recorder/v5', option_sets: O.source, states_source: O.states_source, exported_at: iso(),
+    session: { session_id: s.session_id, site: s.site, observer: s.observer || '', started_at: s.started_at },
+    points: sitePoints(s.site).filter(q => ids.has(q.id)).map(q => ({ id: q.id, label: q.label, sheet: q.sheet || '', sheet_name: sheetName(s.site, q.sheet), tool_id: q.tool_id || '', provisional: !!q.provisional, unplaced: !!q.unplaced || (q.provisional && q.x == null), note: q.note || '', x: q.x == null ? '' : Math.round(q.x), y: q.y == null ? '' : Math.round(q.y) })),
+    entries: list.map(e => ({ ...clone(e), differs_from_base: differs(e) })) };
+  const enRows = [['session_id', 'entry_id', 'seq', 'branch_of_entry_id', 'condition_id', 'condition', 'condition_value', 'differs_from_base', 'type', 'where_point_id', 'where_label', 'who', 'who_labels', 'action_id', 'action', 'to_point_id', 'to_label', 'route', 'route_stops', 'tool_ids', 'technology_ids', 'inputs', 'outputs', 'other_specified', 'note']]
+    .concat(list.map(e => [s.session_id, e.entry_id, e.seq, e.branch_of_entry_id, e.condition_id, byId[e.condition_id] ? byId[e.condition_id].label : '', e.condition_value, differs(e).join(';'),
+      byId[e.type] ? byId[e.type].label : '', e.where_point_id, ptLabel(e.where_point_id), e.who.join(';'), e.who.map(roleKeyLabel).join(';'), e.action_id, lbl(e.action_id, e), e.to_point_id, ptLabel(e.to_point_id), (e.route || []).map(w => w.point_id || (w.sheet + '@' + w.x + ',' + w.y)).join('>'), (e.route || []).map((w, i) => w.stop ? (i + 1) + ':' + (w.point_id || w.label) + (w.stop_note ? '=' + w.stop_note : '') : '').filter(Boolean).join(';'),
+      e.tool_ids.join(';'), e.technology_ids.join(';'), e.inputs.map(i => (i.from || 'OUTSIDE') + (i.all ? '[all]' : '') + ':' + i.artifact).join(';'), e.outputs.join(';'), Object.entries(e.other || {}).map(([k, v]) => k + '=' + v).join(';'), e.note]));
+  const lkRows = [['session_id', 'from_entry_id', 'from_versions', 'artifact_id', 'artifact', 'to_entry_id']]
+    .concat(list.flatMap(e => e.inputs.map(i => [s.session_id, i.from || 'OUTSIDE', !i.from ? '' : i.all ? 'all' : 'this', i.artifact, lbl(i.artifact, e), e.entry_id])));
+  const files = [[s.session_id + '.json', JSON.stringify(p, null, 1), 'application/json'], [s.session_id + '_entries.csv', csv(enRows), 'text/csv'], [s.session_id + '_links.csv', csv(lkRows), 'text/csv']];
+  if (await downloadMany(files)) { s.exported_at = iso(); save(); render(); }
 }
 async function downloadMany(files) {
   try {
@@ -1386,6 +1697,11 @@ async function download(name, text, type, quiet) {
   if (!quiet) toast('Downloaded ' + name);
   await new Promise(r => setTimeout(r, 300));
 }
+function loadDiagrams(j, name) {
+  if (j.format !== 'site-diagrams/v1' || !j.sites) throw new Error('not a site-diagrams file');
+  Object.entries(j.sites).forEach(([site, d]) => { S.diagrams[site] = { name, loaded_at: iso(), sheets: d.sheets, points: d.points }; });
+  toast('Site diagrams loaded: ' + Object.keys(j.sites).join(', '));
+}
 let pickMode = '';
 function pickFile(mode) { pickMode = mode; const f = document.getElementById('file-json'); f.value = ''; f.click(); }
 document.getElementById('file-json').addEventListener('change', async ev => {
@@ -1393,24 +1709,21 @@ document.getElementById('file-json').addEventListener('change', async ev => {
   try {
     const j = JSON.parse(await f.text());
     if (pickMode === 'dia') {
-      const s = sess(); const site = j.site || s.site;
-      if (site !== s.site && !(await confirmDlg(`This diagram is for ${site}, the session is ${s.site}. Load it for ${site}?`, 'Load'))) return;
-      if (!Array.isArray(j.points) && !Array.isArray(j.bubbles)) throw new Error('needs "points" or "bubbles"');
-      S.diagrams[site] = { name: j.name || f.name, width: j.width, height: j.height, bubbles: j.bubbles || [], links: j.links || [], points: (j.points || []).map(p => ({ id: p.id, label: p.label || p.id, x: p.x, y: p.y, tool_id: p.tool_id || '' })) };
-      toast('Diagram loaded for ' + site);
-    } else if (j.v === 4 && Array.isArray(j.sessions)) {
+      loadDiagrams(j, f.name);
+    } else if (j.v === 5 && Array.isArray(j.sessions)) {
       let n = 0;
       j.sessions.forEach(x => { if (!S.sessions.some(q => q.session_id === x.session_id)) { S.sessions.push(x); n++; } });
       ['LMH', 'WCM'].forEach(site => (j.points && j.points[site] || []).forEach(p => { if (!(S.points[site] || []).some(q => q.id === p.id)) (S.points[site] = S.points[site] || []).push(p); }));
       toast(`Backup imported: ${n} new session(s); existing ones left as they are.`);
-    } else if (j.format === 'walkthrough-recorder/v4') {
+    } else if (j.format === 'walkthrough-recorder/v5') {
       const sid = j.session.session_id;
       if (S.sessions.some(q => q.session_id === sid) && !(await confirmDlg(`Session ${sid} already exists on this device. Replace it with the file?`, 'Replace', true))) return;
       S.sessions = S.sessions.filter(q => q.session_id !== sid);
-      S.sessions.push({ ...j.session, source: j.option_sets, events: j.events, draft: { note: '', n: 0, entries: [] }, exported_at: j.exported_at });
+      const entries = j.entries.map(e => { const o = { ...e }; delete o.differs_from_base; return o; });
+      S.sessions.push({ ...j.session, source: j.option_sets, n: Math.max(0, ...entries.map(e => e.seq || 0)), entries, exported_at: j.exported_at });
       (j.points || []).forEach(p => { const L = S.points[j.session.site] = S.points[j.session.site] || []; if (!L.some(q => q.id === p.id) && p.provisional) L.push(p); });
       S.cur = sid; toast('Session ' + sid + ' imported.');
-    } else throw new Error('not a recorder v4 file');
+    } else throw new Error('not a recorder v5 file');
     save(); render();
   } catch (err) { toast('Could not read this file: ' + err.message); }
 });
@@ -1418,17 +1731,26 @@ document.getElementById('file-json').addEventListener('change', async ev => {
 /* ---------- events ---------- */
 document.addEventListener('click', ev => {
   const go = ev.target.closest('tr[data-go]');
-  if (go) { const [id, i] = go.dataset.go.split('|'); ui.view = 'record'; ui.sel = id; ui.ei = +i; render(); return; }
+  if (go) { ui.view = 'record'; ui.ei = go.dataset.go; render(); return; }
+  if (ui.noClick && Date.now() - ui.noClick < 450 && ev.target.closest('.dia svg')) { ui.noClick = 0; return; }
+  const rsvg = !ui.placing && ui.pm === 'route' && ev.target.closest('.dia.routing svg');
+  if (rsvg) { addWaypoint(rsvg, ev); return; }
+  const svg = ui.placing && ev.target.closest('.dia svg');
+  if (svg) {
+    const pt = svg.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY;
+    const c = pt.matrixTransform(svg.getScreenCTM().inverse());
+    const p = (S.points[svg.dataset.site] || []).find(q => q.id === ui.placing);
+    if (p) { p.x = Math.round(c.x); p.y = Math.round(c.y); p.sheet = svg.dataset.sheet; toast('Pin placed for “' + p.label + '”.'); }
+    ui.placing = null; save(); render(); return;
+  }
   const b = ev.target.closest('[data-act]'); if (!b || b.disabled) return;
-  if (b.dataset.act === 'edit' && ev.target.closest('button') && ev.target.closest('button') !== b) return;
   ev.stopPropagation();
   onAct(b.dataset.act, b.dataset.v, b);
 });
 document.addEventListener('input', ev => {
   const t = ev.target, k = t.dataset.in; if (!k) return;
-  if (k === 'snote') { snap().obj.note = t.value; save(); }
-  else if (k === 'enote') { const e = curEntry(); e.note = t.value; touch(e); const card = document.querySelector('.ent.on .kd.chg, .ent.on .kd.car'); if (card) card.outerHTML = e.changed === 'Y' ? '<span class="kd chg">' + (e.carried_from_entry_id ? 'CHANGED' : 'NEW') + '</span>' : '<span class="kd car">carried</span>'; }
-  else if (k === 'newobs') { ui.newObs = t.value; const b = document.querySelector('[data-act=start]'); if (b) b.disabled = !(ui.newSite && t.value.trim()); }
+  if (k === 'enote') { curEntry().note = t.value; save(); }
+  else if (k === 'ptnote') { const p = S.points[sess().site].find(p => p.id === t.dataset.v); p.note = t.value; save(); }
   else if (k === 'ptlabel') { const p = S.points[sess().site].find(p => p.id === t.dataset.v); p.label = t.value; save(); }
 });
 document.addEventListener('change', ev => {
@@ -1439,13 +1761,13 @@ document.addEventListener('change', ev => {
 /* ---------- boot ---------- */
 (async () => {
   const saved = await store.get(KEY);
-  if (saved && saved.v === 4) S = Object.assign(S, saved);
+  if (saved && saved.v === 5) S = Object.assign(S, saved);
   if (S.cur && !sess()) S.cur = S.sessions.length ? S.sessions[0].session_id : null;
   ui.view = sess() ? 'record' : 'session';
   render();
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 })();
-window.__wt = { S: () => S, ui };
+window.__wt = { S: () => S, ui, loadDiagrams: (j, n) => { loadDiagrams(j, n); save(); render(); } };
 })();
 
 </script>
