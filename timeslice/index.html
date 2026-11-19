@@ -1,0 +1,2297 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Time Slice Recorder</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Jost:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light;
+  --teal: #1c9c8c; --teal-deep: #147a6e; --teal-tint: #e3f3f1;
+  --orange: #e8843c; --orange-tint: #fcefe4;
+  --violet: #6b63c4; --lavender: #ecebf8;
+  --blue: #1e63c4; --blue-tint: #e7f1fb;
+  --ink: #1f2a33; --ink-2: #4a5661; --muted: #7c8792;
+  --line: #dfe3e8; --bg: #f3f4f6; --soft: #f7f8fa; --bad: #a32b2b;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 14px/1.4 Inter, -apple-system, system-ui, sans-serif; -webkit-text-size-adjust: 100%; }
+button, input, select, textarea { font: inherit; color: inherit; }
+h1, h2, h3 { font-family: Jost, -apple-system, sans-serif; margin: 0; }
+.app { display: flex; flex-direction: column; height: 100%; }
+.top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; padding: max(8px, env(safe-area-inset-top)) 14px 8px; background: #fff; border-bottom: 1px solid var(--line); }
+.top h1 { font-size: 18px; font-weight: 600; }
+.sid { font: 600 12px Jost; color: var(--teal-deep); background: var(--teal-tint); border-radius: 6px; padding: 2px 8px; }
+.sid:empty { display: none; }
+#tabs { display: flex; gap: 4px; flex: 1; }
+#tabs button { border: 1px solid var(--line); background: #fff; border-radius: 9px; min-height: 38px; padding: 0 14px; cursor: pointer; }
+#tabs button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+.saved { font-size: 11px; color: var(--muted); }
+main { flex: 1; min-height: 0; overflow: auto; padding: 12px 12px calc(12px + env(safe-area-inset-bottom)); }
+
+.btn { border: 1px solid var(--line); background: #fff; border-radius: 9px; min-height: 40px; padding: 0 14px; cursor: pointer; white-space: nowrap; }
+.btn:active { transform: scale(.98); }
+.btn.primary { background: var(--teal-deep); color: #fff; border-color: var(--teal-deep); }
+.btn.dark { background: var(--ink); color: #fff; border-color: var(--ink); }
+.btn.danger { color: var(--bad); }
+.btn.primary.danger { background: var(--bad); border-color: var(--bad); color: #fff; }
+.btn.big { min-height: 48px; font-size: 15px; padding: 0 20px; font-weight: 600; }
+.btn.sm { min-height: 32px; padding: 0 9px; font-size: 12.5px; }
+.btn[disabled] { opacity: .4; cursor: not-allowed; }
+.muted { color: var(--muted); } .small { font-size: 12px; }
+.card { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.grow { flex: 1; }
+input[type=text], input[type=number], select, textarea { border: 1px solid var(--line); border-radius: 9px; background: #fff; min-height: 40px; padding: 6px 10px; width: 100%; }
+textarea { min-height: 60px; resize: vertical; }
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--teal); outline-offset: -1px; }
+
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; background: #fff; }
+.seg button { border: 0; border-right: 1px solid var(--line); background: #fff; min-height: 40px; padding: 0 14px; cursor: pointer; }
+.seg button:last-child { border-right: 0; }
+.seg button.on { background: var(--teal-deep); color: #fff; font-weight: 600; }
+.seg.src button.on[data-v=Est] { background: var(--orange); }
+.seg.src button.on[data-v=Sim] { background: var(--blue); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 1px solid var(--line); background: #fff; border-radius: 999px; min-height: 36px; padding: 0 12px; cursor: pointer; font-size: 13px; }
+.chip.on { background: var(--teal-tint); border-color: var(--teal); box-shadow: inset 0 0 0 1px var(--teal); }
+.chip.dig { border-color: #b9c9e6; color: #1e4f99; }
+.chip.add { border-style: dashed; color: var(--teal-deep); }
+.chip.sm { min-height: 30px; font-size: 12px; padding: 0 10px; }
+.grp { font: 600 10px Jost; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 10px 0 5px; }
+
+/* layout */
+.rec { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 14px; align-items: start; }
+.rec > * { min-width: 0; }
+.list { position: sticky; top: 0; max-height: calc(100dvh - 90px); overflow-y: auto; }
+.lh { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; } .lh b { font: 600 15px Jost; }
+.sl { display: block; width: 100%; text-align: left; background: #fff; border: 1px solid var(--line); border-left: 4px solid var(--teal); border-radius: 10px; padding: 7px 9px; margin-bottom: 6px; cursor: pointer; }
+.sl.on { box-shadow: 0 0 0 2px var(--ink); }
+.sl b { font: 600 14px Jost; } .sl .d { font-size: 12px; color: var(--ink-2); margin-left: 6px; }
+.sl .c { display: block; font-size: 11.5px; color: var(--muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.add-wide { width: 100%; border-style: dashed; color: var(--teal-deep); font-weight: 600; }
+.rule { font-size: 12px; color: var(--ink-2); background: #fffbef; border: 1px solid #f0dfa8; border-radius: 9px; padding: 7px 9px; margin-top: 8px; line-height: 1.45; }
+
+.sh { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 10px; }
+.sh h2 { font-size: 24px; }
+.cut { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; font-size: 12.5px; margin-bottom: 12px; }
+.cut b { font: 600 10px Jost; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.cut span { background: var(--soft); border: 1px solid var(--line); border-radius: 6px; padding: 1px 7px; }
+.cut .warn { background: #fdecec; border-color: #f2c4c4; color: var(--bad); }
+.sec { margin-bottom: 16px; }
+.st { display: flex; align-items: center; gap: 8px; font: 600 15px Jost; margin-bottom: 8px; }
+.st .n { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--teal-tint); color: var(--teal-deep); font-size: 12px; }
+.st .r { margin-left: auto; font: 400 12px Inter; color: var(--muted); }
+.when { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.when input { width: 110px; }
+
+.rc { border: 1px solid var(--line); border-left: 4px solid var(--teal); border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; background: #fff; }
+.rc.same { border-left-color: #c3c9d0; background: var(--soft); }
+.rc-h { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.rc-h .nm { font: 600 15px Jost; }
+.rc-h .inst { border: 1px solid var(--line); background: #fff; border-radius: 6px; min-height: 28px; padding: 0 7px; cursor: pointer; font-size: 12px; }
+.tag { font: 600 10px Jost; letter-spacing: .1em; text-transform: uppercase; border-radius: 5px; padding: 2px 7px; background: #eceef1; color: var(--muted); }
+.tag.new { background: var(--teal-tint); color: var(--teal-deep); }
+.tag.chg { background: #fff4d6; color: #8a6400; }
+.fl { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 6px 10px; align-items: center; }
+.fl > label { font: 600 11px Jost; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.wbtn { text-align: left; border: 1px solid var(--line); background: #fff; border-radius: 9px; min-height: 40px; padding: 4px 10px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+.wbtn .k { font: 600 9.5px Jost; letter-spacing: .1em; padding: 1px 6px; border-radius: 4px; background: var(--teal-tint); color: var(--teal-deep); }
+.wbtn .k.dig { background: var(--blue-tint); color: #1e4f99; }
+.wbtn.empty { color: var(--muted); }
+.sugs { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.sugs .chip { min-height: 28px; font-size: 11.5px; padding: 0 9px; }
+.sameview { font-size: 13px; color: var(--ink-2); line-height: 1.5; }
+.sameview i { color: var(--muted); }
+.cv { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) 20px minmax(0, 1.4fr) auto; gap: 6px; align-items: center; margin-bottom: 6px; }
+.cv .arr { text-align: center; color: var(--muted); }
+.empty-ed { min-height: 50vh; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 10px; padding: 32px; }
+.empty-ed h2 { font-size: 24px; } .empty-ed p { max-width: 560px; line-height: 1.5; margin: 0; }
+
+/* table */
+.tscroll { overflow: auto; background: #fff; border: 1px solid var(--line); border-radius: 12px; }
+table.dt { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+.dt th, .dt td { border-bottom: 1px solid var(--line); padding: 6px 8px; text-align: left; vertical-align: top; }
+.dt th { position: sticky; top: 0; background: var(--soft); font: 600 11px Jost; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); }
+.dt tr.s0 td { border-top: 2px solid var(--ink-2); }
+.dt td.same { color: var(--muted); font-style: italic; }
+.dt tr[data-go] { cursor: pointer; }
+
+/* session */
+.cols { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; align-items: start; }
+.cols h3 { margin-bottom: 8px; }
+.srow { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px dashed var(--line); }
+.pill { font-size: 12px; border-radius: 999px; padding: 2px 9px; background: #eceef1; }
+.pill.ok { background: var(--teal-tint); color: var(--teal-deep); }
+.welcome { max-width: 640px; margin: 24px auto; display: grid; gap: 12px; }
+
+/* dialogs */
+.dlg-bg { position: fixed; inset: 0; background: rgba(20,28,36,.42); display: grid; place-items: center; z-index: 50; padding: 16px; }
+.dlg { background: #fff; border-radius: 14px; padding: 16px; width: min(560px, 100%); max-height: 88dvh; overflow: auto; }
+.dlg.wide { width: min(980px, 100%); }
+.dlg p { margin: 0 0 10px; }
+.dlg-act { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+#toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); background: var(--ink); color: #fff; border-radius: 10px; padding: 9px 14px; opacity: 0; transition: .2s; z-index: 60; font-size: 13px; pointer-events: none; }
+#toast.on { opacity: 1; transform: translate(-50%, 0); }
+
+/* where picker map */
+.dwrap { position: relative; }
+.dia { height: min(52dvh, 520px); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #FBFAF7; }
+.dia svg { width: 100%; height: 100%; touch-action: none; user-select: none; -webkit-user-select: none; display: block; }
+.dia .np { pointer-events: none; }
+.dia .pt { cursor: pointer; }
+.floors { position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; background: #fff; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+.floors button { border: 0; border-bottom: 1px solid var(--line); background: #fff; min-height: 38px; padding: 0 12px; cursor: pointer; font-size: 12.5px; text-align: left; }
+.floors button:last-child { border-bottom: 0; }
+.floors button.on { background: var(--teal-deep); color: #fff; font-weight: 600; }
+.zooms { position: absolute; right: 10px; bottom: 10px; display: flex; flex-direction: column; background: #fff; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.zooms button { border: 0; border-bottom: 1px solid var(--line); background: #fff; width: 42px; height: 40px; font-size: 19px; cursor: pointer; }
+.zooms button:last-child { border-bottom: 0; }
+.zooms button[data-v="0"], .zooms button[data-v="site"] { font-size: 11px; font-weight: 600; }
+.ptabs { display: flex; gap: 4px; margin-bottom: 10px; }
+
+@media (max-width: 760px) {
+  .rec { grid-template-columns: 1fr; }
+  .list { position: static; max-height: none; }
+  .cv { grid-template-columns: 1fr 1fr; } .cv .arr { display: none; }
+}
+/* suggestions appear only for the field being typed in */
+.fl .sugs { display: none; }
+.fl > div:focus-within .sugs { display: flex; }
+
+/* ===== v2: step panels, swim lanes, stopwatch ===== */
+.edc { display: flex; flex-direction: column; height: calc(100dvh - 90px); padding: 12px 0 0; overflow: hidden; }
+.edc > .sh, .edc > .cond, .edc > .when, .edc > .cut, .edc > .stabs { margin-left: 16px; margin-right: 16px; }
+.sh { margin-bottom: 6px; }
+.tm { font: 600 12px Jost; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.tm.big { font-size: 16px; background: var(--soft); border: 1px solid var(--line); border-radius: 7px; padding: 2px 8px; }
+.tag.var { background: var(--orange-tint); color: #b45a1c; }
+.cond { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: var(--orange-tint); border-radius: 10px; padding: 6px 10px; margin-bottom: 8px; font-size: 13px; }
+.cond b { font: 600 10px Jost; letter-spacing: .12em; text-transform: uppercase; color: #b45a1c; }
+.when { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; }
+.when label { font: 600 11px Jost; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.when input { width: 110px; }
+.cut { margin-bottom: 8px; }
+.stabs { display: flex; gap: 4px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+.stabs button { flex: 1; min-height: 44px; border: 1px solid var(--line); background: #fff; border-radius: 9px; cursor: pointer; font-size: 14px; color: var(--ink-2); }
+.stabs button b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--teal-tint); color: var(--teal-deep); font: 600 11px Jost; margin-right: 5px; }
+.stabs button.ok b { background: var(--teal); color: #fff; }
+.stabs button.on { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); color: var(--ink); font-weight: 600; }
+.steps { flex: 1; min-height: 0; display: flex; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: none; }
+.steps::-webkit-scrollbar { display: none; }
+.step { flex: 0 0 100%; min-width: 0; overflow-y: auto; overscroll-behavior-y: contain; scroll-snap-align: start; scroll-snap-stop: always; padding: 10px 16px 90px; }
+.stepnav { display: flex; gap: 8px; align-items: center; padding-top: 12px; margin-top: 10px; border-top: 1px solid var(--line); }
+.ph { font-size: 13px; color: var(--ink-2); margin-bottom: 10px; }
+
+/* swim lane bands inside a step */
+.lane { display: grid; grid-template-columns: 96px minmax(0, 1fr); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-bottom: 8px; background: #fff; }
+.lane-h { background: color-mix(in srgb, var(--lc) 12%, #fff); border-right: 3px solid var(--lc); color: var(--lc); font: 600 13px Jost; padding: 10px 8px; writing-mode: horizontal-tb; }
+.lane-b { padding: 6px; display: grid; gap: 6px; }
+.lane-b .rc { margin: 0; border-left-width: 1px; }
+.rc-h .bd, .wr .bd { display: inline-grid; place-items: center; min-width: 30px; height: 24px; padding: 0 5px; border-radius: 12px; color: #fff; font: 700 11px Jost; flex: none; }
+.fld { position: relative; }
+.fld .sugs { display: none; } .fld:focus-within .sugs { display: flex; }
+.task { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 6px; }
+.task input { width: 84px; min-height: 34px; }
+.seg.sm button { min-height: 32px; padding: 0 9px; font-size: 12px; }
+.addrow { margin-top: 8px; max-width: 320px; }
+
+/* where: role picker + map with role badges */
+.who-pick { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.wr { display: flex; align-items: center; gap: 8px; text-align: left; border: 1px solid var(--line); border-left: 4px solid var(--lc); background: #fff; border-radius: 10px; padding: 5px 9px; cursor: pointer; min-height: 44px; }
+.wr.on { box-shadow: 0 0 0 2px var(--ink); }
+.wr b { font: 600 13px Jost; }
+.dia.empty { display: grid; place-items: center; color: var(--muted); font-size: 13px; height: 120px; }
+
+/* slice list */
+.sl-h { display: flex; align-items: baseline; gap: 6px; }
+.sl-h .tm { margin-left: auto; }
+.sl .d { display: block; margin: 0; }
+.sl.var { margin-left: 14px; width: calc(100% - 14px); border-left-color: var(--orange); border-style: dashed; border-left-style: solid; }
+
+/* stopwatch bar */
+#timer { position: fixed; left: 50%; bottom: calc(14px + env(safe-area-inset-bottom)); transform: translateX(-50%); display: flex; align-items: center; gap: 8px; background: var(--ink); color: #fff; border-radius: 14px; padding: 8px 10px 8px 14px; z-index: 40; box-shadow: 0 6px 20px rgba(0,0,0,.25); max-width: calc(100% - 24px); flex-wrap: wrap; }
+#timer .tl { font-size: 12.5px; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#timer .tv { font: 600 26px Jost; font-variant-numeric: tabular-nums; min-width: 96px; text-align: center; }
+#timer .btn { min-height: 38px; }
+#timer .btn:not(.primary):not(.danger) { background: #2f3d48; color: #fff; border-color: #2f3d48; }
+
+/* swim-lane overview */
+table.sw { border-collapse: collapse; font-size: 12px; min-width: 100%; }
+.sw th, .sw td { border: 1px solid var(--line); padding: 6px 8px; vertical-align: top; text-align: left; min-width: 170px; }
+.sw thead th { position: sticky; top: 0; background: var(--soft); cursor: pointer; font-weight: 500; }
+.sw th.ln { position: sticky; left: 0; background: #fff; min-width: 96px; width: 96px; font: 600 13px Jost; color: var(--lc, var(--ink-2)); border-left: 4px solid var(--lc, var(--line)); z-index: 1; }
+.sw thead th.ln { z-index: 2; }
+.sw td.v { background: #fffaf4; }
+.lc { margin-bottom: 5px; line-height: 1.35; }
+.lc.same { color: var(--muted); }
+.lc span { display: block; font-size: 11px; }
+.lc .lw { color: var(--teal-deep); } .lc .lh2 { color: var(--blue); } .lc .ly { color: var(--ink-2); font-style: italic; } .lc .lt { color: #b45a1c; }
+
+/* ===== v3: shared actions (move together / talk / same task) ===== */
+.together { border: 1px dashed #b9c2ca; border-radius: 12px; padding: 10px; margin-bottom: 10px; background: var(--soft); }
+.pickrow { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; align-items: center; }
+.pk { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-left: 4px solid var(--lc); background: #fff; border-radius: 10px; min-height: 42px; padding: 0 10px 0 6px; cursor: pointer; font-size: 13px; }
+.pk.on { background: #fff8e0; box-shadow: 0 0 0 2px var(--ink); }
+.act { border: 1px solid var(--line); border-left: 5px solid var(--teal); border-radius: 12px; padding: 9px 10px; margin-bottom: 8px; background: #fff; }
+.act.move { border-left-color: #D81B60; } .act.talk { border-left-color: var(--blue); } .act.task { border-left-color: var(--violet); }
+.act.drawing { box-shadow: 0 0 0 2px #D81B60; }
+.act-h { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.act-h .ic { font-size: 18px; }
+.act-h .lbl { flex: 1; min-width: 160px; font-weight: 600; }
+.mbs { display: flex; gap: 3px; flex-wrap: wrap; }
+.mb { border: 0; background: none; padding: 0; cursor: pointer; display: inline-flex; flex-direction: column; align-items: center; }
+.mb i { font-size: 9px; color: #b0124f; font-style: normal; font-weight: 600; }
+.sugs.show { display: flex; margin: 6px 0 2px; }
+.rt { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; font-size: 13px; }
+.rt b { font: 600 12px Jost; color: #b0124f; }
+.rt .rtx i { display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; background: #D81B60; color: #fff; font: 600 9px Jost; font-style: normal; margin-right: 2px; }
+.rt select { width: auto; min-height: 32px; padding: 2px 6px; }
+.act-f { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 6px; align-items: center; margin-top: 6px; }
+.act-f input { min-height: 36px; }
+.dia.routing { box-shadow: 0 0 0 3px #D81B60; }
+.dia.routing svg { cursor: crosshair; }
+.ins { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+.in { font-size: 12px; border-radius: 6px; padding: 2px 7px; background: var(--soft); border: 1px solid var(--line); }
+.in.main { font-weight: 600; }
+.in.move { border-color: #f2b7cb; background: #fff7fa; } .in.talk { border-color: #b9c9e6; background: var(--blue-tint); } .in.task { border-color: #cfc9ee; background: var(--lavender); }
+
+/* ===== v4: scene board (map + actions / roles) ===== */
+.rec { grid-template-columns: 210px minmax(0, 1fr); }
+.bd-card { display: flex; flex-direction: column; height: calc(100dvh - 90px); padding: 10px 12px 0; overflow: hidden; }
+.bd-card > .sh { flex-wrap: wrap; gap: 6px 8px; margin-bottom: 4px; }
+.bd-card .when { display: inline-flex; gap: 6px; align-items: center; margin: 0; }
+.bd-card .when input { width: 70px; min-height: 34px; }
+.bd-card .seg.src button { min-height: 34px; padding: 0 10px; }
+.bd-card .cut { margin-bottom: 6px; font-size: 12px; }
+.split { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(330px, 1fr); gap: 12px; }
+.mapcol { min-height: 0; display: flex; flex-direction: column; }
+.mapcol .dwrap { flex: 1; min-height: 0; }
+.mapcol .dia { height: 100%; }
+.mode { font-size: 12.5px; color: var(--ink-2); background: var(--soft); border: 1px solid var(--line); border-radius: 9px; padding: 6px 9px; margin-bottom: 6px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.mode.draw { background: #fff2f6; border-color: #f2b7cb; color: #8a0f3e; }
+.mode.place { background: #fff8e0; border-color: #f0dfa8; }
+.chips.inl { display: inline-flex; gap: 4px; }
+.dia.placing { box-shadow: 0 0 0 3px #D9A520; }
+.panel { min-height: 0; overflow-y: auto; padding: 2px 2px 90px; }
+.ph2 { display: flex; align-items: center; gap: 6px; margin: 2px 0 6px; } .ph2 b { font: 600 15px Jost; }
+.addrole { width: auto; min-height: 34px; padding: 2px 8px; }
+.prompt { border: 2px solid var(--ink); border-radius: 12px; padding: 10px; margin-bottom: 10px; background: #fffdf5; }
+.prompt .ph { margin-bottom: 2px; }
+.chip.mv { border-color: #f2b7cb; }
+.chip.jn { border-color: var(--teal); }
+.chip i { font-style: normal; color: var(--muted); font-size: 11px; margin-left: 3px; }
+.ac { border: 1px solid var(--line); border-left: 4px solid var(--blue); border-radius: 11px; margin-bottom: 6px; background: #fff; }
+.ac.mv { border-left-color: #D81B60; }
+.ac.open { box-shadow: 0 0 0 2px var(--ink); }
+.ac-h { display: flex; align-items: center; gap: 6px; padding: 7px 9px; cursor: pointer; min-height: 42px; }
+.ac-h b { font: 600 14px Jost; }
+.ac-h .mbs { display: inline-flex; gap: 2px; }
+.ac-h .chev { color: var(--muted); }
+.ac-s { font-size: 12px; color: var(--ink-2); padding: 0 9px 7px; }
+.ac-b { padding: 4px 10px 10px; border-top: 1px solid var(--line); }
+.ac-b .f { display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 8px; align-items: start; margin-top: 8px; }
+.ac-b .f > label { font: 600 10.5px Jost; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding-top: 9px; }
+.mt { margin-top: 5px; }
+.bars { display: flex; flex-wrap: wrap; gap: 4px; padding: 0 9px 7px; }
+.ac-b .bars { padding: 0; }
+.bar { font-size: 11.5px; background: #fdecec; border: 1px solid #f2c4c4; color: var(--bad); border-radius: 6px; padding: 2px 7px; }
+.bar button { border: 0; background: none; color: var(--bad); cursor: pointer; padding: 0 0 0 4px; }
+.role { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-left: 4px solid var(--lc); border-radius: 10px; padding: 6px 8px; margin-bottom: 5px; background: #fff; }
+.role .rl { display: flex; flex-direction: column; min-width: 0; }
+.role .rl b { font: 600 13.5px Jost; }
+.role .rl .small { overflow: hidden; text-overflow: ellipsis; }
+.role .mn { font-weight: 600; }
+.warnt { color: #b45a1c; }
+.ib { border: 1px solid var(--line); background: #fff; border-radius: 8px; width: 34px; height: 34px; cursor: pointer; flex: none; font-size: 14px; }
+.ib.ask { width: 22px; height: 22px; font-size: 11px; border-radius: 50%; color: var(--muted); }
+.ib.ask.on { background: #fff4d6; border-color: #d9a520; color: #8a6400; font-weight: 700; }
+.ib.x { color: var(--bad); }
+.askdot { display: inline-block; font: 600 10px Jost; background: #fff4d6; color: #8a6400; border-radius: 8px; padding: 0 5px; margin-left: 4px; }
+.lc .lb { color: var(--bad); }
+@media (max-width: 1000px) { .split { grid-template-columns: 1fr; } .mapcol .dia { height: 46dvh; } .bd-card { height: auto; overflow: visible; } .panel { overflow: visible; } }
+
+/* ===== v5: slice strip · roles (left) · action sentences (right) · map on demand ===== */
+.v5 { display: flex; flex-direction: column; height: calc(100dvh - 86px); }
+.strip { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: thin; align-items: stretch; flex: none; }
+.sc { flex: none; display: flex; flex-direction: column; align-items: flex-start; gap: 1px; border: 1px solid var(--line); border-left: 4px solid var(--teal); background: #fff; border-radius: 10px; padding: 5px 10px; cursor: pointer; min-width: 92px; }
+.sc.var { border-left-color: var(--orange); border-style: dashed; border-left-style: solid; }
+.sc.on { box-shadow: 0 0 0 2px var(--ink); }
+.sc b { font: 600 14px Jost; } .sc .tm { font-size: 11px; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.strip .add { flex: none; border-style: dashed; color: var(--teal-deep); font-weight: 600; min-height: 44px; }
+.hd { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; background: #fff; border: 1px solid var(--line); border-radius: 12px 12px 0 0; padding: 8px 12px; flex: none; }
+.hd h2 { font-size: 22px; }
+.hd .when { display: inline-flex; gap: 6px; align-items: center; margin: 0; }
+.hd .when input { width: 66px; min-height: 34px; }
+.hd .seg.src button { min-height: 34px; padding: 0 10px; }
+.v5 > .cut { background: #fff; border-left: 1px solid var(--line); border-right: 1px solid var(--line); padding: 0 12px 8px; margin: 0; font-size: 12px; flex: none; }
+.work { flex: 1; min-height: 0; display: grid; grid-template-columns: 250px minmax(0, 1fr); background: #fff; border: 1px solid var(--line); border-top: 0; border-radius: 0 0 12px 12px; overflow: hidden; }
+.work.withmap { grid-template-columns: 230px minmax(0, 1fr) minmax(0, 1fr); }
+.roles { border-right: 1px solid var(--line); background: var(--soft); overflow-y: auto; padding: 10px 8px 80px; }
+.acts { overflow-y: auto; padding: 10px 12px 90px; min-width: 0; }
+.work .mapcol { border-left: 1px solid var(--line); padding: 8px; display: flex; flex-direction: column; min-height: 0; }
+.work .mapcol .dwrap { flex: 1; min-height: 0; } .work .mapcol .dia { height: 100%; }
+.lnk { border: 0; background: none; color: var(--teal-deep); cursor: pointer; font-size: 12.5px; padding: 4px 2px; text-decoration: underline; }
+.rr { display: flex; align-items: flex-start; gap: 7px; border: 1px solid var(--line); border-left: 4px solid var(--lc); background: #fff; border-radius: 10px; padding: 7px 7px; margin-bottom: 6px; cursor: pointer; position: relative; }
+.rr.on { background: #fff8e0; box-shadow: 0 0 0 2px var(--ink); }
+.rr .rl { display: flex; flex-direction: column; min-width: 0; flex: 1; gap: 1px; }
+.rr .rl b { font: 600 13.5px Jost; }
+.rr .rl .small { line-height: 1.3; overflow-wrap: anywhere; }
+.rr .rbtn { display: flex; flex-direction: column; gap: 3px; align-items: center; }
+.rr .ib { width: 30px; height: 30px; font-size: 13px; }
+.rr .ib.ask { width: 22px; height: 22px; }
+.addrole { width: 100%; margin-top: 4px; }
+.composer { border: 2px solid var(--ink); border-radius: 12px; padding: 10px; margin-bottom: 12px; background: #fffdf5; }
+.composer.empty { border: 1px dashed #b9c2ca; background: var(--soft); color: var(--muted); font-size: 13px; }
+.composer .who { display: flex; align-items: center; gap: 4px; margin-bottom: 8px; font-size: 14px; }
+.composer .who b { font: 600 15px Jost; margin-left: 4px; }
+.chip.vb.move { border-color: #f2b7cb; } .chip.vb.talk { border-color: #b9c9e6; } .chip.vb.screen { border-color: #cfe0dc; } .chip.vb.wait { border-color: #e6d8a8; }
+.acts .ac { border: 1px solid var(--line); border-left: 4px solid var(--violet); border-radius: 11px; margin-bottom: 7px; background: #fff; padding: 8px 10px; cursor: pointer; transition: opacity .15s; }
+.acts .ac.move { border-left-color: #D81B60; } .acts .ac.talk { border-left-color: var(--blue); } .acts .ac.screen { border-left-color: var(--teal); } .acts .ac.wait { border-left-color: #d9a520; }
+.acts .ac.dim { opacity: .45; }
+.acts .ac.open { cursor: default; box-shadow: 0 0 0 2px var(--ink); }
+.sent { font-size: 14.5px; line-height: 1.45; }
+.sent.big { font-size: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--line); margin-bottom: 4px; }
+.sent b { font-weight: 600; }
+.s-via { color: var(--blue); } .s-on { color: var(--teal-deep); } .s-rt { color: #b0124f; } .s-det { color: var(--ink-2); font-style: italic; }
+.ac .meta { display: flex; gap: 6px; align-items: center; margin-top: 3px; }
+.ac .bars { padding: 4px 0 0; }
+.bld .f { display: grid; grid-template-columns: 60px minmax(0, 1fr); gap: 8px; align-items: start; margin-top: 7px; }
+.bld .f > label { font: 600 10.5px Jost; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding-top: 9px; text-align: right; }
+.bld .pk { min-height: 36px; padding: 0 8px 0 4px; font-size: 12.5px; }
+@media (max-width: 1000px) { .work, .work.withmap { grid-template-columns: 1fr; } .roles { border-right: 0; border-bottom: 1px solid var(--line); max-height: 34dvh; } .work .mapcol .dia { height: 46dvh; } .v5 { height: auto; } }
+/* v5.1: info artifacts in the action builder */
+.io .row { gap: 4px; margin-bottom: 4px; }
+.iol { width: 52px; }
+.artsel { width: auto; min-height: 32px; padding: 2px 6px; font-size: 12.5px; }
+.chip.art { display: inline-flex; align-items: center; gap: 2px; }
+.chip.art button { border: 0; background: none; cursor: pointer; color: var(--muted); padding: 0 0 0 3px; }
+.s-io { color: #8a6400; }
+
+/* ===== v6: fill-in sentence editor · slide-over map ===== */
+.work { position: relative; }
+.work .mapcol.over { position: absolute; top: 0; right: 0; bottom: 0; width: min(62%, 720px); background: #fff; border-left: 1px solid var(--line); box-shadow: -10px 0 24px rgba(20,28,36,.14); z-index: 5; padding: 8px; display: flex; flex-direction: column; animation: slidein .18s ease-out; }
+@keyframes slidein { from { transform: translateX(24px); } to { transform: none; } }
+.acts .ac.open { padding: 10px 12px; }
+.ac-top { display: flex; align-items: flex-start; gap: 8px; }
+.ac-top .ic { border: 1px solid var(--line); background: var(--soft); border-radius: 9px; width: 38px; height: 38px; font-size: 17px; cursor: pointer; flex: none; }
+.toks { display: flex; flex-wrap: wrap; gap: 4px 4px; align-items: center; font-size: 16px; line-height: 1.3; }
+.tk { border: 1px solid transparent; background: none; border-radius: 8px; padding: 6px 7px; min-height: 38px; cursor: pointer; font-size: 16px; color: var(--ink); }
+.tk:hover { background: var(--soft); }
+.tk b { font-weight: 600; }
+.tk.empty { color: #9aa4ae; border: 1px dashed #c9d0d6; font-size: 14px; }
+.tk.on { background: #fff4d6; border-color: #d9a520; }
+.tk.pickable { border: 1px dashed var(--bad); background: #fff6f6; animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 50% { background: #fde3e3; } }
+.pop { margin: 8px 0 2px 46px; padding: 10px; border: 1px solid #e6d8a8; background: #fffdf5; border-radius: 10px; }
+.pop .chip { min-height: 38px; }
+.pop input[type=text] { min-height: 40px; }
+.pickbar { margin: 8px 0 0 46px; font-size: 12.5px; color: var(--bad); background: #fff6f6; border: 1px solid #f2c4c4; border-radius: 8px; padding: 6px 9px; }
+.acts .ac.open .bars { padding: 6px 0 0 46px; }
+.addons { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin: 8px 0 0 46px; padding-top: 8px; border-top: 1px dashed var(--line); }
+.ad { border: 1px solid var(--line); background: #fff; border-radius: 999px; min-height: 32px; padding: 0 10px; font-size: 12.5px; color: var(--ink-2); cursor: pointer; }
+.ad.set { border-color: var(--teal); color: var(--teal-deep); background: var(--teal-tint); }
+.ad.on { border-color: #d9a520; background: #fff4d6; color: var(--ink); }
+.lnk.danger { color: var(--bad); }
+.composer.slim { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-width: 1px; }
+.composer.slim .who { margin: 0; }
+/* keep the action sentence visible next to the map: the overlay leaves ~440px of the action column */
+.work .mapcol.over { width: max(440px, calc(100% - 250px - 440px)); }
+.addons .sep { width: 1px; height: 20px; background: var(--line); margin: 0 4px; }
+/* v6.1: the composer is a sentence too — verb slot open, verbs grouped by kind, inline "other" field */
+.composer .ac-top .ic { display: grid; place-items: center; color: var(--muted); }
+.composer .tk.who { cursor: default; display: inline-flex; align-items: center; gap: 3px; padding-left: 0; }
+.composer .tk.who:hover { background: none; }
+.composer .tk.ghost { cursor: default; opacity: .55; }
+.composer .pop.verbs { display: grid; gap: 6px; }
+.vrow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.vrow .vk { width: 26px; text-align: center; font-size: 16px; flex: none; }
+.vrow .chip { min-height: 40px; font-size: 14px; }
+.vrow.other input { flex: 1; min-width: 180px; min-height: 40px; font-size: 15px; }
+.joins { margin: 10px 0 0 46px; display: grid; gap: 6px; }
+.joins .grp { margin: 0; }
+.jrow { display: flex; align-items: center; gap: 8px; text-align: left; border: 1px solid #cfe0dc; background: #fff; border-radius: 10px; min-height: 42px; padding: 4px 10px; cursor: pointer; font-size: 14.5px; color: var(--ink); }
+.jrow:hover { background: var(--teal-tint); }
+.jrow .jt { flex: 1; }
+.jrow .jp { font-size: 12.5px; color: var(--teal-deep); border: 1px dashed var(--teal); border-radius: 999px; padding: 3px 9px; flex: none; }
+.inl { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; }
+.inl input { flex: 1; min-width: 160px; min-height: 40px; font-size: 15px; }
+.io .row .inl { margin-top: 0; flex: 1; }
+.roles .inl input { min-width: 0; flex-basis: 100%; }
+.s-wh { color: #7a4fb0; font-weight: 500; }
+.tk .s-wh { color: #7a4fb0; }
+.rr .rl .wh { color: #7a4fb0; }
+
+/* ===== v6.3 colour system =====
+   black / white = theme · colour = role (LANE_COLOR) · teal = selected / to fill · yellow = warning (? not asked, barrier).
+   The map base (spaces, routes, doors) is left as it is for now. */
+:root { --state: #1c9c8c; --state-deep: #147a6e; --state-tint: #e3f3f1;
+  --warn: #e0a400; --warn-line: #eccb63; --warn-tint: #fff6d3; --warn-ink: #7a5600; }
+/* neutral chrome */
+.sid, .pill.ok, .tag.new, .tag.chg, .tag.var { background: #eceef1; color: var(--ink-2); }
+.btn.primary { background: var(--ink); border-color: var(--ink); }
+#timer .btn.primary { background: #fff; color: var(--ink); border-color: #fff; }
+.lnk { color: var(--ink-2); }
+.strip .add, .add-wide { color: var(--ink); }
+.sc { border-left: 1px solid var(--line); }
+.sc.var { border-left: 1px dashed #b9c2ca; border-style: dashed; margin-left: -2px; }
+.sc.on { box-shadow: none; border-color: var(--state); background: var(--state-tint); }
+.cond { background: var(--soft); border: 1px solid var(--line); } .cond b { color: var(--ink-2); }
+.chip.dig, .chip.jn, .chip.mv { border-color: var(--line); color: var(--ink); }
+.chip.vb.move, .chip.vb.talk, .chip.vb.screen, .chip.vb.wait, .chip.vb.task { border-color: var(--line); }
+.composer { border: 1px solid var(--ink); background: #fff; }
+.pop, .composer .pop.verbs { border: 1px solid var(--line); background: var(--soft); }
+.s-via, .s-on, .s-rt, .s-io, .s-wh, .tk .s-wh, .rr .rl .wh { color: var(--ink-2); }
+.s-wh { font-weight: 600; }
+.jrow { border-color: var(--line); } .jrow:hover { background: var(--soft); }
+.sw td.v { background: var(--soft); }
+.lc .lw, .lc .lh2, .lc .lt { color: var(--ink-2); }
+/* role colour: card edge = subject's role, names in sentences are role-coloured */
+.acts .ac, .acts .ac.move, .acts .ac.talk, .acts .ac.screen, .acts .ac.wait, .acts .ac.task { border-left: 4px solid var(--lc, var(--line)); }
+.rn { font-weight: 600; }
+/* teal = selected / to fill */
+.seg button.on, .seg.src button.on[data-v=Est], .seg.src button.on[data-v=Sim] { background: var(--state-deep); color: #fff; }
+.rr.on { background: var(--state-tint); box-shadow: 0 0 0 2px var(--state); }
+.pk.on { background: var(--state-tint); box-shadow: 0 0 0 2px var(--state); }
+.tk.on { background: var(--state-tint); border-color: var(--state); }
+.tk.empty { color: var(--state-deep); border: 1px dashed var(--state); background: #fff; }
+.composer .tk.ghost { opacity: .5; }
+.ad.on { border-color: var(--state); background: var(--state-tint); color: var(--ink); }
+.ad.set { border-color: var(--ink-2); color: var(--ink); background: #fff; font-weight: 500; }
+.jrow .jp, .chip.add { color: var(--state-deep); border-color: var(--state); }
+/* yellow = warning */
+.bar { background: var(--warn-tint); border-color: var(--warn-line); color: var(--warn-ink); }
+.bar button { color: var(--warn-ink); }
+.ad.set[data-act=bar-arm] { border-color: var(--warn); background: var(--warn-tint); color: var(--warn-ink); }
+.tk.pickable { border: 1px dashed var(--warn); background: var(--warn-tint); animation: pulsew 1.2s ease-in-out infinite; }
+@keyframes pulsew { 50% { background: #ffe9a3; } }
+.pickbar { color: var(--warn-ink); background: var(--warn-tint); border-color: var(--warn-line); }
+.ib.ask.on, .askdot { background: var(--warn-tint); border-color: var(--warn); color: var(--warn-ink); }
+.warnt { color: var(--warn-ink); }
+.cut .warn { background: var(--warn-tint); border-color: var(--warn-line); color: var(--warn-ink); }
+.lc .lb { color: var(--warn-ink); }
+.tk.empty.on { background: var(--state-tint); border-style: solid; }
+.s-at { color: var(--ink-2); }
+.when input.auto { color: var(--muted); font-style: italic; } .srctag { font-size: 12px; color: var(--ink-2); } .dm.man { color: var(--ink); font-weight: 600; } .dm { max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tw { font-size: 12px; color: var(--warn-ink); background: var(--warn-tint); border: 1px solid var(--warn-line); border-radius: 6px; padding: 2px 7px; }
+.when .clk { font-size: 16px; } .when input[data-in=ts] { width: 72px; font: 600 16px Jost; }
+.when input[data-in=ts].auto { color: var(--ink); font-style: normal; border-style: dashed; }
+
+/* ===== v7: branches (fork / join) and decision points ===== */
+.strip.strip2 { display: grid; gap: 5px 6px; align-items: stretch; grid-auto-rows: minmax(44px, auto); }
+.strip2 .gc { display: flex; align-items: stretch; gap: 3px; min-width: 0; }
+.strip2 .gc .sc { min-width: 0; width: 100%; }
+.strip2 .gc.lab { position: sticky; left: 0; z-index: 2; background: var(--bg); padding-right: 4px; }
+.strip2 .rlab { display: flex; align-items: center; gap: 4px; width: 100%; font-size: 12px; color: var(--ink-2); text-align: left; border: 0; background: none; padding: 0 4px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.strip2 .rlab.br { border: 1px dashed #b9c2ca; border-radius: 9px; background: #fff; cursor: pointer; }
+.strip2 .rlab b { font: 600 12px Jost; color: var(--ink); }
+.strip2 .fork { align-self: center; color: var(--muted); font-size: 15px; }
+.strip2 .join { align-self: center; font-size: 12px; color: var(--ink-2); white-space: nowrap; }
+.strip2 .join i { font-style: normal; font-weight: 600; color: var(--ink); }
+.strip2 .join.end { color: var(--muted); }
+.sc .dm2 { font-style: normal; font-size: 11px; margin-right: 3px; color: var(--ink); }
+.brl { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; background: #fff; border-left: 1px solid var(--line); border-right: 1px solid var(--line); padding: 0 12px 6px; font-size: 12.5px; }
+.brtag { border: 1px dashed #9aa4ae; background: var(--soft); border-radius: 8px; padding: 3px 8px; font-size: 12.5px; color: var(--ink); cursor: pointer; text-align: left; }
+.brtag.dec { cursor: default; border-style: solid; border-color: var(--ink-2); background: #fff; }
+.brtag .src { font: 600 10px Jost; letter-spacing: .08em; color: var(--muted); margin-left: 4px; }
+.brl .lnk { font-size: 12.5px; }
+/* v7.1: inline branch editor, span picking, ◀ ▶ handles */
+.bdp { background: #fff; border: 1px solid var(--ink); border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; display: grid; gap: 8px; flex: none; }
+.bdp .row { gap: 8px; flex-wrap: wrap; }
+.bdp input[type=text], .bdp select { min-height: 40px; }
+.bdp .lbl { width: 76px; }
+.seg.sm button { min-height: 34px; padding: 0 10px; font-size: 12.5px; }
+.strip2 .hdl { align-self: center; border: 1px solid var(--line); background: #fff; border-radius: 7px; width: 26px; height: 30px; font-size: 11px; color: var(--ink-2); cursor: pointer; flex: none; padding: 0; }
+.strip2 .hdl:hover { border-color: var(--state); color: var(--state-deep); }
+.strip2 .join { display: flex; align-items: center; gap: 4px; }
+.strip2 .rlab.add { color: var(--state-deep); border-color: var(--state); }
+.strip2 .rlab.on { border-style: solid; }
+.strip2 .pickhint { align-self: center; font-size: 12.5px; color: var(--state-deep); }
+.strip2.picking .gc .sc:not(.var) { border-color: var(--state); border-style: dashed; }
+.strip2 .sc.pk1 { background: var(--state-tint); border: 2px solid var(--state) !important; }
+.strip2 .rlab.pend { border: 1px dotted #b9c2ca; border-radius: 9px; color: var(--muted); }
+.strip2 .pendc { align-self: center; font-size: 12px; color: var(--muted); font-style: italic; white-space: nowrap; }
+.brl .pendt { color: var(--muted); font-style: italic; }
+/* v8: action-level if */
+.ifbar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; padding: 0 0 8px; flex: none; }
+.ifbar .ifg { display: inline-flex; align-items: center; gap: 6px; }
+.iflines { margin: 4px 0 0 24px; display: grid; gap: 2px; }
+.acts .ac.open .iflines { margin-left: 46px; }
+.ifl { font-size: 12.5px; color: var(--ink-2); }
+.ifl.on { color: var(--state-deep); background: var(--state-tint); border-radius: 6px; padding: 1px 6px; }
+.s-if { color: var(--ink-2); font-weight: 600; }
+.ifban { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; background: var(--state-tint); border: 1px solid var(--state); border-radius: 8px; padding: 6px 10px; margin-bottom: 8px; font-size: 12.5px; }
+.acts .ac.ifedit { box-shadow: 0 0 0 2px var(--state); }
+.ifrow { padding: 4px 0; border-bottom: 1px dashed var(--line); font-size: 13px; }
+.rr.ext .bd { outline: 2px dashed currentColor; }
+.strip2 .gc .pendc { white-space: normal; line-height: 1.2; font-size: 11.5px; } .strip2 .gc .join { white-space: normal; line-height: 1.2; }
+
+/* ===== v9: left slice bar (collapsible) · right = actions with field rows ===== */
+.v9 { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 10px; height: calc(100dvh - 86px); }
+.v9.folded { grid-template-columns: 64px minmax(0, 1fr); }
+.side9 { display: flex; flex-direction: column; background: #fff; border: 1px solid var(--line); border-radius: 12px; min-height: 0; overflow: hidden; }
+.sideh { display: flex; align-items: center; gap: 8px; padding: 8px; border-bottom: 1px solid var(--line); }
+.sideh b { font: 600 15px Jost; }
+.slist { flex: 1; overflow-y: auto; padding: 8px; display: grid; gap: 6px; align-content: start; }
+.si { display: flex; flex-direction: column; gap: 3px; text-align: left; border: 1px solid var(--line); background: #fff; border-radius: 10px; padding: 7px 9px; cursor: pointer; }
+.si.on { border-color: var(--state); background: var(--state-tint); }
+.si .sh { display: flex; align-items: baseline; gap: 6px; }
+.si .sh b { font: 600 14px Jost; }
+.si .tm { font-size: 11.5px; color: var(--ink-2); }
+.si .w { color: var(--warn-ink); font-size: 12px; }
+.si .sa { display: grid; gap: 1px; font-size: 11.5px; color: var(--ink-2); }
+.si .sa span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.folded .si { align-items: center; padding: 6px 2px; }
+.folded .si .sh { flex-direction: column; align-items: center; gap: 0; }
+.newsl { margin: 8px; min-height: 40px; }
+.right9 { position: relative; display: flex; flex-direction: column; min-height: 0; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px 0; overflow: hidden; }
+.right9 .ifbar { padding-bottom: 6px; border-bottom: 1px dashed var(--line); margin-bottom: 8px; }
+.hd9 { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; flex: none; }
+.hd9 h2 { font-size: 22px; }
+.hd9 input[data-in=ts] { width: 110px; min-height: 36px; font: 600 16px Jost; }
+.hd9 input[data-in=ts].auto { border-style: dashed; }
+.og { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; margin: 8px 0 0; font-size: 12.5px; flex: none; }
+.ogi { background: var(--soft); border: 1px solid var(--line); border-radius: 8px; padding: 2px 8px; }
+.ogi i { color: var(--muted); font-style: normal; font-size: 11.5px; }
+.ogi .lnk { margin-left: 6px; font-size: 11.5px; }
+.ogi.end { color: var(--muted); text-decoration: line-through; }
+.ogi.end .lnk { text-decoration: none; }
+.acts9 { flex: 1; overflow-y: auto; padding: 10px 0 90px; display: grid; gap: 8px; align-content: start; }
+.ac9 { border: 1px solid var(--line); border-left: 4px solid var(--lc, var(--line)); border-radius: 11px; padding: 9px 11px; background: #fff; cursor: pointer; }
+.ac9.open { cursor: default; box-shadow: 0 0 0 1px var(--ink); }
+.ac9.ifedit { box-shadow: 0 0 0 2px var(--state); }
+.ac9 .sent { font-size: 15.5px; line-height: 1.4; }
+.ac9 .meta { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 4px; }
+.ac9 .meta .tm { font-size: 12px; color: var(--ink-2); }
+.ac9 .bars { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+.form9 { display: grid; gap: 0; margin-top: 10px; border-top: 1px solid var(--line); }
+.fr { display: grid; grid-template-columns: 104px minmax(0, 1fr); gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); align-items: start; }
+.fl { font: 600 13px Jost; color: var(--ink-2); padding-top: 8px; letter-spacing: .02em; }
+.fb { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-width: 0; }
+.fb .chips { gap: 5px; }
+.fb .row { width: 100%; }
+.fb .sub { width: 100%; display: flex; flex-wrap: wrap; gap: 5px; align-items: center; margin-top: 4px; }
+.fb textarea { width: 100%; min-height: 56px; }
+.rchip { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--line); border-left: 4px solid var(--lc); border-radius: 9px; padding: 4px 4px 4px 8px; font-size: 13px; background: #fff; }
+.rchip b { color: var(--lc); }
+.rchip button, .chip button { border: 0; background: none; color: var(--muted); cursor: pointer; padding: 0 4px; font-size: 15px; }
+.rsel { width: auto; min-height: 34px; font-size: 13px; }
+.io9 { margin-top: 6px; gap: 6px; }
+.wv { font-size: 14px; margin-right: 4px; }
+.ifrow { display: flex; align-items: center; gap: 8px; width: 100%; padding: 4px 0; border-bottom: 1px dashed var(--line); font-size: 13px; }
+.foot { margin-top: 10px; }
+.btn.wide { width: 100%; min-height: 46px; border-style: dashed; color: var(--state-deep); border-color: var(--state); }
+.mapov { position: absolute; top: 0; right: 0; bottom: 0; width: min(64%, 760px); background: #fff; border-left: 1px solid var(--line); box-shadow: -10px 0 24px rgba(20,28,36,.14); z-index: 5; padding: 8px; display: flex; flex-direction: column; }
+.mapov .dwrap { flex: 1; min-height: 0; position: relative; } .mapov .dia { height: 100%; }
+.mapov .mode { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 13px; margin-bottom: 6px; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--soft); }
+/* v10: tabbed action editor, pickers (quick · more ▾ · type) */
+.tabs9 { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px; border-bottom: 1px solid var(--line); }
+.tabs9 button { border: 1px solid var(--line); border-bottom: 0; background: var(--soft); border-radius: 9px 9px 0 0; min-height: 40px; padding: 0 14px; font: 600 13.5px Jost; color: var(--ink-2); cursor: pointer; }
+.tabs9 button.on { background: #fff; color: var(--ink); border-color: var(--ink); position: relative; top: 1px; }
+.tabs9 button.done:not(.on) { color: var(--state-deep); }
+.tabbody { padding: 12px 2px 4px; display: grid; gap: 8px; min-height: 120px; }
+.tabbody .grp { margin: 4px 0 0; }
+.pk9 { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.pk9 .chip { min-height: 40px; font-size: 14px; }
+.pk9 .chip.sm { min-height: 34px; font-size: 13px; }
+.pk9 .rsel { min-height: 40px; }
+.pkt { display: inline-flex; gap: 4px; align-items: center; }
+.pkt input { width: 190px; min-height: 40px; }
+.chip.big2 { min-height: 46px; padding: 0 18px; font-size: 15px; }
+.dirrow { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 4px; padding-top: 8px; border-top: 1px dashed var(--line); }
+.wnow { font-size: 15px; }
+.barline { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.barline input { flex: 1; min-width: 220px; min-height: 40px; }
+.tabbody textarea { width: 100%; min-height: 64px; }
+.acts9 .ac9.open { padding-bottom: 10px; }
+/* v11: branches in the slice list */
+.bg { margin-left: 10px; border-left: 2px dashed #b9c2ca; padding-left: 8px; display: grid; gap: 6px; }
+.bg.sc9 { border-left-style: solid; }
+.bh { text-align: left; border: 1px dashed #9aa4ae; background: var(--soft); border-radius: 8px; padding: 4px 8px; font-size: 12px; color: var(--ink-2); cursor: pointer; display: flex; flex-wrap: wrap; gap: 4px; align-items: baseline; }
+.bh b { font: 600 12px Jost; color: var(--ink); }
+.bh .rj { flex-basis: 100%; color: var(--muted); } .bh .rj i { font-style: normal; font-weight: 600; color: var(--ink); }
+.bs { display: grid; gap: 6px; }
+.si.br { border-style: dashed; }
+.sidef { display: grid; gap: 0; }
+.right9 > .bdp { margin-bottom: 8px; }
+.kg { display: flex; align-items: center; gap: 8px; font-size: 14px; margin-top: 6px; }
+.kg input { width: 20px; height: 20px; }
+.brl { border: 0; padding: 6px 0 0; }
+/* v12: scenario bar · frame versions · decision paths */
+.scen { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px dashed var(--line); flex: none; }
+.vers { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-top: 6px; flex: none; }
+.vers .chip .vt { border: 0; background: none; font: inherit; color: inherit; cursor: pointer; padding: 0; }
+.si .vb { font-size: 10.5px; border: 1px solid var(--line); border-radius: 6px; padding: 0 5px; color: var(--ink-2); white-space: nowrap; }
+.si .vb.on { border-color: var(--state); color: var(--state-deep); background: var(--state-tint); }
+.si.dim { opacity: .5; border-style: dotted; }
+.si .sh { flex-wrap: wrap; }
+.dg { margin-left: 10px; display: grid; gap: 6px; }
+.dh { text-align: left; border: 1px solid var(--ink-2); background: #fff; border-radius: 8px; padding: 4px 8px; font-size: 12px; cursor: pointer; }
+.dh b { font: 600 12px Jost; }
+.dg .bh { cursor: default; }
+/* v12.1: labelled sentence parts */
+.sent.lab { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; }
+.sg { display: inline-flex; align-items: baseline; gap: 5px; }
+.sg i { font: 600 9.5px Jost; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-style: normal; border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; }
+.dmain { font-size: 12px; color: var(--ink); padding: 2px 8px; } .dmain i { font-style: normal; color: var(--muted); }
+.bdp .chip .vt { border: 0; background: none; font: inherit; color: inherit; cursor: pointer; padding: 0; }
+/* v12.3: version chips that wrap a button line up with the plain ones */
+.vers .chip, .bdp .chip, .pk9 span.chip { display: inline-flex; align-items: center; gap: 4px; vertical-align: middle; }
+.vers .chip .vt, .bdp .chip .vt { line-height: 1; font-size: inherit; }
+
+/* v13: scenario = session copy; one version form with a range */
+.scen .scn { width: 200px; font: 600 13px Inter, sans-serif; border: 1px solid var(--line, #d4dae0); border-radius: 6px; padding: 3px 7px; }
+.scen .viewing { background: #fff1e6; border: 1px solid #f0b48a; border-radius: 12px; padding: 2px 10px; font-size: 12px; }
+.vb.st { background: #fff6d6; color: #8a6400; }
+.vb.st.new { background: #e3f4e1; color: #2f6b2c; }
+.bdp .chip i.fp { font-style: normal; opacity: .6; font-size: 11px; margin-left: 2px; }
+.bdp select[data-in=vp-to] { width: auto; max-width: 380px; flex: 0 1 auto; }
+
+/* v13.1: decision sits on the action that makes it */
+.decb { display: block; margin-top: 6px; text-align: left; border: 1px solid #c9b8f0; background: #f4f0fd; color: #3d2b8a; border-radius: 8px; padding: 4px 9px; font: 500 12px Inter, sans-serif; cursor: pointer; }
+
+</style>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0f6b6b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Time Slice">
+<link rel="apple-touch-icon" href="icon-180.png">
+<script>window.TS_DIAGRAMS_URL = 'site_diagrams.json';
+if ('serviceWorker' in navigator && location.protocol !== 'file:') addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));</script>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <h1>Time Slice Recorder</h1>
+    <span class="sid" id="sid"></span>
+    <nav id="tabs"></nav>
+    <span class="saved" id="saved"></span>
+  </header>
+  <main id="main"></main>
+</div>
+<input type="file" id="file-json" accept="application/json,.json" hidden>
+<script>
+/* Generated by tools/options_from_xlsx.py from observation_tool_option_sets_v3.xlsx — do not edit by hand. */
+window.OPTS = {
+ "source": "observation_tool_option_sets_v3.xlsx",
+ "sites": [
+  "LMH",
+  "WCM"
+ ],
+ "types": [
+  {
+   "id": "TY01",
+   "label": "Case",
+   "def": "Work done around patient cases"
+  },
+  {
+   "id": "TY02",
+   "label": "Spatial",
+   "def": "Work done for physical patient care in hospital"
+  }
+ ],
+ "roles": [
+  {
+   "id": "R01",
+   "label": "Patient",
+   "group": "Patient"
+  },
+  {
+   "id": "R02",
+   "label": "Family / caregiver",
+   "group": "Patient"
+  },
+  {
+   "id": "R03",
+   "label": "EMS",
+   "group": "Pre-hospital"
+  },
+  {
+   "id": "R04",
+   "label": "Triage-RN",
+   "group": "ED"
+  },
+  {
+   "id": "R05",
+   "label": "ED Attending",
+   "group": "ED"
+  },
+  {
+   "id": "R06",
+   "label": "ED resident / APP",
+   "group": "ED"
+  },
+  {
+   "id": "R07",
+   "label": "ED nurse",
+   "group": "ED"
+  },
+  {
+   "id": "R08",
+   "label": "Neuro Attending",
+   "group": "Neurology"
+  },
+  {
+   "id": "R09",
+   "label": "Neuro fellow / resident / PA",
+   "group": "Neurology"
+  },
+  {
+   "id": "R10",
+   "label": "Radiologist",
+   "group": "Imaging"
+  },
+  {
+   "id": "R11",
+   "label": "CT tech",
+   "group": "Imaging"
+  },
+  {
+   "id": "R12",
+   "label": "MRI tech",
+   "group": "Imaging"
+  },
+  {
+   "id": "R13",
+   "label": "Pharmacist",
+   "group": "Pharmacy"
+  },
+  {
+   "id": "R14",
+   "label": "Transporter",
+   "group": "Support"
+  },
+  {
+   "id": "R15",
+   "label": "Command / bed center staff",
+   "group": "Support"
+  },
+  {
+   "id": "R16",
+   "label": "Hospitalist",
+   "group": "Inpatient"
+  },
+  {
+   "id": "R17",
+   "label": "Inpatient nurse",
+   "group": "Inpatient"
+  },
+  {
+   "id": "R99",
+   "label": "Other (specify)",
+   "group": "Other"
+  }
+ ],
+ "actions": [
+  {
+   "id": "AC01",
+   "type": "TY01",
+   "label": "Receive",
+   "covers": "Alert, notification, page or message arrives (passive)",
+   "minWho": 1,
+   "toWhere": false,
+   "io": "Input",
+   "tech": [
+    "TC07",
+    "TC04",
+    "TC06"
+   ],
+   "tools": [
+    "TL01"
+   ],
+   "outState": ""
+  },
+  {
+   "id": "AC02",
+   "type": "TY01",
+   "label": "Review",
+   "covers": "Look at images, notes, orders, results, handoff messages",
+   "minWho": 1,
+   "toWhere": false,
+   "io": "Input",
+   "tech": [
+    "TC08",
+    "TC09"
+   ],
+   "tools": [],
+   "outState": ""
+  },
+  {
+   "id": "AC03",
+   "type": "TY01",
+   "label": "Discuss",
+   "covers": "Talk with another person: clinician ↔ clinician, with patient / family, handoff, coordination",
+   "minWho": 2,
+   "toWhere": false,
+   "io": "Both",
+   "tech": [
+    "TC01",
+    "TC02",
+    "TC03"
+   ],
+   "tools": [],
+   "outState": ""
+  },
+  {
+   "id": "AC04",
+   "type": "TY01",
+   "label": "Order / request",
+   "covers": "Place order; request consult, bed, transport",
+   "minWho": 1,
+   "toWhere": false,
+   "io": "Output",
+   "tech": [
+    "TC08",
+    "TC12"
+   ],
+   "tools": [],
+   "outState": ""
+  },
+  {
+   "id": "AC05",
+   "type": "TY01",
+   "label": "Document",
+   "covers": "Write note, recommendation, report, screen result, MAR",
+   "minWho": 1,
+   "toWhere": false,
+   "io": "Output",
+   "tech": [
+    "TC08"
+   ],
+   "tools": [],
+   "outState": ""
+  },
+  {
+   "id": "AC06",
+   "type": "TY01",
+   "label": "Notify",
+   "covers": "Send message / page, activate alert",
+   "minWho": 1,
+   "toWhere": false,
+   "io": "Output",
+   "tech": [
+    "TC04",
+    "TC02",
+    "TC06"
+   ],
+   "tools": [
+    "TL01"
+   ],
+   "outState": ""
+  },
+  {
+   "id": "AC07",
+   "type": "TY01",
+   "label": "Decide / verify",
+   "covers": "Treatment, imaging, disposition decision; pharmacist verifies order",
+   "minWho": 1,
+   "toWhere": false,
+   "io": "Both",
+   "tech": [],
+   "tools": [],
+   "outState": ""
+  },
+  {
+   "id": "AS01",
+   "type": "TY02",
+   "label": "Move patient",
+   "covers": "Patient moves from → to; every role in who moves with the patient",
+   "minWho": 1,
+   "toWhere": true,
+   "io": "None",
+   "tech": [],
+   "tools": [
+    "TL06"
+   ],
+   "outState": "ST01"
+  },
+  {
+   "id": "AS02",
+   "type": "TY02",
+   "label": "Go to",
+   "covers": "Staff travels without the patient (to see patient, fetch, deliver)",
+   "minWho": 1,
+   "toWhere": true,
+   "io": "None",
+   "tech": [],
+   "tools": [],
+   "outState": "ST02"
+  },
+  {
+   "id": "AS03",
+   "type": "TY02",
+   "label": "Assess",
+   "covers": "Exam / NIHSS, triage screen, swallow screen, vitals",
+   "minWho": 1,
+   "toWhere": false,
+   "io": "Output",
+   "tech": [
+    "TC01",
+    "TC03"
+   ],
+   "tools": [
+    "TL05",
+    "TL03"
+   ],
+   "outState": ""
+  },
+  {
+   "id": "AS04",
+   "type": "TY02",
+   "label": "Treat",
+   "covers": "Give medication, IV, other bedside care",
+   "minWho": 1,
+   "toWhere": false,
+   "io": "Input",
+   "tech": [
+    "TC01"
+   ],
+   "tools": [
+    "TL03",
+    "TL02"
+   ],
+   "outState": "ST05"
+  },
+  {
+   "id": "AS05",
+   "type": "TY02",
+   "label": "Image",
+   "covers": "Position patient on scanner table + acquire CT / MRI (scanner = fixed tool picked at where)",
+   "minWho": 1,
+   "toWhere": false,
+   "io": "Output",
+   "tech": [],
+   "tools": [
+    "TL06"
+   ],
+   "outState": ""
+  },
+  {
+   "id": "AS06",
+   "type": "TY02",
+   "label": "Fetch",
+   "covers": "Retrieve medication / supplies / tele-cart at a point (ADC, supply room, pharmacy pickup)",
+   "minWho": 1,
+   "toWhere": false,
+   "io": "Input",
+   "tech": [
+    "TC11"
+   ],
+   "tools": [
+    "TL05",
+    "TL03"
+   ],
+   "outState": "ST03"
+  },
+  {
+   "id": "AS07",
+   "type": "TY02",
+   "label": "Prepare",
+   "covers": "Set up supplies, prepare / dispense meds, clean room or scanner",
+   "minWho": 1,
+   "toWhere": false,
+   "io": "None",
+   "tech": [],
+   "tools": [
+    "TL03"
+   ],
+   "outState": "ST04"
+  },
+  {
+   "id": "A99",
+   "type": "both",
+   "label": "Other",
+   "covers": "Anything else; type a note",
+   "minWho": 1,
+   "toWhere": false,
+   "io": "None",
+   "tech": [],
+   "tools": [],
+   "outState": ""
+  }
+ ],
+ "tools": [
+  {
+   "id": "TL01",
+   "label": "Personal mobile phone",
+   "mobility": "Portable"
+  },
+  {
+   "id": "TL02",
+   "label": "Barcode scanner",
+   "mobility": "Portable"
+  },
+  {
+   "id": "TL03",
+   "label": "Supplies(Medcup/ Water/ Syringes/tubing/Smart IV Pump)",
+   "mobility": "Portable"
+  },
+  {
+   "id": "TL04",
+   "label": "WOW (workstation on wheels)",
+   "mobility": "Mobile"
+  },
+  {
+   "id": "TL05",
+   "label": "Tele-cart",
+   "mobility": "Mobile"
+  },
+  {
+   "id": "TL06",
+   "label": "Stretcher / bed",
+   "mobility": "Mobile"
+  },
+  {
+   "id": "TL07",
+   "label": "Workstation",
+   "mobility": "Fixed"
+  },
+  {
+   "id": "TL08",
+   "label": "ADC (Pyxis / Omnicell)",
+   "mobility": "Fixed"
+  },
+  {
+   "id": "TL09",
+   "label": "Badge / biometric reader",
+   "mobility": "Fixed"
+  },
+  {
+   "id": "TL10",
+   "label": "CT",
+   "mobility": "Fixed"
+  },
+  {
+   "id": "TL11",
+   "label": "MRI",
+   "mobility": "Fixed"
+  },
+  {
+   "id": "TL99",
+   "label": "Other (specify)",
+   "mobility": "—"
+  }
+ ],
+ "tech": [
+  {
+   "id": "TC01",
+   "label": "In-person",
+   "LMH": "",
+   "WCM": ""
+  },
+  {
+   "id": "TC02",
+   "label": "Phone call",
+   "LMH": "",
+   "WCM": ""
+  },
+  {
+   "id": "TC03",
+   "label": "Video call",
+   "LMH": "",
+   "WCM": ""
+  },
+  {
+   "id": "TC04",
+   "label": "Message",
+   "LMH": "",
+   "WCM": ""
+  },
+  {
+   "id": "TC05",
+   "label": "Email",
+   "LMH": "",
+   "WCM": ""
+  },
+  {
+   "id": "TC06",
+   "label": "Overhead page",
+   "LMH": "",
+   "WCM": ""
+  },
+  {
+   "id": "TC07",
+   "label": "System Notification Center",
+   "LMH": "",
+   "WCM": ""
+  },
+  {
+   "id": "TC08",
+   "label": "EPIC-EHR",
+   "LMH": "",
+   "WCM": ""
+  },
+  {
+   "id": "TC09",
+   "label": "EPIC-PACS / image viewer",
+   "LMH": "",
+   "WCM": ""
+  },
+  {
+   "id": "TC10",
+   "label": "Interpreter system",
+   "LMH": "",
+   "WCM": ""
+  },
+  {
+   "id": "TC11",
+   "label": "ADC system",
+   "LMH": "",
+   "WCM": ""
+  },
+  {
+   "id": "TC12",
+   "label": "Bed / transport management system",
+   "LMH": "",
+   "WCM": ""
+  },
+  {
+   "id": "TC99",
+   "label": "Other (specify)",
+   "LMH": "",
+   "WCM": ""
+  }
+ ],
+ "info": [
+  {
+   "id": "IA01",
+   "label": "Stroke alert"
+  },
+  {
+   "id": "IA02",
+   "label": "Imaging order"
+  },
+  {
+   "id": "IA03",
+   "label": "Imaging Result"
+  },
+  {
+   "id": "IA04",
+   "label": "Consult note / recommendation"
+  },
+  {
+   "id": "IA05",
+   "label": "Medication order"
+  },
+  {
+   "id": "IA06",
+   "label": "Dysphagia screen result"
+  },
+  {
+   "id": "IA07",
+   "label": "Medication administration record"
+  },
+  {
+   "id": "IA08",
+   "label": "Admission / bed request"
+  },
+  {
+   "id": "IA09",
+   "label": "Bed assignment"
+  },
+  {
+   "id": "IA10",
+   "label": "Transport request"
+  },
+  {
+   "id": "IA11",
+   "label": "Handoff note / message"
+  },
+  {
+   "id": "IA12",
+   "label": "Patient history / last known well"
+  },
+  {
+   "id": "IA13",
+   "label": "Discharge instructions"
+  },
+  {
+   "id": "IA99",
+   "label": "Other (specify)"
+  }
+ ],
+ "states": [
+  {
+   "id": "ST01",
+   "label": "Patient arrived",
+   "action": "AS01"
+  },
+  {
+   "id": "ST02",
+   "label": "Staff arrived",
+   "action": "AS02"
+  },
+  {
+   "id": "ST03",
+   "label": "Item / medication retrieved",
+   "action": "AS06"
+  },
+  {
+   "id": "ST04",
+   "label": "Room / equipment ready",
+   "action": "AS07"
+  },
+  {
+   "id": "ST05",
+   "label": "Treatment given",
+   "action": "AS04"
+  },
+  {
+   "id": "ST99",
+   "label": "Other state (specify)",
+   "action": ""
+  }
+ ],
+ "conditions": [
+  {
+   "id": "C01",
+   "category": "Time",
+   "label": "Time block",
+   "values": [
+    "Weekday day",
+    "Weekday afternoon",
+    "Night",
+    "Weekend"
+   ],
+   "typical": "Tele vs on-site neuro; scanner closed; different staff"
+  },
+  {
+   "id": "C02",
+   "category": "Labor",
+   "label": "Shift handoff happening",
+   "values": [
+    "Yes",
+    "No"
+   ],
+   "typical": "Adds handoff action; incoming clinician becomes Who"
+  },
+  {
+   "id": "C03",
+   "category": "Labor",
+   "label": "Neurology mode",
+   "values": [
+    "On-site",
+    "Tele"
+   ],
+   "typical": "Who → tele-neurologist; Where → Off-site; channel → Video; device → Tele-cart"
+  },
+  {
+   "id": "C04",
+   "category": "Labor",
+   "label": "Clinician handling other",
+   "values": [
+    "seeing patient",
+    "in office"
+   ],
+   "typical": "starting point change"
+  },
+  {
+   "id": "C05",
+   "category": "Facility",
+   "label": "CT availability",
+   "values": [
+    "Open",
+    "In use",
+    "Down"
+   ],
+   "typical": "Wait location or alternate scanner"
+  },
+  {
+   "id": "C06",
+   "category": "Facility",
+   "label": "MRI availability",
+   "values": [
+    "Open",
+    "In use",
+    "Closed"
+   ],
+   "typical": "Wait location; admission to get MRI"
+  },
+  {
+   "id": "C07",
+   "category": "Facility",
+   "label": "Bed availability",
+   "values": [
+    "Available",
+    "Not available"
+   ],
+   "typical": "Patient stays in ED; different destination"
+  },
+  {
+   "id": "C08",
+   "category": "Facility",
+   "label": "Tele-cart availability",
+   "values": [
+    "Open",
+    "Down",
+    "In use"
+   ],
+   "typical": "Adds Carry item (tele-cart)"
+  },
+  {
+   "id": "C09",
+   "category": "Clinical",
+   "label": "Severity",
+   "values": [
+    "A",
+    "B",
+    "C"
+   ],
+   "typical": "Severe → different team and pathway"
+  },
+  {
+   "id": "C10",
+   "category": "Clinical",
+   "label": "Admitted",
+   "values": [
+    "Yes",
+    "No"
+   ],
+   "typical": "Admission order, transport to unit vs discharge"
+  },
+  {
+   "id": "C11",
+   "category": "Clinical",
+   "label": "Main problem is neuro (if admitted)",
+   "values": [
+    "Yes",
+    "No"
+   ],
+   "typical": "Neuro unit vs medicine ward; admitting team"
+  },
+  {
+   "id": "C12",
+   "category": "Clinical",
+   "label": "Swallow screen result",
+   "values": [
+    "Pass",
+    "Fail"
+   ],
+   "typical": "Oral meds held / alternate route"
+  },
+  {
+   "id": "C99",
+   "category": "Other",
+   "label": "Other (specify)",
+   "values": [],
+   "typical": ""
+  }
+ ],
+ "states_source": "recorder defaults (not yet in the workbook)"
+};
+
+</script>
+<script>
+/* Time Slice Recorder v9 — basic piece.
+   Left: collapsible list of slices (+ New frame). Right: the actions of the selected slice; each action has
+   who · when (total time, starts after …) · where (spot / route) · what (verb + noun, input / output) · with whom · how · if · barrier / note.
+   A slice is a freeze-frame at a timestamp. An action lives in the slice where it starts; later slices show it as "still going".
+   "Starts after" (needs): an action can need several earlier actions to be done; their times do not have to match — no wait action.
+   If: an action can have alternatives under a condition (store only what differs, or "does not happen").
+   Local prototype; lists from ../recorder/options.js (adjusted here, the shared file is unchanged). */
+(() => {
+'use strict';
+const O = window.OPTS;
+const KEY = 'wtslice-v9', OLDKEY = 'wtslice-v4';
+const byId = {};
+['roles', 'actions', 'tools', 'tech', 'info', 'conditions'].forEach(k => O[k].forEach(x => { byId[x.id] = x; }));
+const OTHER = id => /99$/.test(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const iso = () => new Date().toISOString();
+const pad = (n, w) => String(n).padStart(w, '0');
+const clone = o => JSON.parse(JSON.stringify(o));
+const r2 = x => Math.round(x * 100) / 100;
+
+/* ---------- system boundary, roles, lists ---------- */
+const TEAM = { R01: 'Patient', R02: 'Patient', R03: 'External', R04: 'ED', R05: 'ED', R06: 'ED', R07: 'ED', R08: 'Neuro', R09: 'Neuro', R10: 'Imaging', R11: 'Imaging', R12: 'Imaging', R13: 'External', R14: 'Transport', R15: 'External', R16: 'IM', R17: 'IM', R99: 'Other' };
+const ROLE_LABEL = { R05: 'EM physician', R08: 'Neurologist', R13: 'Pharmacy', R15: 'Command center', R16: 'Hospitalist (IM)', R17: 'IM nurse' };
+const ROLE_HIDE = ['R06', 'R09']; // experience level is not recorded
+O.roles.forEach(r => { if (ROLE_LABEL[r.id]) r.label = ROLE_LABEL[r.id]; r.group = TEAM[r.id] || 'Other'; });
+const COND_HIDE = ['C03', 'C01']; // Neuro on-site / tele follows from site × time; time block is split into Day / Time of day
+[{ id: 'C22', category: 'Scenario', label: 'Day', values: ['Weekday', 'Weekend'] }, { id: 'C23', category: 'Scenario', label: 'Time of day', values: ['Day', 'After-hours'] },
+ { id: 'C20', category: 'Arrival', label: 'Arrival mode', values: ['EMS (pre-notified)', 'Walk-in'] },
+ { id: 'C21', category: 'Labor', label: 'Neuro location at alert', values: ['Office', 'In ED', 'On a ward (4C)'] }].forEach(c => { if (!O.conditions.some(x => x.id === c.id)) { O.conditions.splice(O.conditions.length - 1, 0, c); byId[c.id] = c; } });
+const TEAMS = [['Neuro', 'Neuro team'], ['ED', 'ED team'], ['Imaging', 'Imaging team'], ['IM', 'IM team'], ['Transport', 'Transport'], ['Patient', 'Patient / family'], ['External', 'External systems'], ['Other', 'Other']];
+const TEAM_COLOR = { Neuro: '#6a4fc9', ED: '#2563c9', Imaging: '#c03d82', IM: '#3d8a3a', Transport: '#5f6b76', Patient: '#e2702b', External: '#8a5a2b', Other: '#8a949e' };
+[{ id: 'TL20', label: 'Exam tools (penlight, reflex hammer…)' }, { id: 'TL21', label: 'Hands-on / physical contact' }].forEach(t => { if (!O.tools.some(x => x.id === t.id)) { O.tools.splice(O.tools.length - 1, 0, t); byId[t.id] = t; } });
+/* quick choices (the rest is in "more ▾", anything else can be typed) */
+const Q_WHO = ['R01', 'R05', 'R07', 'R04', 'R08', 'R14', 'R11', 'R12', 'R03'];
+const Q_VERB = ['Move', 'Go', 'Hand off', 'Talk about', 'Ask', 'Examine', 'Prepare', 'Scan', 'Review', 'Order', 'Document', 'Deliver', 'Pick up'];
+const MORE_VERB = ['Decide', 'Walk', 'Notify', 'Assess', 'Treat', 'Wait', 'Call', 'Page', 'Transfer', 'Admit', 'Discharge', 'Draw', 'Give'];
+const Q_NOUN = ['patient', 'symptoms & history', 'LKW', 'NIHSS', 'imaging order', 'imaging result', 'report', 'scanner', 'note', 'medication'];
+const Q_TOOL = ['TL06', 'TL20', 'TL21', 'TL07', 'TL04', 'TL05', 'TL01', 'TL10', 'TL11'];
+const Q_TECH = ['TC01', 'TC02', 'TC03', 'TC04', 'TC08', 'TC09'];
+const Q_ART = ['IA01', 'IA02', 'IA03', 'IA12', 'IA11', 'IA05'];
+const ABBR = { R01: 'Pt', R02: 'Fam', R03: 'EMS', R04: 'Tri', R05: 'EM', R06: 'EM', R07: 'RN', R08: 'Neu', R09: 'Neu', R10: 'Rad', R11: 'CT', R12: 'MR', R13: 'Rx', R14: 'Tr', R15: 'Cmd', R16: 'Hos', R17: 'IMRN', R99: 'Oth' };
+const rid = k => String(k).split(':')[0];
+const roleLabel = k => (OTHER(rid(k)) && k.includes(':') ? k.split(':').slice(1).join(':') : (byId[rid(k)] || {}).label || k);
+const roleAbbr = k => (OTHER(rid(k)) && k.includes(':') ? k.split(':')[1].slice(0, 4) : ABBR[rid(k)] || '?');
+const roleColor = k => TEAM_COLOR[TEAM[rid(k)] || 'Other'];
+const names = ks => (ks || []).map(k => `<b class="rn" style="color:${roleColor(k)}">${esc(roleAbbr(k))}</b>`).join(', ');
+const VERBS = ['Move patient', 'Go to', 'Hand off', 'Talk', 'Ask', 'Notify', 'Assess', 'Examine', 'Prepare', 'Scan', 'Review', 'Order / request', 'Document', 'Deliver', 'Pick up'];
+const MOVE_VERBS = ['Move', 'Go', 'Walk', 'Move patient', 'Go to'];
+const labelOf = id => (byId[id] ? byId[id].label : id);
+const COMM = O.tech.filter(t => +t.id.slice(2) <= 6).map(t => t.id);
+const HOW = [...COMM, ...O.tools.filter(t => !OTHER(t.id)).map(t => t.id), ...O.tech.filter(t => +t.id.slice(2) > 6 && !OTHER(t.id)).map(t => t.id)];
+const DIGITAL = O.tech.filter(t => +t.id.slice(2) >= 7 && !OTHER(t.id)).map(t => ({ kind: 'digital', id: t.id, label: t.label }));
+const RELATIONS = ['next to', 'inside', 'across from', 'near', 'not sure'];
+const BAR_FIELDS = ['who', 'when', 'where', 'what', 'with', 'how'];
+const IF_FIELDS = ['who', 'verb', 'noun', 'with', 'how', 'where', 'route', 'min', 'min_hi', 'src', 'needs', 'inputs', 'outputs', 'note'];
+const artLabel = x => (x.text ? x.text : labelOf(x.id));
+
+/* ---------- storage ---------- */
+const store = (() => {
+  let dbp;
+  const open = () => dbp || (dbp = new Promise((res, rej) => { try { const r = indexedDB.open('wtslice', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); } catch (e) { rej(e); } }));
+  return {
+    async get(k) { try { const db = await open(); return await new Promise((res, rej) => { const q = db.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }); } catch (e) { try { return JSON.parse(localStorage.getItem(k)); } catch (e2) { return null; } } },
+    async set(k, v) { try { const db = await open(); await new Promise((res, rej) => { const t = db.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, k); t.oncomplete = res; t.onerror = () => rej(t.error); }); return true; } catch (e) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e2) { return false; } } }
+  };
+})();
+let S = { v: 9, sessions: [], cur: null, places: { LMH: [], WCM: [] }, diagrams: { LMH: null, WCM: null } };
+const ui = { on: {}, ver: {}, dup: null, vp: null, dp: null, bp: null, tab: 'who', view: 'record', sid: '', open: '', side: true, map: '', sheet: {}, vb: {}, noClick: 0, timer: null, ifOn: {}, ifEdit: null, newIf: {}, newBar: { field: 'where', text: '' }, newSite: '', moreHow: false };
+let saveT;
+function save() {
+  clearTimeout(saveT);
+  saveT = setTimeout(async () => { const ok = await store.set(KEY, S); const el = document.getElementById('saved'); if (el) el.textContent = ok ? 'Saved on this device ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '⚠ Not saved'; }, 250);
+}
+
+/* ---------- model helpers ---------- */
+const sess = () => S.sessions.find(s => s.session_id === S.cur) || null;
+const slices = () => (sess() ? sess().slices : []);
+const findSl = id => slices().find(x => x.id === id) || null;
+const curSlice = () => findSl(ui.sid);
+/* Variation, three levels.
+   0) Scenario = a whole session. Two sites = two sessions; a scenario (weekend, after-hours …) = Duplicate as scenario: a copy, no link back,
+      each frame remembers what it was copied from (changed / new / removed).
+   1) Condition → version if … : you type the condition and say which frames it changes (one frame, or several in a row; then the next frame as
+      usual). Each version is a copy edited on its own. Extra steps under it: + Frame only if …. Viewing a version shows it on every frame at once.
+   2) Decision → side paths. After a frame, ◆ a decision; ★ outcome continues on the main line, each other outcome is its own side path
+      (P1·1, P1·2 …), which may rejoin a later frame. */
+const decisions = () => (sess() && sess().decisions) || [];
+const findDec = id => decisions().find(d => d.id === id) || null;
+const decOf = aid => decisions().find(d => d.act === aid) || null; // a decision is made by one action; the paths fork after that action's frame
+const decWho = d => { const a = d && d.act ? findAct(d.act) : null; return a && a.who.length ? a.who.map(k => ABBR[rid(k)] || roleLabel(k)).join(', ') : ''; };
+const outOf = pid => { for (const d of decisions()) { const o = (d.outcomes || []).find(x => x.id === pid); if (o) return { d, o }; } return null; };
+const ckey = c => c.condition_id + ':' + c.value;
+const condOn = c => !!ui.on[ckey(c)];
+const viewConds = cs => { ui.on = {}; (cs || []).forEach(c => { ui.on[ckey(c)] = true; }); };
+const condsOn = cs => (cs || []).every(condOn);
+const condsText = cs => (cs || []).map(c => c.value).join(' · ');
+const visible = x => !x.only_if || condsOn(x.only_if);
+const mainsAll = () => slices().filter(x => !x.path);
+const mains = () => mainsAll().filter(visible);
+const pathAll = pid => slices().filter(x => x.path === pid);
+const pathFrames = pid => pathAll(pid).filter(visible);
+function scenVar(sl) { return (sl.variants || []).filter(v => condsOn(v.conds)).sort((a, b) => b.conds.length - a.conds.length)[0] || null; }
+const shownVar = sl => scenVar(sl); // the version you are viewing is the one shown, timed and edited — on every frame at once
+const timeActs = sl => { const v = scenVar(sl); return v ? v.acts : sl.acts; };
+const shownActs = sl => { const v = shownVar(sl); return v ? v.acts : sl.acts; };
+const title = sl => (sl.path ? sl.path + '·' + (pathAll(sl.path).indexOf(sl) + 1) : 'F' + (mainsAll().indexOf(sl) + 1));
+function pathOf(sl) { if (!sl.path) return mains().slice(0, mains().indexOf(sl) + 1); const r = outOf(sl.path), f = r ? findSl(r.d.after) : null, own = pathFrames(sl.path); return [...(f ? pathOf(f) : []), ...own.slice(0, own.indexOf(sl) + 1)]; }
+function nextOf(sl) { if (!sl.path) { const m = mains(); return m[m.indexOf(sl) + 1] || null; } const own = pathFrames(sl.path), i = own.indexOf(sl); if (own[i + 1]) return own[i + 1]; const r = outOf(sl.path); return r && r.o.rejoin ? findSl(r.o.rejoin) : null; }
+const prevOf = sl => { const p = pathOf(sl); return p.length > 1 ? p[p.length - 2] : null; };
+const allConds = () => { const m = new Map(); ((sess() && sess().conds) || []).forEach(c => m.set(ckey(c), { condition_id: c.condition_id, value: c.value })); slices().forEach(x => [...(x.variants || []).flatMap(v => v.conds), ...(x.only_if || [])].forEach(c => { if (!m.has(ckey(c))) m.set(ckey(c), { condition_id: c.condition_id, value: c.value }); })); return [...m.values()]; };
+const activeConds = () => allConds().filter(condOn);
+/* footprint of a condition: the frames that have a version for it (or exist only under it) — you set it when you create the version */
+const footprint = c => slices().filter(x => (x.variants || []).some(v => v.conds.some(y => ckey(y) === ckey(c))) || (x.only_if || []).some(y => ckey(y) === ckey(c)));
+function rangeText(fs) { const ms = mainsAll(), idx = fs.filter(x => !x.path).map(x => ms.indexOf(x)).sort((a, b) => a - b), out = []; idx.forEach(i => { const L = out[out.length - 1]; if (L && i === L[1] + 1) L[1] = i; else out.push([i, i]); }); return [...out.map(([a, b]) => 'F' + (a + 1) + (b > a ? '–F' + (b + 1) : '')), ...fs.filter(x => x.path).map(title)].join(', '); }
+/* scenario = a copy of the whole session (Duplicate as scenario), no link back; each frame remembers what it was copied from */
+const frameSig = x => JSON.stringify({ a: x.acts, v: x.variants || [], o: x.only_if || [], m: x.ts_mode, t: x.ts, h: x.ts_hi });
+function frameStatus(x) { const s = sess(); if (!s || !s.based_on) return ''; if (!x.base_id) return 'new'; return frameSig(x) === x.base_sig ? '' : 'changed'; }
+const actLists = sl => [sl.acts, ...(sl.variants || []).map(v => v.acts)];
+const allActs = () => slices().flatMap(sl => actLists(sl).flatMap(l => l.map(a => ({ sl, a }))));
+const findAct = id => { for (const sl of slices()) for (const l of actLists(sl)) { const a = l.find(x => x.id === id); if (a) return a; } return null; };
+const listOfAct = id => { for (const sl of slices()) for (const l of actLists(sl)) if (l.some(x => x.id === id)) return l; return null; };
+const routeText = a => (a.route || []).map(w => w.label).filter((l, i, arr) => l && l !== arr[i - 1]).join(' → ');
+const ioText = a => [(a.inputs || []).length ? 'in: ' + a.inputs.map(artLabel).join(', ') : '', (a.outputs || []).length ? 'out: ' + a.outputs.map(artLabel).join(', ') : ''].filter(Boolean).join(' · ');
+const whereText = a => ((a.route || []).length ? '🚶 ' + routeText(a) : a.where && a.where.label ? (a.where.kind === 'digital' ? '🖥 ' : a.where.kind === 'text' ? '✎ ' : '📍 ') + a.where.label : '');
+const condLabel = c => { if (!c) return ''; const d = byId[c.condition_id]; return OTHER(c.condition_id) ? c.value : (d ? d.label : c.condition_id) + ' = ' + c.value; };
+const blankAct = () => { const s = sess(); s.t = (s.t || 0) + 1; return { id: 'A' + s.t, who: [], to: [], verb: '', noun: '', tools: [], tech: [], where: null, route: [], min: null, min_hi: null, src: '', needs: [], inputs: [], outputs: [], ifs: [], barriers: [], note: '' }; };
+function normAct(a) { // older records: with → who, how → tools / technology, "Move patient" → move + patient
+  a.who = a.who || []; a.to = a.to || [];
+  if (a.with && a.with.length) { a.with.forEach(k => { if (!a.who.includes(k)) a.who.push(k); }); } delete a.with;
+  if (a.how) { a.tools = a.tools || a.how.filter(id => /^TL/.test(id)); a.tech = a.tech || a.how.filter(id => !/^TL/.test(id)); delete a.how; }
+  a.tools = a.tools || []; a.tech = a.tech || [];
+  const SPLIT = { 'Move patient': ['Move', 'patient'], 'Go to': ['Go', ''], 'Order / request': ['Order', ''] };
+  if (SPLIT[a.verb]) { const [v, n] = SPLIT[a.verb]; a.verb = v; if (!a.noun || /^to |^stretcher/.test(a.noun)) a.noun = (n + ' ' + (a.noun || '')).trim(); }
+  a.inputs = a.inputs || []; a.outputs = a.outputs || []; a.barriers = a.barriers || []; delete a.needs; a.cont = !!a.cont;
+}
+const valLabel = v => (/^(tool|tech|art):/.test(v) ? v.split(':').slice(1).join(':') : labelOf(v));
+const howText = a => [...(a.tools || []), ...(a.tech || [])].map(valLabel).join(', ');
+const whoHtml = a => { const to = (a.to || []).filter(k => a.who.includes(k)), from = a.who.filter(k => !to.includes(k)); return to.length && from.length ? `${names(from)} → ${names(to)}` : names(a.who); };
+const whoText = a => { const to = (a.to || []).filter(k => a.who.includes(k)), from = a.who.filter(k => !to.includes(k)); return to.length && from.length ? from.map(roleAbbr).join(', ') + ' → ' + to.map(roleAbbr).join(', ') : a.who.map(roleAbbr).join(', '); };
+function sentenceParts(a) { // labelled parts: who · what · how · where
+  const how = howText(a), wh = (a.route || []).length ? ['where · route', routeText(a)] : a.where && a.where.label ? ['where · ' + ({ digital: 'online', text: 'note' }[a.where.kind] || 'spot'), a.where.label] : null;
+  return `<span class="sg"><i>who</i><span>${a.who.length ? whoHtml(a) : '<span class="muted">—</span>'}</span></span><span class="sg"><i>what</i><span>${esc((a.verb || '—').toLowerCase())}${a.noun ? ' <b>' + esc(a.noun) + '</b>' : ''}</span></span>${how ? `<span class="sg"><i>how</i><span>${esc(how)}</span></span>` : ''}${wh ? `<span class="sg"><i>${wh[0]}</i><span>${esc(wh[1])}</span></span>` : ''}`;
+}
+function sentenceHtml(a) {
+  return `${a.who.length ? whoHtml(a) : '<span class="muted">who?</span>'} ${esc((a.verb || 'does …').toLowerCase())}${a.noun ? ' <b>' + esc(a.noun) + '</b>' : ''}${howText(a) ? ` <span class="s-on">· ${esc(howText(a))}</span>` : ''}${whereText(a) ? ` <span class="s-at">· ${esc(whereText(a))}</span>` : ''}`;
+}
+const sentenceText = a => [whoText(a), (a.verb || '').toLowerCase(), a.noun, howText(a) ? '· ' + howText(a) : '', whereText(a) ? '· ' + whereText(a) : ''].filter(Boolean).join(' ');
+const shortText = a => [whoText(a), (a.verb || '…').toLowerCase(), a.noun].filter(Boolean).join(' ');
+
+/* ---------- if (action-level alternatives) ---------- */
+const activeIf = () => null; // variations removed for now (a new global setting is coming)
+function eff(a) { const x = activeIf(a); if (!x || (ui.ifEdit && ui.ifEdit.a === a.id)) return a; return { ...a, ...clone(x.over || {}), skip: !!x.skip, _if: x }; }
+const effActs = sl => shownActs(sl);
+function ifSummary(a, x) {
+  if (x.skip) return 'does not happen'; const o = x.over || {}, out = [];
+  if ('who' in o) out.push('who: ' + o.who.map(roleAbbr).join(', '));
+  if ('verb' in o || 'noun' in o) out.push(((o.verb ?? a.verb) || '').toLowerCase() + ' ' + (o.noun ?? a.noun ?? ''));
+  if ('with' in o) out.push('with: ' + (o.with.map(roleAbbr).join(', ') || '—'));
+  if ('how' in o) out.push('how: ' + (o.how.map(labelOf).join(', ') || '—'));
+  if ('route' in o && o.route.length) out.push('🚶 ' + routeText(o)); else if ('where' in o && o.where) out.push('📍 ' + o.where.label);
+  if ('min' in o) out.push('⏱ ' + totText(o.min, o.min_hi));
+  if ('needs' in o) out.push('after: ' + (o.needs.map(id => { const b = findAct(id); return b ? shortText(b) : id; }).join(', ') || '—'));
+  if ('note' in o && o.note) out.push('— ' + o.note);
+  return out.join(' · ') || 'same (nothing changed yet)';
+}
+function startIf(a, i) { a._base = {}; IF_FIELDS.forEach(k => { a._base[k] = clone(a[k] === undefined ? null : a[k]); }); Object.assign(a, clone(a.ifs[i].over || {})); ui.ifEdit = { a: a.id, i }; ui.open = a.id; }
+function finishIf() {
+  const e = ui.ifEdit; ui.ifEdit = null; const a = e && findAct(e.a); if (!a || !a._base) return;
+  const over = {}; IF_FIELDS.forEach(k => { if (JSON.stringify(a[k] === undefined ? null : a[k]) !== JSON.stringify(a._base[k])) over[k] = clone(a[k]); });
+  if (a.ifs[e.i]) a.ifs[e.i].over = over; Object.assign(a, a._base); delete a._base; save();
+}
+
+/* ---------- time ---------- */
+const mmss = m => { if (m == null || isNaN(m)) return '—'; const s = Math.round(Math.abs(m) * 60); return (m < 0 ? '−' : '') + pad(Math.floor(s / 60), 2) + ':' + pad(s % 60, 2); };
+const rText = (lo, hi) => (lo == null ? '?' : hi == null || Math.abs(hi - lo) < 0.005 ? mmss(lo) : mmss(lo) + '–' + mmss(hi));
+const minText = m => (m == null ? '' : r2(m) + ' min');
+const totText = (lo, hi) => (lo == null ? '—' : hi == null || Math.abs(hi - lo) < 0.005 ? minText(lo) : r2(lo) + '–' + r2(hi) + ' min');
+function parseMin(v) {
+  v = String(v || '').trim(); if (!v) return null;
+  const m = v.match(/^(\d+):(\d{1,2})$/); if (m) return r2(+m[1] + +m[2] / 60);
+  const s = v.match(/^([\d.]+)\s*s(ec)?$/i); if (s) return r2(+s[1] / 60);
+  const n = parseFloat(v); return isNaN(n) ? null : n;
+}
+function parseRange(v) {
+  v = String(v || '').trim(); if (!v) return null;
+  const parts = v.split(/\s*(?:–|—|\bto\b|-)\s*/).filter(Boolean).map(parseMin);
+  if (!parts.length || parts.some(x => x == null)) return null;
+  const lo = Math.min(...parts), hi = Math.max(...parts); return { lo, hi: hi > lo ? hi : null };
+}
+/* v14 · carry-over: an action continues into the following frames until you end it there (✕ ended → a.ended_in has that frame).
+   A frame's auto timestamp = when the actions ended at it finish (the latest one). Each path is timed on its own. Manual: typed. */
+const endsAt = (a, x) => (a.ended_in || []).includes(x.id);
+function carriedIn(seq, k) { // actions started before seq[k] that are still there in seq[k]
+  const out = [];
+  for (let j = 0; j < k; j++) timeActs(seq[j]).forEach(a => { for (let m = j + 1; m <= k; m++) if (endsAt(a, seq[m])) return; out.push({ a, x: seq[j] }); });
+  return out;
+}
+function timeline() {
+  const out = { act: {}, sl: {}, join: {} };
+  const run = seq => {
+    let t = { lo: 0, hi: 0 }, known = true, why = 'start (T0)', last = null;
+    seq.forEach((sl, k) => {
+      const manual = sl.ts_mode === 'manual' && sl.ts != null;
+      const ts = manual ? { lo: sl.ts, hi: sl.ts_hi ?? sl.ts } : k === 0 ? { lo: 0, hi: 0 } : known ? t : null;
+      if (!out.sl[sl.id]) { out.sl[sl.id] = { ts, why: manual ? 'typed' : k === 0 ? 'start (T0)' : why, mode: manual ? 'manual' : 'auto', src: manual ? sl.ts_src || 'Est' : '' };
+        timeActs(sl).forEach(a => { const e = ts && a.min != null ? { lo: r2(ts.lo + a.min), hi: r2(ts.hi + (a.min_hi ?? a.min)) } : null; out.act[a.id] = { start: ts ? ts.lo : null, startHi: ts ? ts.hi : null, end: e ? e.lo : null, endHi: e ? e.hi : null }; }); }
+      const here = [...carriedIn(seq, k).map(o => o.a), ...timeActs(sl)], nx = seq[k + 1];
+      const ended = nx ? here.filter(a => endsAt(a, nx)) : here, tt = ended.map(a => out.act[a.id]);
+      if (ended.length && tt.every(q => q && q.end != null)) { t = { lo: Math.max(...tt.map(q => q.end)), hi: Math.max(...tt.map(q => q.endHi)) }; known = true; why = 'when ' + ended.map(shortText).join(' + ') + (ended.length > 1 ? ' end' : ' ends') + (nx ? '' : ''); }
+      else { known = false; why = !ts && !ended.length ? 'unknown — nothing ended before this frame; ✕ end what stopped, or type the time' : ended.length ? 'unknown — give ' + ended.filter((q, i) => !tt[i] || tt[i].end == null).map(shortText).join(', ') + ' a time, or type it' : 'unknown — nothing ended before this frame; ✕ end what stopped, or type the time'; }
+      last = known ? t : null;
+    });
+    return last;
+  };
+  run(mains());
+  decisions().forEach(d => (d.outcomes || []).forEach(o => { const own = pathFrames(o.id); if (!own.length) return; const end = run(pathOf(own[own.length - 1])), to = o.rejoin ? findSl(o.rejoin) : null; out.join[o.id] = { at: end, to, usual: to && out.sl[to.id] ? out.sl[to.id].ts : null }; }));
+  return out;
+}
+/* Slice timestamp (auto): the next slice starts when the actions of this slice are done (the latest one),
+   except actions marked "keeps going" (they run on and show as "still going" later). Each path is timed on its own. Manual: typed. */
+function timelineV13() { // before v14: used only to migrate old sessions
+  const out = { act: {}, sl: {}, join: {} };
+  const run = seq => {
+    let t = { lo: 0, hi: 0 }, known = true, why = 'start (T0)';
+    seq.forEach((sl, k) => {
+      const manual = sl.ts_mode === 'manual' && sl.ts != null;
+      const ts = manual ? { lo: sl.ts, hi: sl.ts_hi ?? sl.ts } : k === 0 ? { lo: 0, hi: 0 } : known ? t : null;
+      const xs = timeActs(sl).map(a => ({ a, end: ts && a.min != null ? { lo: r2(ts.lo + a.min), hi: r2(ts.hi + (a.min_hi ?? a.min)) } : null }));
+      if (!out.sl[sl.id]) { out.sl[sl.id] = { ts, why: manual ? 'typed' : k === 0 ? 'start (T0)' : why, mode: manual ? 'manual' : 'auto', src: manual ? sl.ts_src || 'Est' : '' }; xs.forEach(x => { out.act[x.a.id] = { start: ts ? ts.lo : null, startHi: ts ? ts.hi : null, end: x.end ? x.end.lo : null, endHi: x.end ? x.end.hi : null }; }); }
+      const ending = xs.filter(x => !x.a.cont);
+      if (ts && ending.length && ending.every(x => x.end)) { t = { lo: Math.max(...ending.map(x => x.end.lo)), hi: Math.max(...ending.map(x => x.end.hi)) }; known = true; why = 'when ' + ending.map(x => shortText(x.a)).join(' + ') + (ending.length > 1 ? ' are' : ' is') + ' done (' + title(sl) + ')'; }
+      else { known = false; why = !ts ? 'unknown — the frame before has no time' : ending.length ? 'unknown — give the actions in ' + title(sl) + ' a time, or type it' : 'unknown — everything in ' + title(sl) + ' keeps going; type the time'; }
+    });
+    return known ? t : null;
+  };
+  run(mains());
+  decisions().forEach(d => (d.outcomes || []).forEach(o => { const own = pathFrames(o.id); if (!own.length) return; const end = run(pathOf(own[own.length - 1])), to = o.rejoin ? findSl(o.rejoin) : null; out.join[o.id] = { at: end, to, usual: to && out.sl[to.id] ? out.sl[to.id].ts : null }; }));
+  return out;
+}
+const sgn = x => (x >= 0 ? '+' : '−') + mmss(Math.abs(x));
+const joinDelta = j => { if (!j || !j.at || !j.usual) return ''; const d1 = j.at.lo - j.usual.lo, d2 = j.at.hi - j.usual.hi; return Math.abs(d1) < 0.005 && Math.abs(d2) < 0.005 ? 'same' : Math.abs(d1 - d2) < 0.005 ? sgn(d1) : sgn(Math.min(d1, d2)) + '…' + sgn(Math.max(d1, d2)); };
+const tsText = sl => { const t = timeline().sl[sl.id]; return t && t.ts ? rText(t.ts.lo, t.ts.hi) : '?'; };
+function ongoing(sl) { // still there from earlier frames on this path (carried over)
+  const T = timeline(), p = pathOf(sl); if (!p.length) return [];
+  return carriedIn(p, p.length - 1).map(o => ({ ...o, tt: T.act[o.a.id] || {} }));
+}
+const endedHere = sl => { const p = pathOf(sl), k = p.length - 1; if (k < 1) return []; return [...carriedIn(p, k - 1), ...timeActs(p[k - 1]).map(a => ({ a, x: p[k - 1] }))].filter(o => endsAt(o.a, sl)); };
+function migrateCarry(s) { // v13 "keeps going" → v14 carry-over: each action gets the frame where it is no longer there
+  if (s.carry_v) return; const keep = { ...ui.on };
+  const sets = [[], ...s.slices.flatMap(x => (x.variants || []).map(v => v.conds))];
+  sets.forEach(cs => { viewConds(cs); const T = timelineV13(), seqs = [mains(), ...decisions().flatMap(d => (d.outcomes || []).map(o => { const own = pathFrames(o.id); return own.length ? pathOf(own[own.length - 1]) : []; }))];
+    seqs.forEach(seq => seq.forEach((x, k) => timeActs(x).forEach(a => { a.ended_in = a.ended_in || []; let to = null;
+      if (!a.cont) to = seq[k + 1]; else { const e = T.act[a.id]; if (e && e.endHi != null) to = seq.slice(k + 1).find(y => T.sl[y.id] && T.sl[y.id].ts && T.sl[y.id].ts.lo >= e.endHi - 0.005); }
+      if (to && !a.ended_in.includes(to.id)) a.ended_in.push(to.id); }))); });
+  ui.on = keep; s.carry_v = 1;
+}
+
+/* site diagrams: next to the page on GitHub Pages (build sets TS_DIAGRAMS_URL), from data/ when run locally */
+const DIA_URL = window.TS_DIAGRAMS_URL || '../data/diagrams/site_diagrams.json';
+/* ---------- map helpers ---------- */
+// block-plan style: soft fill + label in a darker shade of the same hue; doors = dashed lines
+const BLOCK = { clinical: { f: '#D9CCEB', t: '#5E4A86' }, rooms: { f: '#B9A6DA', t: '#3F2E66' }, support: { f: '#E7DFF1', t: '#76659A' },
+  imaging: { f: '#C6D4EA', t: '#3F5E8C' }, entrance: { f: '#F0C894', t: '#89521D' }, triage: { f: '#F4B9BC', t: '#963A45' }, work: { f: '#BFDCC3', t: '#41704B' },
+  corridor: { f: '#C9E7DD', t: '#3B7A68' }, elevator: { f: '#AEB8BE', t: '#2F3B42' }, stair: { f: '#E6CBA8', t: '#7A5230' }, door: { f: '#F6DFC4', t: '#8E5A2B' },
+  garage: { f: '#E3E9F1', t: '#6C7C93' }, building: { f: '#F1EDE6', t: '#9A8F80' }, context: { f: '#ECEFF2', t: '#ECEFF2' }, context2: { f: '#DDE3EA', t: '#DDE3EA' },
+  open: { f: '#FFFFFF', t: '#A3ADB0' }, unknown: { f: '#FFFFFF', t: '#B0487A' } };
+const inRings = (x, y, rings) => { let c = false; (rings || []).forEach(r => { for (let i = 0, j = r.length - 1; i < r.length; j = i++) { const [x1, y1] = r[j], [x2, y2] = r[i]; if ((y1 > y) !== (y2 > y) && x < (x2 - x1) * (y - y1) / (y2 - y1) + x1) c = !c; } }); return c; };
+const boxDist = (x, y, b) => Math.max(b.x - x, 0, x - b.x - b.w) + Math.max(b.y - y, 0, y - b.y - b.h);
+function spaceAt(sh, x, y) {
+  const hit = sh.spaces.filter(sp => !sp.zone && sp.point_id && x >= sp.x && x <= sp.x + sp.w && y >= sp.y && y <= sp.y + sp.h && (!sp.rings || inRings(x, y, sp.rings))).sort((a, b) => (a.kind === 'building') - (b.kind === 'building') || a.w * a.h - b.w * b.h)[0];
+  if (!hit) return { id: '', label: 'Open spot' };
+  if (hit.parts && hit.parts.length) { const p = hit.parts.slice().sort((a, b) => boxDist(x, y, a) - boxDist(x, y, b))[0]; return { id: p.id, label: p.label }; }
+  return { id: hit.point_id, label: hit.name || hit.label };
+}
+const sheetsOf = site => (S.diagrams[site] && S.diagrams[site].sheets) || [];
+function curSheet(site) { const sh = sheetsOf(site); return sh.find(x => x.id === ui.sheet[site]) || sh[0] || null; }
+const placesOf = site => S.places[site] || (S.places[site] = []);
+function pointLabel(site, id) { const d = S.diagrams[site]; const p = (d && d.points.find(q => q.id === id)) || placesOf(site).find(q => q.id === id); return p ? p.label : id; }
+function spaceCenter(site, id) {
+  for (const sh of sheetsOf(site)) { const sp = sh.spaces.find(x => x.point_id === id); if (sp) { const b = sp.lab ? { x: sp.lab[0], y: sp.lab[1], w: sp.lab[2], h: sp.lab[3] } : sp; return { sheet: sh.id, x: Math.round(b.x + b.w / 2), y: Math.round(b.y + b.h / 2) }; }
+    const pt = sh.spaces.flatMap(x => x.parts || []).find(q => q.id === id); if (pt) return { sheet: sh.id, x: Math.round(pt.x + pt.w / 2), y: Math.round(pt.y + pt.h / 2) }; }
+  const p = placesOf(site).find(q => q.id === id); return p && p.x != null ? { sheet: p.sheet, x: p.x, y: p.y } : null;
+}
+function sessionId(site) { const d = new Date(), day = d.getFullYear() + pad(d.getMonth() + 1, 2) + pad(d.getDate(), 2), pre = site + '-' + day + '-'; return pre + pad(S.sessions.filter(s => s.session_id.startsWith(pre)).length + 1, 2); }
+
+/* ---------- dialogs, stopwatch ---------- */
+function toast(msg) { let t = document.getElementById('toast'); if (!t) { t = document.createElement('div'); t.id = 'toast'; document.body.appendChild(t); } t.textContent = msg; t.className = 'on'; clearTimeout(t._h); t._h = setTimeout(() => { t.className = ''; }, 2600); }
+function dialog(html, onMount) {
+  return new Promise(res => {
+    const bg = document.createElement('div'); bg.className = 'dlg-bg'; bg.innerHTML = '<div class="dlg">' + html + '</div>'; document.body.appendChild(bg);
+    const done = v => { bg.remove(); res(v); }; bg.addEventListener('click', ev => { if (ev.target === bg) done(null); }); onMount(bg.querySelector('.dlg'), done);
+  });
+}
+function confirmDlg(text, ok = 'OK', danger = false) {
+  return dialog(`<p>${esc(text)}</p><div class="dlg-act"><button class="btn" data-x>Cancel</button><button class="btn primary${danger ? ' danger' : ''}" data-ok>${esc(ok)}</button></div>`, (d, done) => { d.querySelector('[data-x]').onclick = () => done(false); d.querySelector('[data-ok]').onclick = () => done(true); });
+}
+function newPlaceDlg(site) {
+  const sh = curSheet(site), pts = sh ? sh.spaces.filter(x => x.point_id).map(x => ({ id: x.point_id, label: pointLabel(site, x.point_id) })).sort((a, b) => a.label.localeCompare(b.label)) : [];
+  return dialog(`<p><b>New place</b><br><span class="small muted">Missing from the diagram? Name it and say how it relates to a space you know. It is marked to confirm.</span></p>
+    <input type="text" data-l placeholder="e.g. workstation by the bays">
+    <div data-rel><div class="grp">Relation</div><div class="seg">${RELATIONS.map((r, i) => `<button class="${i === 0 ? 'on' : ''}" data-r="${r}">${r}</button>`).join('')}</div>
+    <select data-a style="margin-top:8px"><option value="">— known space —</option>${pts.map(p => `<option value="${esc(p.id)}">${esc(p.label)}</option>`).join('')}</select></div>
+    <div class="dlg-act"><button class="btn" data-x>Cancel</button><button class="btn primary" data-ok>Add</button></div>`, (d, done) => {
+    let kind = 'physical', rel = RELATIONS[0]; const l = d.querySelector('[data-l]'); setTimeout(() => l.focus(), 30);
+    d.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { rel = b.dataset.r; d.querySelectorAll('[data-r]').forEach(x => x.classList.toggle('on', x === b)); });
+    d.querySelector('[data-x]').onclick = () => done(null);
+    d.querySelector('[data-ok]').onclick = () => {
+      const label = l.value.trim(); if (!label) return;
+      const list = placesOf(site), id = site + '-P' + pad(Math.max(900, ...list.map(p => +p.id.split('-P')[1] || 900)) + 1, 3);
+      const p = { id, kind, label, relation: kind === 'digital' ? '' : rel, anchor_id: '', anchor_label: '', sheet: '', x: null, y: null, to_confirm: true }, a = d.querySelector('[data-a]').value;
+      if (kind === 'physical' && a && sh) { const sp = sh.spaces.find(x => x.point_id === a), fs = Math.max(9, sh.viewBox[2] / 75), n = list.filter(q => q.anchor_id === a).length; p.anchor_id = a; p.anchor_label = pointLabel(site, a); p.sheet = sh.id; p.x = Math.round(rel === 'inside' ? sp.x + sp.w / 2 : sp.x + sp.w + fs * 2.2); p.y = Math.round(sp.y + sp.h / 2 + n * fs * 2.6); }
+      list.push(p); save(); done(p);
+    };
+  });
+}
+function timerStart(target, label) { ui.timer = { target, label, acc: 0, t0: performance.now() }; renderTimer(); }
+function timerSecs() { const t = ui.timer; return t ? (t.acc + (t.t0 != null ? performance.now() - t.t0 : 0)) / 1000 : 0; }
+const clock = s => pad(Math.floor(s / 60), 2) + ':' + pad(Math.floor(s % 60), 2) + '.' + Math.floor((s % 1) * 10);
+function renderTimer() {
+  let el = document.getElementById('timer'); if (!ui.timer) { if (el) el.remove(); return; }
+  if (!el) { el = document.createElement('div'); el.id = 'timer'; document.body.appendChild(el); }
+  const run = ui.timer.t0 != null;
+  el.innerHTML = `<span class="tl">⏱ ${esc(ui.timer.label)}</span><span class="tv" id="tv">${clock(timerSecs())}</span><button class="btn" data-tm="${run ? 'pause' : 'go'}">${run ? 'Pause' : ui.timer.acc ? 'Resume' : 'Start'}</button><button class="btn" data-tm="reset">Reset</button><button class="btn primary" data-tm="save" ${timerSecs() > 0 ? '' : 'disabled'}>Save as [Sim]</button><button class="btn danger" data-tm="close">×</button>`;
+}
+setInterval(() => { const v = document.getElementById('tv'); if (v && ui.timer && ui.timer.t0 != null) v.textContent = clock(timerSecs()); }, 100);
+function timerAct(x) {
+  const t = ui.timer; if (!t) return;
+  if (x === 'go') t.t0 = performance.now(); if (x === 'pause') { t.acc += performance.now() - t.t0; t.t0 = null; } if (x === 'reset') { t.acc = 0; t.t0 = null; } if (x === 'close') ui.timer = null;
+  if (x === 'save') { const m = Math.max(0.01, r2(timerSecs() / 60)), a = findAct(t.target); if (a) { a.min = m; a.min_hi = null; a.src = 'Sim'; save(); toast('Saved ' + minText(m) + ' [Sim]'); } ui.timer = null; render(); }
+  renderTimer();
+}
+
+/* ---------- map ---------- */
+function mapHtml(site, sl) {
+  const sh = curSheet(site); if (!sh) return `<div class="dia empty">Site diagrams not loaded (Session tab).</div>`;
+  const key = site + '|' + sh.id, vb = ui.vb[key] || sh.viewBox, fs = Math.max(9, sh.viewBox[2] / 75), A = effActs(sl);
+  const here = {}; A.filter(a => !(a.route || []).length && a.where && a.where.kind !== 'digital').forEach(a => { const c = a.where.x != null ? { sheet: a.where.sheet, x: a.where.x, y: a.where.y } : spaceCenter(site, a.where.id); if (c && c.sheet === sh.id) { const kk = Math.round(c.x / 20) + ',' + Math.round(c.y / 20); (here[kk] = here[kk] || { c, ks: new Set(), on: false }); a.who.forEach(k => here[kk].ks.add(k)); if (a.id === ui.open) here[kk].on = true; } });
+  if (sl && sl.id) ongoing(sl).forEach(({ a }) => { const r = a.route || [], w = r[r.length - 1], c = w ? { sheet: w.sheet, x: w.x, y: w.y } : a.where && a.where.kind !== 'digital' ? (a.where.x != null ? { sheet: a.where.sheet, x: a.where.x, y: a.where.y } : spaceCenter(site, a.where.id)) : null; if (c && c.sheet === sh.id) { const kk = Math.round(c.x / 20) + ',' + Math.round(c.y / 20); (here[kk] = here[kk] || { c, ks: new Set(), on: false }); a.who.forEach(k => here[kk].ks.add(k)); } }); // carried over: where they are now
+  if (sh.image) { const img = `<image href="${sh.image}" x="0" y="0" width="${sh.image_size[0]}" height="${sh.image_size[1]}" class="np"/>`, tap = sh.spaces.map(sp => `<g class="pt" data-pt="${esc(sp.point_id || '')}"><rect x="${sp.x}" y="${sp.y}" width="${sp.w}" height="${sp.h}" fill="transparent"><title>${esc(sp.name || '')}</title></rect></g>`).join('');
+    ui._img = img + tap; } else ui._img = '';
+  const big = {}; sh.spaces.forEach((sp, i) => { const k = sp.point_id || (sp.label ? 'l' + i : ''); if (k && (!big[k] || sp.w * sp.h > sh.spaces[big[k]].w * sh.spaces[big[k]].h)) big[k] = i; });
+  const labelled = new Set(Object.values(big)), labs = [];
+  const rect = (sp, i) => {
+    const id = sp.point_id, lab = sp.zone ? '' : id ? pointLabel(site, id) : (sp.label || ''), st = BLOCK[sp.kind] || { f: sp.fill || '#E5E7EB', t: '#283F48' };
+    const lb = sp.lab ? { x: sp.lab[0], y: sp.lab[1], w: sp.lab[2], h: sp.lab[3] } : sp;
+    const g = sp.kind === 'building' || sp.rings ? 0 : Math.min(fs * 0.16, sp.w / 6, sp.h / 6), x = lb.x + g, y = lb.y + g, w = Math.max(1, lb.w - 2 * g), h = Math.max(1, lb.h - 2 * g), r = sp.kind === 'building' ? 0 : Math.min(fs * 0.6, w / 3, h / 3);
+    const dash = sp.zone || sp.kind === 'unknown' || sp.kind === 'open' || sp.kind === 'door';
+    const fill = sp.zone ? 'rgba(164,146,185,.10)' : st.f, stroke = dash ? (sp.zone ? '#A492B9' : st.t) : 'none';
+    let text = '';
+    if (lab && labelled.has(i) && !(sp.parts && sp.parts.length)) {
+      const vert = h > w * 1.6, len = vert ? h : w, thick = vert ? w : h, f0 = sp.font || fs * 0.82, fz = Math.max(Math.min(f0, thick * 0.55, (len - fs * 0.5) / Math.max(3, lab.length * 0.56)), Math.min(f0, 4.5)), pad = Math.min(fs * 0.45, thick * 0.18);
+      text = vert ? `<text x="${x + pad + fz * 0.82}" y="${y + pad}" font-size="${fz}" text-anchor="end" transform="rotate(-90 ${x + pad + fz * 0.82} ${y + pad})" fill="${st.t}" font-weight="500">${esc(lab)}</text>`
+        : `<text x="${x + pad}" y="${y + pad + fz * 0.82}" font-size="${fz}" fill="${st.t}" font-weight="500">${esc(lab)}</text>`;
+    }
+    const body = sp.rings ? `<path d="${sp.rings.map(rg => 'M' + rg.map(q => q[0] + ',' + q[1]).join('L') + 'Z').join('')}" fill-rule="evenodd" fill="${fill}" stroke="#FBFAF7" stroke-width="${fs * 0.32}" stroke-linejoin="round"><title>${esc(lab)}</title></path>`
+      : `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" fill="${fill}" stroke="${stroke}" stroke-width="${fs / 9}"${dash ? ` stroke-dasharray="${fs * 0.4} ${fs * 0.3}"` : ''}><title>${esc(lab)}</title></rect>`;
+    const shape = `<g${id ? ` class="pt" data-pt="${esc(id)}"` : ' class="np"'}>${body}</g>`;
+    if (sp.parts) sp.parts.forEach(p => { const px = p.x + p.w / 2, py = p.y + p.h / 2; if (!inRings(px, py, sp.rings)) return; const v = p.h > p.w * 1.6, fz = Math.min(fs * 0.7, Math.max(p.w, p.h) / Math.max(4, p.label.length * 0.56)); labs.push(`<text x="${px}" y="${py}" font-size="${fz}" text-anchor="middle" dominant-baseline="middle" fill="${st.t}" opacity=".85" class="np"${v ? ` transform="rotate(-90 ${px} ${py})"` : ''}>${esc(p.label)}</text>`); });
+    labs.push(text ? `<g class="np">${text}</g>` : ''); return shape;
+  };
+  const spaces = sh.image ? ui._img : sh.spaces.map((sp, i) => [sp, i]).sort((a, b) => (a[0].zone ? 0 : a[0].kind === 'building' ? 1 : 2) - (b[0].zone ? 0 : b[0].kind === 'building' ? 1 : 2)).map(([sp, i]) => rect(sp, i)).join('') + labs.join('');
+  const links = sh.links.map(l => l.wall ? `<path d="${l.d}" fill="none" stroke="#B5BEC2" stroke-width="${fs / 7}" stroke-linejoin="round" class="np"><title>${esc(l.title || '')}</title></path>` : sh.source === 'hand sketch' && !l.inferred ? `<path d="${l.d}" fill="none" stroke="#1f2a33" stroke-width="${fs / 1.8}" stroke-linecap="round" class="np"><title>${esc(l.title || 'door')}</title></path>` : `<path d="${l.d}" fill="none" stroke="#253B43" stroke-width="${fs / 6}" opacity=".55"${l.inferred ? ' stroke-dasharray="5 4"' : ''} class="np"/>`).join('')
+    + (sh.doors || []).map(d => `<line x1="${d.x1}" y1="${d.y1}" x2="${d.x2}" y2="${d.y2}" stroke="#5D6E76" stroke-width="${fs / 4.5}" stroke-dasharray="${fs * 0.45} ${fs * 0.35}" stroke-linecap="round" class="np"><title>${esc(d.title || 'door')}</title></line>`).join('')
+    + (sh.titles || []).map(x => `<text x="${x.x}" y="${x.y}" font-size="${fs * 0.85}" text-anchor="middle" fill="#9AA6A4" class="np">${esc(x.text)}</text>`).join('');
+  const pins = placesOf(site).filter(p => p.sheet === sh.id && p.x != null).map(p => { const anc = spaceCenter(site, p.anchor_id); return `${anc ? `<line x1="${anc.x}" y1="${anc.y}" x2="${p.x}" y2="${p.y}" stroke="#1e63c4" stroke-dasharray="3 3" stroke-width="${fs / 8}" class="np"/>` : ''}<g class="pt" data-pt="${esc(p.id)}"><circle cx="${p.x}" cy="${p.y}" r="${fs * 1.3}" fill="#fff" stroke="#1e63c4" stroke-width="${fs / 5}" stroke-dasharray="4 3"/><text x="${p.x}" y="${p.y + fs * 0.35}" font-size="${fs}" font-weight="700" text-anchor="middle" fill="#1e63c4">?</text><text x="${p.x}" y="${p.y - fs * 1.7}" font-size="${fs * 0.95}" text-anchor="middle" fill="#1e63c4" font-weight="600">${esc(p.label)}</text></g>`; }).join('');
+  const badge = (x, y, k, r0) => `<g class="np"><circle cx="${x}" cy="${y}" r="${r0}" fill="${roleColor(k)}" stroke="#fff" stroke-width="${fs / 7}"/><text x="${x}" y="${y + fs * 0.33}" font-size="${fs * 0.78}" font-weight="700" text-anchor="middle" fill="#fff">${esc(roleAbbr(k))}</text></g>`;
+  let routes = '';
+  A.filter(a => (a.route || []).length).forEach(a => {
+    const on = a.id === ui.open || ui._exp, col = on ? '#D81B60' : '#e58aaa';
+    a.route.forEach((w, i) => {
+      if (w.sheet !== sh.id) return; const prev = a.route[i - 1], next = a.route[i + 1];
+      if (prev && prev.sheet === sh.id) routes += `<line x1="${prev.x}" y1="${prev.y}" x2="${w.x}" y2="${w.y}" stroke="${col}" stroke-width="${fs / (on ? 2.4 : 3.2)}" stroke-linecap="round"${!next || next.sheet !== sh.id || !w.f ? ` marker-end="url(#rarr${on ? 1 : 0})"` : ''} class="np"/>`;
+      if (next && next.sheet !== sh.id) routes += `<text x="${w.x}" y="${w.y + fs * 2.6}" font-size="${fs}" text-anchor="middle" fill="${col}" font-weight="700" class="np">to ${esc((sheetsOf(site).find(s2 => s2.id === next.sheet) || {}).name || '')} →</text>`;
+      if (prev && prev.sheet !== sh.id) routes += `<text x="${w.x}" y="${w.y + fs * 2.6}" font-size="${fs}" text-anchor="middle" fill="${col}" font-weight="700" class="np">from ${esc((sheetsOf(site).find(s2 => s2.id === prev.sheet) || {}).name || '')}</text>`;
+    });
+    a.route.forEach((w, i) => { if (w.sheet === sh.id && !w.f) routes += `<g class="np"><circle cx="${w.x}" cy="${w.y}" r="${fs * (on ? 0.85 : 0.6)}" fill="${col}" stroke="#fff" stroke-width="${fs / 6}"/>${on ? `<text x="${w.x}" y="${w.y + fs * 0.33}" font-size="${fs * 0.85}" font-weight="700" text-anchor="middle" fill="#fff">${i + 1}</text>` : ''}</g>`; });
+    const mid = a.route.filter(w => w.sheet === sh.id); if (!mid.length) return;
+    const i0 = Math.floor((mid.length - 1) / 2), m = mid[i0], m2 = mid[Math.min(mid.length - 1, i0 + 1)], ks = [...a.who], r0 = fs * 1.05, cx = (m.x + m2.x) / 2, cy = (m.y + m2.y) / 2 - fs * 1.6;
+    ks.forEach((k, i) => { routes += badge(cx + (i - (ks.length - 1) / 2) * r0 * 2.1, cy, k, r0); });
+  });
+  let spots = '';
+  Object.values(here).forEach(({ c, ks, on }) => { const arr = [...ks], r0 = fs * 1.15; if (on) spots += `<circle cx="${c.x}" cy="${c.y}" r="${r0 * (arr.length + 1)}" fill="none" stroke="#1c9c8c" stroke-width="${fs / 4}" class="np"/>`; arr.forEach((k, i) => { spots += badge(c.x + (i - (arr.length - 1) / 2) * r0 * 2.1, c.y, k, r0); }); });
+  const defs = `<defs>${[0, 1].map(i => `<marker id="rarr${i}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M1 1L9 5L1 9z" fill="${i ? '#D81B60' : '#e58aaa'}"/></marker>`).join('')}</defs>`;
+  return `<div class="dwrap"><div class="dia${ui.map === 'route' ? ' routing' : ui.map === 'spot' ? ' placing' : ''}"><svg class="pz" data-sheet="${esc(sh.id)}" viewBox="${vb.join(' ')}" data-key="${esc(key)}" data-base="${(sh.extent || sh.viewBox).join(' ')}">${defs}${spaces}${links}${pins}${routes}${spots}</svg></div>
+    <div class="floors">${sheetsOf(site).map(x => `<button class="${x.id === sh.id ? 'on' : ''}" data-act="sheet" data-v="${x.id}">${esc(x.name)}</button>`).join('')}</div>
+    <div class="zooms"><button data-act="zoom" data-v="1">+</button><button data-act="zoom" data-v="-1">−</button><button data-act="zoom" data-v="0">Fit</button>${sh.extent ? '<button data-act="zoom" data-v="site" title="whole site">Site</button>' : ''}</div></div>`;
+}
+function zoomVB(v, base, f, cx, cy) { const w = Math.min(base[2] * 1.2, Math.max(Math.min(base[2] / 10, 60), v[2] * f)); f = w / v[2]; return [cx - (cx - v[0]) * f, cy - (cy - v[1]) * f, v[2] * f, v[3] * f]; }
+function bindPanZoom(svg) {
+  const key = svg.dataset.key, base = svg.dataset.base.split(' ').map(Number), pts = new Map(); let moved = 0, drawing = null;
+  const vbOf = () => svg.getAttribute('viewBox').split(' ').map(Number), setVB = v => { svg.setAttribute('viewBox', v.join(' ')); ui.vb[key] = v; };
+  const toSvg = (x, y) => { const p = svg.createSVGPoint(); p.x = x; p.y = y; return p.matrixTransform(svg.getScreenCTM().inverse()); };
+  const perPx = () => { const r = svg.getBoundingClientRect(), v = vbOf(); return Math.max(v[2] / r.width, v[3] / r.height); };
+  svg.addEventListener('pointerdown', e => { pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (pts.size === 1) moved = 0; drawing = pts.size === 1 && ui.map === 'route' ? { pts: [], line: null } : null; });
+  svg.addEventListener('pointermove', e => {
+    const prev = pts.get(e.pointerId); if (!prev) return;
+    if (pts.size === 1 && drawing) {
+      moved += Math.abs(e.clientX - prev.x) + Math.abs(e.clientY - prev.y);
+      if (moved > 6) { const c = toSvg(e.clientX, e.clientY), last = drawing.pts[drawing.pts.length - 1]; if (!last || Math.hypot(c.x - last.x, c.y - last.y) > perPx() * 14) { drawing.pts.push({ x: Math.round(c.x), y: Math.round(c.y) }); if (!drawing.line) { drawing.line = document.createElementNS('http://www.w3.org/2000/svg', 'polyline'); drawing.line.setAttribute('fill', 'none'); drawing.line.setAttribute('stroke', '#D81B60'); drawing.line.setAttribute('stroke-width', perPx() * 4); drawing.line.setAttribute('stroke-linecap', 'round'); svg.appendChild(drawing.line); } drawing.line.setAttribute('points', drawing.pts.map(q => q.x + ',' + q.y).join(' ')); } }
+    } else if (pts.size === 1) { const dx = e.clientX - prev.x, dy = e.clientY - prev.y; moved += Math.abs(dx) + Math.abs(dy); if (moved > 6) { const u = perPx(), v = vbOf(); setVB([v[0] - dx * u, v[1] - dy * u, v[2], v[3]]); } }
+    else if (pts.size === 2) {
+      if (drawing && drawing.line) drawing.line.remove(); drawing = null;
+      const [a, b] = [...pts.entries()].map(([id, q]) => (id === e.pointerId ? { x: e.clientX, y: e.clientY } : q)), [a0, b0] = [...pts.values()];
+      const d0 = Math.hypot(a0.x - b0.x, a0.y - b0.y), d1 = Math.hypot(a.x - b.x, a.y - b.y);
+      if (d0 > 0 && d1 > 0) { const m0 = toSvg((a0.x + b0.x) / 2, (a0.y + b0.y) / 2); setVB(zoomVB(vbOf(), base, d0 / d1, m0.x, m0.y)); const u = perPx(), mx = (a.x + b.x) / 2 - (a0.x + b0.x) / 2, my = (a.y + b.y) / 2 - (a0.y + b0.y) / 2, v = vbOf(); setVB([v[0] - mx * u, v[1] - my * u, v[2], v[3]]); }
+      moved += 99;
+    }
+    pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  });
+  const end = e => { if (pts.delete(e.pointerId) && moved > 6) ui.noClick = Date.now(); if (drawing && drawing.pts.length > 1) { const d = drawing; drawing = null; freehandDone(svg, d.pts); } else drawing = null; };
+  svg.addEventListener('pointerup', end); svg.addEventListener('pointercancel', end); svg.addEventListener('pointerleave', end);
+  svg.addEventListener('wheel', e => { e.preventDefault(); const p = toSvg(e.clientX, e.clientY); setVB(zoomVB(vbOf(), base, e.deltaY > 0 ? 1.12 : 1 / 1.12, p.x, p.y)); }, { passive: false });
+}
+function freehandDone(svg, arr) { const a = findAct(ui.open); if (!a) return; const sheet = svg.dataset.sheet, sh = sheetsOf(sess().site).find(x => x.id === sheet); arr.forEach(q => { const at = spaceAt(sh, q.x, q.y); a.route.push({ point_id: at.id, sheet, x: q.x, y: q.y, label: at.label, f: 1 }); }); a.where = null; save(); render(); }
+function tapMap(svg, ev) {
+  const a = findAct(ui.open), site = sess().site; if (!a || !ui.map || ui.map === 'view') return;
+  const g = ev.target.closest('[data-pt]'), sheet = svg.dataset.sheet, sh = sheetsOf(site).find(x => x.id === sheet);
+  const p = svg.createSVGPoint(); p.x = ev.clientX; p.y = ev.clientY; const c = p.matrixTransform(svg.getScreenCTM().inverse());
+  const at = g && placesOf(site).find(q => q.id === g.dataset.pt) ? { id: g.dataset.pt, label: pointLabel(site, g.dataset.pt) } : spaceAt(sh, c.x, c.y);
+  if (ui.map === 'route') { a.route.push({ point_id: at.id, sheet, x: Math.round(c.x), y: Math.round(c.y), label: at.label }); a.where = null; }
+  else { a.where = { kind: 'physical', id: at.id, label: at.label, sheet, x: Math.round(c.x), y: Math.round(c.y) }; a.route = []; ui.map = ''; }
+  save(); render();
+}
+
+function migrateBranches(s) { // v11 branches → versions (conditions) / decision paths
+  if (!(s.branches || []).length) return; s.decisions = s.decisions || []; s.conds = s.conds || [];
+  const main = s.slices.filter(x => !x.branch && !x.path);
+  s.branches.forEach(b => {
+    const own = s.slices.filter(x => x.branch === b.id), c = b.cause || {};
+    if (c.type === 'decision') { let d = s.decisions.find(x => x.after === b.from && x.question === c.question); if (!d) { d = { id: 'D' + (s.decisions.length + 1), after: b.from, question: c.question || '', main: '', outcomes: [] }; s.decisions.push(d); } d.outcomes.push({ id: 'P' + b.id.slice(1), outcome: c.outcome || '', rejoin: b.rejoin || '' }); own.forEach(x => { x.path = 'P' + b.id.slice(1); delete x.branch; }); return; }
+    const conds = (c.conds || []).map(x => ({ condition_id: ['C20', 'C22', 'C23'].includes(x.condition_id) ? x.condition_id : 'C99', value: x.value }));
+    conds.filter(x => x.condition_id === 'C99').forEach(x => { if (!s.conds.some(y => y.value === x.value)) s.conds.push(x); });
+    let i = b.from ? main.findIndex(x => x.id === b.from) + 1 : 0;
+    own.forEach(x => { const m = main[i]; if (m && m.id !== b.rejoin) { m.variants = m.variants || []; m.variants.push({ id: 'V' + (m.variants.length + 1), conds, acts: x.acts }); s.slices = s.slices.filter(y => y !== x); i++; } else { delete x.branch; x.only_if = conds; } });
+  });
+  s.branches = [];
+}
+/* ---------- render ---------- */
+function render() {
+  const s = sess();
+  document.getElementById('sid').textContent = s ? s.session_id + (s.mock ? ' · MOCK' : '') : '';
+  document.getElementById('tabs').innerHTML = (s ? [['record', 'Record'], ['session', 'Session']] : [['session', 'Session']]).map(([k, l]) => `<button class="${ui.view === k ? 'on' : ''}" data-act="view" data-v="${k}">${l}</button>`).join('');
+  if (!s) ui.view = 'session';
+  if (s) { migrateBranches(s); migrateCarry(s); (s.decisions || []).forEach(d => { if (!d.act || !findAct(d.act)) { const f = s.slices.find(x => x.id === d.after), l = f && f.acts[f.acts.length - 1]; d.act = l ? l.id : ''; } }); s.slices.forEach(x => actLists(x).forEach(l => l.forEach(normAct))); }
+  if (s && !curSlice()) ui.sid = s.slices.length ? s.slices[0].id : '';
+  const keep = document.querySelector('.acts9'), y = keep ? keep.scrollTop : 0;
+  document.getElementById('main').innerHTML = ui.view === 'record' ? vRecord() : vSession();
+  const n = document.querySelector('.acts9'); if (n) n.scrollTop = y;
+  document.querySelectorAll('svg.pz').forEach(bindPanZoom);
+}
+function vRecord() {
+  const s = sess(), sl = curSlice();
+  return `<div class="v9${ui.side ? '' : ' folded'}">${vSide()}<section class="right9">${scenBar()}${sl ? vSlice(sl) : `<div class="card"><h2>Start the first frame</h2><button class="btn primary big" data-act="new-slice">+ New frame</button></div>`}${ui.map && sl ? `<section class="mapov">${mapBanner()}${mapHtml(s.site, sl)}</section>` : ''}</section></div>`;
+}
+function vSide() {
+  const T = timeline();
+  const item = sl => { const on = sl.id === ui.sid, vis = visible(sl), v = scenVar(sl), n = (sl.variants || []).length;
+    return `<button class="si${on ? ' on' : ''}${sl.path ? ' br' : ''}${vis ? '' : ' dim'}" data-act="sel" data-v="${sl.id}"><span class="sh"><b>${esc(title(sl))}</b><span class="tm">${vis ? esc(tsText(sl)) : 'only if ' + esc(condsText(sl.only_if))}</span>${n ? `<span class="vb${v ? ' on' : ''}" title="versions">${v ? 'if ' + esc(condsText(v.conds)) : '·' + n}</span>` : ''}${sl.only_if && vis ? `<span class="vb">only if ${esc(condsText(sl.only_if))}</span>` : ''}${frameStatus(sl) ? `<span class="vb st ${frameStatus(sl)}">${frameStatus(sl)}</span>` : ''}</span>${ui.side ? `<span class="sa">${timeActs(sl).map(a => `<span>${esc(shortText(a))}</span>`).join('') || '<span class="muted">no actions yet</span>'}</span>` : ''}</button>`; };
+  const decs = fid => decisions().filter(d => d.after === fid).map(d => `<div class="dg"><button class="dh" data-act="dec-edit" data-v="${d.id}">◆ ${decWho(d) ? esc(decWho(d)) + ': ' : ''}<b>${esc(d.question || 'decision')}</b></button>
+      ${ui.side ? `<span class="dmain">★ ${esc(d.main || '—')} <i>continues on the main line</i></span>` : ''}
+      ${(d.outcomes || []).map(o => { const j = T.join[o.id], dl = joinDelta(j), own = pathAll(o.id); return `<div class="bg"><span class="bh">↳ <b>${esc(o.outcome)}</b>${ui.side && o.rejoin && findSl(o.rejoin) ? `<span class="rj">↘ ${esc(title(findSl(o.rejoin)))}${j && j.at ? ' ' + rText(j.at.lo, j.at.hi) : ''}${dl && dl !== 'same' ? ' <i>' + dl + '</i>' : ''}</span>` : ''}</span>
+        <div class="bs">${own.map(x => item(x) + decs(x.id)).join('')}${own.length ? '' : `<button class="lnk" data-act="path-first" data-v="${o.id}">+ first frame</button>`}</div></div>`; }).join('')}</div>`).join('');
+  return `<aside class="side9"><div class="sideh"><button class="ib" data-act="side" title="${ui.side ? 'Collapse' : 'Expand'}">${ui.side ? '«' : '»'}</button>${ui.side ? '<b>Frames</b>' : ''}</div>
+    <div class="slist">${mainsAll().map(x => item(x) + decs(x.id)).join('')}</div>
+    <div class="sidef"><button class="btn sm add newsl" data-act="new-slice">${ui.side ? '+ New frame' : '+'}</button>${ui.side && activeConds().length && !(curSlice() || {}).path ? `<button class="btn sm newsl" data-act="new-slice-only">+ Frame only if ${esc(condsText(activeConds()))}</button>` : ''}</div></aside>`;
+}
+function ifBar() { return '';
+  const by = {}; slices().forEach(x => x.acts.forEach(a => (a.ifs || []).forEach(f => { if (f.cond) (by[f.cond.condition_id] = by[f.cond.condition_id] || new Set()).add(f.cond.value); })));
+  const ids = Object.keys(by); if (!ids.length) return '';
+  return `<div class="ifbar"><span class="small muted">if</span>${ids.map(cid => `<span class="ifg"><span class="small">${esc((byId[cid] || {}).label || cid)}</span><span class="seg sm"><button class="${ui.ifOn[cid] ? '' : 'on'}" data-act="if-on" data-k="${cid}" data-v="">usual</button>${[...by[cid]].map(v => `<button class="${ui.ifOn[cid] === v ? 'on' : ''}" data-act="if-on" data-k="${cid}" data-v="${esc(v)}">${esc(v)}</button>`).join('')}</span></span>`).join('')}</div>`;
+}
+/* session bar: this session's scenario (a copy of the session = a scenario), and which version you are viewing */
+function scenBar() {
+  const s = sess(), av = activeConds();
+  const removed = s.based_on ? (s.base_frames || []).filter(b => !s.slices.some(x => x.base_id === b.id)) : [];
+  const ch = s.slices.filter(x => frameStatus(x) === 'changed'), nw = s.slices.filter(x => frameStatus(x) === 'new');
+  return `<div class="scen"><span class="small muted">scenario</span><input type="text" data-in="scen-name" class="scn" value="${esc(s.scenario || 'Weekday · day (main)')}" title="the scenario this session records">
+    ${s.based_on ? `<span class="small muted">copied from <b>${esc(s.based_on)}</b> · changed ${ch.length ? esc(ch.map(title).join(', ')) : 'none'}${nw.length ? ' · new ' + esc(nw.map(title).join(', ')) : ''}${removed.length ? ' · removed ' + esc(removed.map(b => b.title).join(', ')) : ''}</span>` : ''}
+    <span class="grow"></span>${av.length ? `<span class="viewing">viewing <b>version if ${esc(condsText(av))}</b> <button class="lnk" data-act="ver" data-v="usual">back to usual</button></span>` : ''}
+    <button class="btn sm" data-act="dup-open">⧉ Duplicate as scenario…</button></div>${ui.dup ? dupPanel() : ''}`;
+}
+function dupPanel() {
+  const s = sess();
+  return `<div class="bdp"><div class="row"><b>⧉ Duplicate as scenario</b><span class="small muted">a copy of the whole session (all frames, versions, decisions) — change what differs; no link back. Each frame is marked <i>changed</i> once you edit it.</span><span class="grow"></span><button class="lnk" data-act="dup-close">close</button></div>
+    <div class="row"><span class="small">Scenario</span>${['Weekend', 'After-hours', 'Weekend · after-hours'].map(q => `<button class="chip sm${ui.dup.name === q ? ' on' : ''}" data-act="dup-q" data-v="${q}">${q}</button>`).join('')}
+      <span class="pkt"><input type="text" data-in="dup-name" value="${esc(ui.dup.name)}" placeholder="or type, e.g. holiday" enterkeyhint="done" style="width:220px"></span></div>
+    <div class="row"><span class="small muted">copy of ${esc(s.session_id)} (${esc(s.scenario || 'Weekday · day (main)')})</span><span class="grow"></span><button class="btn sm dark" data-act="dup-save">Create scenario session</button></div></div>`;
+}
+function frameLine(sl) {
+  const T = timeline(), out = [];
+  if (sl.path) { const r = outOf(sl.path), j = T.join[sl.path], dl = joinDelta(j), to = r && r.o.rejoin ? findSl(r.o.rejoin) : null;
+    const f = findSl(r.d.after), aIdx = mainsAll().indexOf(f && f.path ? findSl(outOf(f.path).d.after) : f);
+    out.push(`<button class="brtag" data-act="dec-edit" data-v="${r.d.id}">◆ ${esc(r.d.question || 'decision')} → <b>${esc(r.o.outcome)}</b> ✎</button><span class="small muted">side path after ${esc(title(f || {}))} · rejoins</span><select data-in="rejoin" data-v="${r.o.id}" class="rsel"><option value="">— no / not known —</option>${mainsAll().filter(x => mainsAll().indexOf(x) > aIdx).map(x => `<option value="${x.id}" ${x.id === r.o.rejoin ? 'selected' : ''}>${esc(title(x))} · ${esc(timeActs(x).map(shortText).join('; ').slice(0, 50))}</option>`).join('')}</select>${to && dl ? `<span class="small muted">at ${rText(j.at.lo, j.at.hi)} (main ${rText(j.usual.lo, j.usual.hi)}, ${dl})</span>` : ''}`); }
+  decisions().filter(d => d.after === sl.id).forEach(d => out.push(`<button class="brtag dec" data-act="dec-edit" data-v="${d.id}">◆ ${esc(decWho(d))} decides: ${esc(d.question || 'decision')} — ★ ${esc(d.main || '—')} continues here · side paths: ${(d.outcomes || []).map(o => esc(o.outcome)).join(', ') || '—'} ✎</button>`));
+  const inn = []; decisions().forEach(d => (d.outcomes || []).forEach(o => { if (o.rejoin === sl.id) inn.push(o); }));
+  if (inn.length) out.push(`<span class="small muted">↘ rejoining here: ${inn.map(o => { const j = T.join[o.id], dl = joinDelta(j); return esc(o.outcome) + (j && j.at ? ' ' + rText(j.at.lo, j.at.hi) : '') + (dl && dl !== 'same' ? ' (' + dl + ')' : ''); }).join(' · ')}</span>`);
+  return out.length ? `<div class="brl">${out.join('')}</div>` : '';
+}
+function versionRow(sl) {
+  const v = shownVar(sl), vs = sl.variants || [], av = activeConds();
+  return `<div class="vers"><span class="small muted">version</span><button class="chip sm${v ? '' : ' on'}" data-act="ver" data-v="usual">usual</button>${vs.map(x => `<span class="chip sm${v === x ? ' on' : ''}"><button class="vt" data-act="ver" data-v="${x.id}" title="version if ${esc(condsText(x.conds))} · ${esc(rangeText(footprint(x.conds[0])))}">if ${esc(condsText(x.conds))}</button>${v === x ? `<button data-act="ver-del" data-v="${x.id}" title="delete this version of ${esc(title(sl))}">×</button>` : ''}</span>`).join('')}
+    <button class="chip sm add" data-act="ver-new">+ version if…</button>${av.length && !v ? `<span class="small muted">· no version if ${esc(condsText(av))} here: same as usual</span>` : ''}${sl.only_if ? `<span class="small muted">· this frame is only in the version if ${esc(condsText(sl.only_if))} <button class="lnk" data-act="only-clear">make it always</button></span>` : ''}</div>`;
+}
+function vpPanel(sl) { // one form for every version: a condition + which frames it changes
+  const d = ui.vp, ms = mainsAll(), i0 = ms.indexOf(sl), later = sl.path ? [] : ms.slice(i0);
+  const toSl = findSl(d.to) || sl, after = sl.path ? null : ms[ms.indexOf(toSl) + 1];
+  return `<div class="bdp"><div class="row"><b>+ Version if…</b><span class="small muted">a copy of what is shown now — change what differs; no link back</span><span class="grow"></span><button class="lnk" data-act="vp-close">close</button></div>
+    <div class="row"><span class="small">if</span>${allConds().map(c => { const on = d.conds.some(x => ckey(x) === ckey(c)), fp = footprint(c); return `<button class="chip sm${on ? ' on' : ''}" data-act="vp-c" data-v="${esc(ckey(c))}">${on ? '✓ ' : ''}${esc(c.value)}${fp.length ? ` <i class="fp">${esc(rangeText(fp))}</i>` : ''}</button>`; }).join('')}
+      <span class="pkt"><input type="text" data-in="vp-new" placeholder="condition, e.g. Walk-in · Neuro is in the ED" enterkeyhint="done" style="width:280px"><button class="btn sm" data-act="vp-cadd">Add</button></span></div>
+    <div class="row"><span class="small">changes</span><span class="seg sm"><button class="${d.to === sl.id ? 'on' : ''}" data-act="vp-to" data-v="${sl.id}">only ${esc(title(sl))}</button>${later.length > 1 ? `<button class="${d.to !== sl.id ? 'on' : ''}" data-act="vp-to" data-v="${(later[1] || sl).id}">several frames</button>` : ''}</span>
+      ${d.to !== sl.id ? `<span class="small">${esc(title(sl))} through</span><select data-in="vp-to">${later.slice(1).map(x => `<option value="${x.id}" ${x.id === d.to ? 'selected' : ''}>${esc(title(x))} · ${esc(timeActs(x).map(shortText).join('; ').slice(0, 40))}</option>`).join('')}</select>` : ''}
+      <span class="small muted">${after ? '→ then ' + esc(title(after)) + ' as usual' : sl.path ? '' : '→ to the end'}</span></div>
+    <p class="small muted" style="margin:0">Extra steps under this condition: view the version, then <i>+ Frame only if …</i> in the frame list.</p>
+    <div class="row"><span class="grow"></span><button class="btn sm dark" data-act="vp-save">Create version</button></div></div>`;
+}
+const DEC_PRESETS = [['Suspected for', ['Acute', 'Minor', 'None']], ['Admit?', ['Admit', 'Don’t admit']]];
+function dpPanel() {
+  const d = ui.dp, f = findSl(d.after), a = findAct(d.act);
+  return `<div class="bdp"><div class="row"><b>◆ Decision</b><span class="small muted">made by <b>${esc(a ? shortText(a) : '—')}</b> (${esc(title(f))}) · the paths fork after ${esc(title(f))}</span><span class="grow"></span><button class="lnk" data-act="dp-close">close</button></div>
+    <div class="row"><span class="small">What is decided?</span><input type="text" data-in="dp" data-k="question" value="${esc(d.question)}" placeholder="e.g. Suspected for" style="flex:1;min-width:200px">${DEC_PRESETS.map(([q]) => `<button class="chip sm" data-act="dp-preset" data-v="${esc(q)}">${esc(q)}</button>`).join('')}</div>
+    <div class="row"><span class="small">Outcomes</span>${d.opts.map((o, i) => `<span class="chip${o.main ? ' on' : ''}"><button class="vt" data-act="dp-main" data-v="${i}" title="${o.main ? 'continues on the main line' : 'tap: make this the main line'}">${o.main ? '★ ' : '☆ '}${esc(o.name)}</button><button data-act="dp-odel" data-v="${i}">×</button></span>`).join('')}
+      <span class="pkt"><input type="text" data-in="dp-new" placeholder="+ outcome" enterkeyhint="done" style="width:150px"><button class="btn sm" data-act="dp-oadd">Add</button></span></div>
+    <p class="small muted" style="margin:0">★ = continues on the main line (the frames after ${esc(title(f))}). Each other outcome gets its own side path (its frames start empty; set where it rejoins on its own frame).</p>
+    <div class="row"><span class="grow"></span>${d.id ? '<button class="lnk danger" data-act="dp-del">delete decision</button>' : ''}<button class="btn sm dark" data-act="dp-save">Save</button></div></div>`;
+}
+function vSlice(sl) {
+  const t = timeline().sl[sl.id] || { mode: 'auto', why: visible(sl) ? '' : 'only if ' + condsText(sl.only_if) }, manual = t.mode === 'manual', og = ongoing(sl), eh = endedHere(sl);
+  return `<div class="hd9"><h2>${esc(title(sl))}</h2><span class="clk">🕒</span><input type="text" data-in="ts" class="${manual ? '' : 'auto'}" value="${t.ts ? rText(t.ts.lo, t.ts.hi) : ''}" placeholder="mm:ss">
+      ${manual ? `<span class="seg sm">${['Est', 'Sim'].map(k => `<button class="${sl.ts_src === k ? 'on' : ''}" data-act="ts-src" data-v="${k}">[${k}]</button>`).join('')}</span><button class="lnk" data-act="ts-auto">↺ auto</button>` : `<span class="small muted">auto · ${esc(t.why)}</span>`}
+      <span class="grow"></span><button class="btn sm" data-act="map-view">🗺 Map</button><button class="btn sm danger" data-act="del-slice">Delete frame</button></div>
+    ${versionRow(sl)}${ui.vp ? vpPanel(sl) : ''}${ui.dp ? dpPanel() : ''}${frameLine(sl)}
+    ${og.length || eh.length ? `<div class="og">${og.length ? `<span class="small muted">continuing from earlier:</span>${og.map(o => `<span class="ogi">${esc(shortText(o.a))} <i>from ${esc(title(o.x))}${o.tt.end != null ? ' · est. until ' + rText(o.tt.end, o.tt.endHi) : ''}</i><button class="lnk" data-act="carry-end" data-a="${o.a.id}" title="it stopped before this frame">✕ ended</button></span>`).join('')}` : ''}${eh.length ? `<span class="small muted">${og.length ? '· ' : ''}ended before this frame:</span>${eh.map(o => `<span class="ogi end">${esc(shortText(o.a))}<button class="lnk" data-act="carry-undo" data-a="${o.a.id}" title="still going">↺</button></span>`).join('')}` : ''}</div>` : ''}
+    <div class="acts9">${shownActs(sl).map(a => actCard(sl, a)).join('') || '<p class="small muted">No actions in this frame yet.</p>'}
+      <button class="btn add wide" data-act="new-act">+ New action</button></div>`;
+}
+/* picker: a few quick chips + "more ▾" + type your own (no popups) */
+function picker(a, f, quick, more, opt = {}) {
+  const sel = opt.single ? (a[f] ? [a[f]] : []) : (a[f] || []), lab = opt.label || valLabel;
+  const extra = sel.filter(v => !quick.includes(v));
+  return `<div class="pk9">${quick.map(v => `<button class="chip${sel.includes(v) ? ' on' : ''}" data-act="pk" data-a="${a.id}" data-f="${f}" data-v="${esc(v)}"${opt.color ? ` style="border-color:${opt.color(v)}"` : ''}>${esc(lab(v))}</button>`).join('')}${extra.map(v => `<span class="chip on">${esc(lab(v))}<button data-act="pk" data-a="${a.id}" data-f="${f}" data-v="${esc(v)}">×</button></span>`).join('')}
+    ${more.length ? `<select data-in="pk-more" data-a="${a.id}" data-f="${f}" class="rsel"><option value="">more ▾</option>${opt.groups ? opt.groups(more) : more.filter(v => !quick.includes(v)).map(v => `<option value="${esc(v)}">${esc(lab(v))}</option>`).join('')}</select>` : ''}
+    <span class="pkt"><input type="text" data-in="pk-text" data-a="${a.id}" data-f="${f}" placeholder="${esc(opt.ph || 'type your own')}" enterkeyhint="done"><button class="btn sm" data-act="pk-text" data-a="${a.id}" data-f="${f}">Add</button></span></div>`;
+}
+const roleGroups = vs => TEAMS.map(([g, n]) => { const rs = O.roles.filter(r => r.group === g && !ROLE_HIDE.includes(r.id) && !OTHER(r.id) && vs.includes(r.id)); return rs.length ? `<optgroup label="${esc(n)}">${rs.map(r => `<option value="${r.id}">${esc(r.label)}</option>`).join('')}</optgroup>` : ''; }).join('');
+const TABS = [['who', 'Who'], ['when', 'When'], ['where', 'Where'], ['what', 'What'], ['how', 'How'], ['bar', 'Barrier · note']];
+const tabDone = (a, t) => ({ who: a.who.length, when: a.min != null, where: !!whereText(a), what: !!(a.verb || a.noun), how: !!howText(a), bar: a.barriers.length || !!a.note }[t]);
+function actCard(sl, a) {
+  const T = timeline(), tt = T.act[a.id], open = ui.open === a.id;
+  const time = tt && tt.start != null ? `${rText(tt.start, tt.startHi)}${tt.end != null ? ' → ' + rText(tt.end, tt.endHi) : ''}` : '';
+  const head = `<div class="sent lab">${sentenceParts(a)}</div>
+    <div class="meta">${a.min != null ? `<span class="tm">⏱ ${esc(totText(a.min, a.min_hi))} [${esc(a.src || 'Est')}]</span>` : ''}${time ? `<span class="tm">🕒 ${esc(time)}</span>` : ''}</div>
+    ${a.barriers.length ? `<div class="bars">${a.barriers.map((b, i) => `<span class="bar">⚠ ${esc(b.field)}: ${esc(b.text)}${open ? `<button data-act="bar-del" data-a="${a.id}" data-v="${i}">×</button>` : ''}</span>`).join('')}</div>` : ''}
+    ${a.note && !open ? `<div class="small muted">📝 ${esc(a.note)}</div>` : ''}
+    ${decOf(a.id) ? (d => `<button class="decb" data-act="dec-edit" data-v="${d.id}">◆ decides: <b>${esc(d.question || 'decision')}</b> → ★ ${esc(d.main || '—')}${(d.outcomes || []).map(o => ' · ' + esc(o.outcome)).join('')} ✎</button>`)(decOf(a.id)) : ''}`;
+  const lc = `--lc:${a.who.length ? roleColor(a.who[0]) : 'var(--line)'}`;
+  if (!open) return `<div class="ac9" style="${lc}" data-act="open" data-v="${a.id}">${head}</div>`;
+  const tab = ui.tab || 'who', ix = TABS.findIndex(([k]) => k === tab);
+  let body = '';
+  if (tab === 'who') {
+    const to = a.to.filter(k => a.who.includes(k));
+    body = picker(a, 'who', Q_WHO, O.roles.map(r => r.id).filter(id => !OTHER(id) && !ROLE_HIDE.includes(id)), { label: roleLabel, color: roleColor, groups: roleGroups, ph: 'other role, e.g. security' })
+      + (a.who.length > 1 ? `<div class="dirrow"><span class="small muted">between them</span><span class="seg sm"><button class="${to.length ? '' : 'on'}" data-act="dir" data-a="${a.id}" data-v="both">together / both ways</button><button class="${to.length ? 'on' : ''}" data-act="dir" data-a="${a.id}" data-v="one">from → to</button></span>
+        ${to.length ? `<span class="small muted">tap a role to switch side:</span>${a.who.map(k => `<button class="chip sm${to.includes(k) ? ' on' : ''}" data-act="flip" data-a="${a.id}" data-v="${esc(k)}">${to.includes(k) ? 'to' : 'from'} · ${esc(roleAbbr(k))}</button>`).join('')}` : ''}</div>` : '');
+  } else if (tab === 'when') {
+    body = `<div class="pk9">${[0.5, 1, 2, 3, 5, 10].map(m => `<button class="chip${a.min === m && a.min_hi == null ? ' on' : ''}" data-act="dur" data-a="${a.id}" data-v="${m}">${m} min</button>`).join('')}
+      <span class="pkt"><input type="text" inputmode="decimal" data-in="amin" data-a="${a.id}" value="${a.min == null ? '' : a.min + (a.min_hi != null ? '–' + a.min_hi : '')}" placeholder="or type: 4, 2–4, 1:30" style="width:150px"></span>
+      <span class="seg sm">${['Est', 'Sim'].map(x => `<button class="${(a.src || 'Est') === x ? 'on' : ''}" data-act="asrc" data-a="${a.id}" data-v="${x}">[${x}]</button>`).join('')}</span><button class="btn sm" data-act="timer" data-a="${a.id}">⏱ time it</button></div>
+      <p class="small muted kg">Continues into the next frames until you end it there (✕ ended on that frame).</p>`;
+  } else if (tab === 'where') {
+    body = `<div class="wnow">${whereText(a) ? esc(whereText(a)) + ` <button class="lnk" data-act="where-clear" data-a="${a.id}">clear</button>` : '<span class="muted">not set</span>'}</div>
+      <div class="pk9"><button class="chip big2${a.where && a.where.kind === 'physical' && !a.route.length ? ' on' : ''}" data-act="map-spot" data-a="${a.id}">📍 spot</button><button class="chip big2${a.route.length ? ' on' : ''}" data-act="map-route" data-a="${a.id}">🚶 route</button>
+        <select data-in="online" data-a="${a.id}" class="rsel"><option value="">🖥 online ▾</option>${DIGITAL.map(d => `<option value="${d.id}" ${a.where && a.where.id === d.id ? 'selected' : ''}>${esc(d.label)}</option>`).join('')}</select>
+        <span class="pkt"><input type="text" data-in="where-text" data-a="${a.id}" placeholder="or specify, e.g. hallway outside CT" enterkeyhint="done"><button class="btn sm" data-act="where-text" data-a="${a.id}">Set</button></span></div>`;
+  } else if (tab === 'what') {
+    body = `<div class="grp">verb</div>${picker(a, 'verb', Q_VERB, MORE_VERB, { single: true, label: v => v, ph: 'other verb' })}
+      <div class="grp">noun</div>${picker(a, 'noun', Q_NOUN, O.info.filter(x => !OTHER(x.id)).map(x => x.label.toLowerCase()), { single: true, label: v => v, ph: 'other noun' })}
+      <div class="grp">◆ decision</div>${decOf(a.id) ? (d => `<button class="decb" data-act="dec-edit" data-v="${d.id}">◆ decides: <b>${esc(d.question || 'decision')}</b> → ★ ${esc(d.main || '—')}${(d.outcomes || []).map(o => ' · ' + esc(o.outcome)).join('')} ✎</button>`)(decOf(a.id)) : `<div class="row"><button class="btn sm" data-act="dec-new" data-a="${a.id}">◆ Makes a decision</button><span class="small muted">only if the outcomes lead to different next frames (★ main line + side paths); otherwise it is just this action</span></div>`}`;
+  } else if (tab === 'how') {
+    body = `<div class="grp">tool <span class="small muted">(equipment, exam tools, hands-on)</span></div>${picker(a, 'tools', Q_TOOL, O.tools.filter(t => !OTHER(t.id)).map(t => t.id), { ph: 'other tool' })}
+      <div class="grp">technology <span class="small muted">(channel, system)</span></div>${picker(a, 'tech', Q_TECH, O.tech.filter(t => !OTHER(t.id)).map(t => t.id), { ph: 'other technology' })}`;
+  } else {
+    body = `<div class="barline"><span class="small">⚠</span><span class="seg sm">${BAR_FIELDS.filter(f => f !== 'with').map(f => `<button class="${ui.newBar.field === f ? 'on' : ''}" data-act="bar-field" data-v="${f}">${f}</button>`).join('')}</span><input type="text" data-in="bart" value="${esc(ui.newBar.text)}" placeholder="what the expert described, e.g. badge door: detour" enterkeyhint="done"><button class="btn sm" data-act="bar-add" data-a="${a.id}">Add</button></div>
+      <textarea data-in="note" data-a="${a.id}" placeholder="general note">${esc(a.note)}</textarea>`;
+  }
+  return `<div class="ac9 open" style="${lc}">${head}
+    <div class="tabs9">${TABS.map(([k, l]) => `<button class="${k === tab ? 'on' : ''}${tabDone(a, k) ? ' done' : ''}" data-act="tab" data-v="${k}">${l}${tabDone(a, k) ? ' ✓' : ''}</button>`).join('')}</div>
+    <div class="tabbody">${body}</div>
+    <div class="row foot"><button class="btn sm dark" data-act="close">Done</button>${ix < TABS.length - 1 ? `<button class="btn sm" data-act="tab" data-v="${TABS[ix + 1][0]}">Next: ${TABS[ix + 1][1]} ›</button>` : ''}<span class="grow"></span><button class="lnk danger" data-act="act-del" data-a="${a.id}">delete action</button></div>
+  </div>`;
+}
+function mapBanner() {
+  const a = findAct(ui.open);
+  if (ui.map === 'route' && a) return `<div class="mode draw">🚶 Route of <b>${esc(shortText(a))}</b>: tap the start, the spaces passed and the end — or draw with one finger. <span class="grow"></span><button class="btn sm" data-act="rt-undo">Undo</button><button class="btn sm" data-act="rt-clear">Clear</button><button class="btn sm dark" data-act="map-close">Done</button></div>`;
+  if (ui.map === 'spot' && a) return `<div class="mode place">📍 Where does <b>${esc(shortText(a))}</b> happen? Tap a space, or <span class="chips inl">${DIGITAL.map(d => `<button class="chip sm dig" data-act="set-digital" data-a="${a.id}" data-v="${d.id}">${esc(d.label)}</button>`).join('')}<button class="chip sm add" data-act="new-place" data-a="${a.id}">+ New place</button></span><button class="btn sm" data-act="map-close">Cancel</button></div>`;
+  return `<div class="mode">Where everyone is in ${esc(title(curSlice()))}. Pinch to zoom. <span class="grow"></span><button class="btn sm dark" data-act="map-close">Close</button></div>`;
+}
+function vSession() {
+  const s = sess();
+  const start = `<div class="card"><h3>New session</h3><div class="row" style="margin-bottom:10px"><span class="small muted">Site</span><div class="seg">${O.sites.map(x => `<button data-act="pick-site" data-v="${x}" class="${ui.newSite === x ? 'on' : ''}">${x}</button>`).join('')}</div></div>
+    <p class="small muted">Session ID is generated. Roles only, no names. Records stay on this device until you export.</p>
+    <div class="row"><button class="btn primary big" data-act="start" ${ui.newSite ? '' : 'disabled'}>Start session</button><button class="btn" data-act="sample">Load sample (MOCK · LMH)</button></div></div>`;
+  const dia = `<div class="card"><h3>Site diagrams</h3><p>${['LMH', 'WCM'].map(x => S.diagrams[x] ? `<span class="pill ok">${x}: ${sheetsOf(x).map(sh => esc(sh.name)).join(' · ')}</span>` : `<span class="pill">${x}: not loaded</span>`).join(' ')}</p><button class="btn" data-act="import-dia">Load site diagrams…</button></div>`;
+  const device = `<div class="card"><h3>Sessions on this device</h3>${S.sessions.map(x => `<div class="srow"><div class="grow"><b>${esc(x.session_id)}</b>${x.mock ? ' <span class="pill">MOCK</span>' : ''}<br><span class="small muted">${x.slices.length} frames${x.exported_at ? ' · exported' : x.mock ? '' : ' · <span style="color:var(--bad)">not exported</span>'}</span></div>${x.session_id === S.cur ? '<span class="pill ok">open</span>' : `<button class="btn sm" data-act="open-s" data-v="${esc(x.session_id)}">Open</button>`}<button class="btn sm danger" data-act="del-s" data-v="${esc(x.session_id)}">Delete</button></div>`).join('') || '<p class="small muted">None.</p>'}
+    <div class="row" style="margin-top:10px"><button class="btn" data-act="import">Import session JSON</button></div></div>`;
+  if (!s) return `<div class="welcome"><h2>Time Slice Recorder</h2>${start}${dia}${device}</div>`;
+  return `<div class="cols"><div class="card"><h3>Current session</h3><p><b>${esc(s.session_id)}</b>${s.mock ? ' <span class="pill">MOCK</span>' : ''}<br><span class="small muted">Site ${esc(s.site)} · ${s.slices.length} frames · ${allActs().length} actions</span></p>
+    <button class="btn primary" data-act="export">Export this session</button><p class="small muted">JSON (everything, incl. route points) + actions.csv (one row per action, with spot and route coordinates) + frames.csv + decisions.csv + maps.html (one map per frame, vector).</p></div>${start}${dia}${device}</div>`;
+}
+
+/* ---------- actions ---------- */
+function addTyped(a, f, t) { // free text into a picker field
+  if (f === 'verb' || f === 'noun') { a[f] = t; return; }
+  const key = f === 'who' ? 'R99:' + t : f === 'tools' ? 'tool:' + t : 'tech:' + t;
+  if (!a[f].includes(key)) a[f].push(key);
+}
+async function onAct(act, v, el) {
+  const s = sess(), sl = curSlice(), aid = el && el.dataset.a, a = aid ? findAct(aid) : null;
+  if (ui.ifEdit && ['close', 'open', 'sel', 'new-slice', 'new-act', 'view', 'if-on', 'if-edit', 'del-slice'].includes(act)) finishIf();
+  switch (act) {
+    case 'view': ui.view = v; break;
+    case 'side': ui.side = !ui.side; break;
+    case 'sel': ui.sid = v; ui.open = ''; ui.map = ''; ui.vp = null; ui.dp = null; break;
+    case 'new-slice': case 'new-slice-only': { s.n = (s.n || 0) + 1; const ns = { id: s.session_id + '-S' + pad(s.n, 2), ts_mode: 'auto', acts: [], ...(sl && sl.path ? { path: sl.path } : {}), ...(act === 'new-slice-only' ? { only_if: activeConds() } : {}) }; s.slices.splice(sl ? s.slices.indexOf(sl) + 1 : s.slices.length, 0, ns); ui.sid = ns.id; ui.open = ''; ui.vp = null; ui.dp = null; save(); break; }
+    case 'ver': { if (v === 'usual') viewConds([]); else { const x = (sl.variants || []).find(y => y.id === v); if (x) viewConds(x.conds); } ui.open = ''; break; }
+    case 'ver-new': ui.vp = { conds: activeConds(), to: sl.id }; ui.dp = null; break;
+    case 'vp-close': ui.vp = null; break;
+    case 'vp-to': ui.vp.to = v; break;
+    case 'vp-c': { const d = ui.vp, has = d.conds.some(c => ckey(c) === v), c = allConds().find(y => ckey(y) === v); d.conds = has ? d.conds.filter(y => ckey(y) !== v) : c ? [...d.conds, c] : d.conds; break; }
+    case 'vp-cadd': { const i = document.querySelector('[data-in=vp-new]'), t = i ? i.value.trim() : ''; if (!t) return; s.conds = s.conds || []; const c = allConds().find(y => y.value.toLowerCase() === t.toLowerCase()) || { condition_id: 'C99', value: t }; if (!s.conds.some(y => ckey(y) === ckey(c))) s.conds.push(c); if (!ui.vp.conds.some(y => ckey(y) === ckey(c))) ui.vp.conds.push(c); save(); break; }
+    case 'vp-save': {
+      const d = ui.vp; if (!d.conds.length) { toast('Pick or type the condition for this version.'); return; }
+      const k0 = d.conds.map(ckey).sort().join('&'), ms = mainsAll(), fs = sl.path ? [sl] : ms.slice(ms.indexOf(sl), ms.indexOf(findSl(d.to) || sl) + 1);
+      let made = 0;
+      fs.forEach(x => { if ((x.variants || []).some(y => y.conds.map(ckey).sort().join('&') === k0)) return; x.variants = x.variants || []; const vid = 'V' + (Math.max(0, ...x.variants.map(y => +y.id.slice(1) || 0)) + 1); x.variants.push({ id: vid, conds: clone(d.conds), acts: shownActs(x).map(a2 => ({ ...clone(a2), id: blankAct().id, copied_from: a2.id })) }); made++; });
+      if (!made) { toast('Already has a version if ' + condsText(d.conds) + '.'); return; }
+      viewConds(d.conds); ui.vp = null; save(); toast('Version if ' + condsText(d.conds) + ' · ' + rangeText(fs) + ' — change what differs.'); break;
+    }
+    case 'ver-del': { const x = (sl.variants || []).find(y => y.id === v); if (!x || !(await confirmDlg('Delete the version “if ' + condsText(x.conds) + '” of ' + title(sl) + '?', 'Delete', true))) return; sl.variants = sl.variants.filter(y => y !== x); save(); break; }
+    case 'only-clear': delete sl.only_if; save(); break;
+    case 'dup-open': ui.dup = { name: '' }; ui.vp = null; ui.dp = null; break;
+    case 'dup-close': ui.dup = null; break;
+    case 'dup-q': ui.dup.name = v; break;
+    case 'dup-save': {
+      const name = (ui.dup.name || '').trim(); if (!name) { toast('Name the scenario first, e.g. Weekend.'); return; }
+      const root = s.session_id.replace(/-SC\d+$/, ''); let k2 = 1; while (S.sessions.some(q => q.session_id === root + '-SC' + k2)) k2++;
+      const nid = root + '-SC' + k2, c = clone(s), map = {};
+      c.slices.forEach(x => { const nx = nid + x.id.slice(s.session_id.length); map[x.id] = nx; x.base_id = x.id; x.id = nx; });
+      (c.decisions || []).forEach(d => { d.after = map[d.after] || d.after; (d.outcomes || []).forEach(o => { if (o.rejoin) o.rejoin = map[o.rejoin] || o.rejoin; }); });
+      c.slices.forEach(x => { x.base_sig = frameSig(x); });
+      Object.assign(c, { session_id: nid, scenario: name, based_on: s.session_id, base_frames: s.slices.map(x => ({ id: x.id, title: title(x) })), started_at: iso() }); delete c.exported_at;
+      S.sessions.push(c); S.cur = nid; ui.sid = map[ui.sid] || ''; ui.dup = null; viewConds([]); save(); toast('Scenario session ' + nid + ' (' + name + ') — a copy; change what differs.'); break;
+    }
+    case 'dec-new': if (!a) return; ui.dp = { id: '', after: sl.id, act: a.id, question: a.noun ? a.noun.charAt(0).toUpperCase() + a.noun.slice(1) : '', opts: [] }; { const pr = DEC_PRESETS.find(x => x[0].toLowerCase() === (a.noun || '').toLowerCase()); if (pr) ui.dp.opts = pr[1].map((n2, i) => ({ name: n2, pid: '', main: i === 0 })); } ui.vp = null; ui.open = ''; break;
+    case 'dec-edit': { const d = findDec(v); if (!d) return; ui.dp = { id: d.id, after: d.after, act: d.act, question: d.question || '', opts: [{ name: d.main || '', pid: '', main: true }, ...(d.outcomes || []).map(o => ({ name: o.outcome, pid: o.id, main: false, rejoin: o.rejoin || '' }))].filter(o => o.name || o.pid) }; if (!sl || (sl.id !== d.after && !(d.outcomes || []).some(o => o.id === sl.path))) ui.sid = d.after; break; }
+    case 'dp-close': ui.dp = null; break;
+    case 'dp-preset': { const pr = DEC_PRESETS.find(x => x[0] === v); ui.dp.question = v; if (!ui.dp.opts.length) ui.dp.opts = pr[1].map((n2, i) => ({ name: n2, pid: '', main: i === 0 })); break; }
+    case 'dp-oadd': { const i = document.querySelector('[data-in=dp-new]'), t = i ? i.value.trim() : ''; if (!t) return; ui.dp.opts.push({ name: t, pid: '', main: !ui.dp.opts.length }); break; }
+    case 'dp-odel': { const o = ui.dp.opts[+v]; if (o.pid && pathAll(o.pid).some(x => x.acts.length) && !(await confirmDlg('Remove “' + o.name + '” and its frames when you save?', 'Remove', true))) return; ui.dp.opts.splice(+v, 1); if (o.main && ui.dp.opts.length) ui.dp.opts[0].main = true; break; }
+    case 'dp-main': { const o = ui.dp.opts[+v]; if (o.pid && pathAll(o.pid).some(x => x.acts.length)) { toast('“' + o.name + '” already has its own frames; it stays a side path.'); return; } ui.dp.opts.forEach((x, i) => { x.main = i === +v; }); break; }
+    case 'dp-save': {
+      const d = ui.dp; s.decisions = s.decisions || []; const main = d.opts.find(o => o.main), side = d.opts.filter(o => !o.main && o.name.trim());
+      if (!main || !side.length) { toast('Add at least two outcomes and mark one ★ for the main line.'); return; }
+      let pn = Math.max(0, ...s.decisions.flatMap(x => (x.outcomes || []).map(o => +String(o.id).slice(1) || 0)));
+      const created = []; side.forEach(o => { if (!o.pid) { o.pid = 'P' + (++pn); created.push(o.pid); } });
+      const rec = { id: d.id, after: d.after, act: d.act, question: d.question.trim(), main: main.name.trim(), outcomes: side.map(o => ({ id: o.pid, outcome: o.name.trim(), rejoin: o.rejoin || '' })) };
+      const old = findDec(d.id);
+      if (old) { const keep = rec.outcomes.map(o => o.id), drop = (old.outcomes || []).map(o => o.id).filter(id => !keep.includes(id)); s.slices = s.slices.filter(x => !drop.includes(x.path)); Object.assign(old, rec); }
+      else { rec.id = 'D' + (Math.max(0, ...s.decisions.map(x => +x.id.slice(1) || 0)) + 1); s.decisions.push(rec); }
+      const f = findSl(d.after); let at = s.slices.indexOf(f) + 1;
+      created.forEach(pid => { s.n = (s.n || 0) + 1; s.slices.splice(at++, 0, { id: s.session_id + '-S' + pad(s.n, 2), path: pid, ts_mode: 'auto', acts: [] }); });
+      ui.dp = null; save(); toast('◆ ' + (rec.question || 'decision') + ': ★ ' + rec.main + ' continues on the main line; ' + rec.outcomes.map(o => o.outcome).join(', ') + ' as side paths.'); break;
+    }
+    case 'dp-del': { const d = findDec(ui.dp.id); if (!d || !(await confirmDlg('Delete the decision “' + (d.question || '') + '” and the frames of its outcomes? This cannot be undone.', 'Delete', true))) return; const ps = (d.outcomes || []).map(o => o.id); s.slices = s.slices.filter(x => !ps.includes(x.path)); s.decisions = s.decisions.filter(x => x !== d); ui.dp = null; ui.sid = d.after; save(); break; }
+    case 'path-first': { const r = outOf(v); s.n = (s.n || 0) + 1; const ns = { id: s.session_id + '-S' + pad(s.n, 2), path: v, ts_mode: 'auto', acts: [] }; s.slices.splice(s.slices.indexOf(findSl(r.d.after)) + 1, 0, ns); ui.sid = ns.id; save(); break; }
+    case 'cont': a.cont = !a.cont; save(); break;
+    case 'carry-end': if (a && sl) { a.ended_in = [...(a.ended_in || []).filter(x => x !== sl.id), sl.id]; save(); } break;
+    case 'carry-undo': if (a && sl) { a.ended_in = (a.ended_in || []).filter(x => x !== sl.id); save(); } break;
+    case 'del-slice': { if (!(await confirmDlg(`Delete frame ${title(sl)} (all its versions)? This cannot be undone.`, 'Delete', true))) return; allActs().forEach(({ a: q }) => { if (q.ended_in) q.ended_in = q.ended_in.filter(x => x !== sl.id); });
+      const pr = prevOf(sl), nx = nextOf(sl); (s.decisions || []).forEach(d => { if (d.after === sl.id) d.after = pr ? pr.id : (nx ? nx.id : ''); (d.outcomes || []).forEach(o => { if (o.rejoin === sl.id) o.rejoin = nx && !nx.path ? nx.id : ''; }); });
+      s.slices = s.slices.filter(x => x !== sl); ui.sid = ''; save(); break; }
+    case 'ts-src': sl.ts_src = v; save(); break;
+    case 'ts-auto': sl.ts_mode = 'auto'; save(); break;
+    case 'new-act': { const na = blankAct(); shownActs(sl).push(na); ui.open = na.id; ui.tab = 'who'; save(); break; }
+    case 'open': ui.open = v; ui.map = ''; ui.tab = 'who'; break;
+    case 'tab': ui.tab = v; break;
+    case 'pk': { const f = el.dataset.f; if (f === 'verb' || f === 'noun') { a[f] = a[f] === v ? '' : v; if (f === 'verb' && MOVE_VERBS.includes(a.verb) && !a.route.length) { ui.map = 'route'; } }
+      else { a[f] = a[f].includes(v) ? a[f].filter(x => x !== v) : [...a[f], v]; if (f === 'who') a.to = a.to.filter(k => a.who.includes(k)); } save(); break; }
+    case 'pk-text': { const f = el.dataset.f, i = document.querySelector(`[data-in=pk-text][data-f=${f}]`), t = i ? i.value.trim() : ''; if (!t) return; addTyped(a, f, t); save(); break; }
+    case 'dir': if (v === 'both') a.to = []; else if (!a.to.length && a.who.length > 1) a.to = [a.who[a.who.length - 1]]; save(); break;
+    case 'flip': a.to = a.to.includes(v) ? a.to.filter(k => k !== v) : [...a.to, v]; if (a.to.length === a.who.length) a.to = a.to.slice(1); save(); break;
+    case 'dur': a.min = +v; a.min_hi = null; if (!a.src) a.src = 'Est'; save(); break;
+    case 'where-text': { const i = document.querySelector('[data-in=where-text]'), t = i ? i.value.trim() : ''; if (!t) return; a.where = { kind: 'text', id: '', label: t }; a.route = []; save(); break; }
+    case 'art': { const f = el.dataset.f, has = x => (x.text ? 'art:' + x.text : x.id) === v; a[f] = a[f].some(has) ? a[f].filter(x => !has(x)) : [...a[f], /^art:/.test(v) ? { id: 'IA99', text: v.slice(4) } : { id: v }]; save(); break; }
+    case 'art-text': { const f = el.dataset.f, i = document.querySelector(`[data-in=art-text][data-f=${f}]`), t = i ? i.value.trim() : ''; if (!t) return; a[f].push({ id: 'IA99', text: t }); save(); break; }
+    case 'bar-field': ui.newBar.field = v; break;
+    case 'close': ui.open = ''; ui.map = ''; ui.tab = 'who'; break;
+    case 'act-del': { if (decOf(a.id)) { toast('This action makes a decision — delete the decision first (◆ on the card).'); return; } if (!(await confirmDlg('Delete “' + (sentenceText(a) || 'this action') + '”?', 'Delete', true))) return; const x = listOfAct(a.id); x.splice(x.indexOf(a), 1); allActs().forEach(o => { o.a.needs = (o.a.needs || []).filter(id => id !== a.id); }); ui.open = ''; save(); break; }
+    case 'role-add': if (!a[el.dataset.f].includes(v)) a[el.dataset.f].push(v); save(); break;
+    case 'role-del': a[el.dataset.f] = a[el.dataset.f].filter(k => k !== v); save(); break;
+    case 'verb': a.verb = v; if (MOVE_VERBS.includes(v) && !a.route.length) { ui.map = 'route'; if (v === 'Move patient' && !a.with.includes('R01') && !a.who.includes('R01')) a.with.push('R01'); } save(); break;
+    case 'how': a.how = a.how.includes(v) ? a.how.filter(x => x !== v) : [...a.how, v]; save(); break;
+    case 'more-how': ui.moreHow = !ui.moreHow; break;
+    case 'asrc': a.src = v; save(); break;
+    case 'timer': timerStart(a.id, shortText(a)); return;
+    case 'need': a.needs = (a.needs || []).includes(v) ? a.needs.filter(x => x !== v) : [...(a.needs || []), v]; save(); break;
+    case 'art-del': a[el.dataset.f].splice(+v, 1); save(); break;
+    case 'map-spot': ui.open = a.id; ui.map = 'spot'; break;
+    case 'map-route': ui.open = a.id; ui.map = 'route'; break;
+    case 'map-view': ui.map = 'view'; break;
+    case 'map-close': ui.map = ''; break;
+    case 'set-digital': { const d = DIGITAL.find(x => x.id === v) || placesOf(s.site).find(x => x.id === v); a.where = { kind: 'digital', id: d.id, label: d.label }; a.route = []; ui.map = ''; save(); break; }
+    case 'new-place': { const p = await newPlaceDlg(s.site); if (!p) return; a.where = { kind: p.kind, id: p.id, label: p.label, ...(p.x != null ? { sheet: p.sheet, x: p.x, y: p.y } : {}) }; a.route = []; ui.map = ''; save(); break; }
+    case 'where-clear': a.where = null; a.route = []; save(); break;
+    case 'rt-undo': { const x = findAct(ui.open); if (x && x.route.length) { const f = x.route[x.route.length - 1].f; x.route.pop(); if (f) while (x.route.length && x.route[x.route.length - 1].f) x.route.pop(); } save(); break; }
+    case 'rt-clear': { const x = findAct(ui.open); if (x) x.route = []; save(); break; }
+    case 'sheet': ui.sheet[s.site] = v; break;
+    case 'zoom': { const sh = curSheet(s.site); if (!sh) return; const key = s.site + '|' + sh.id, base = sh.viewBox, cur = ui.vb[key] || base; ui.vb[key] = v === 'site' ? (sh.extent || null) : +v === 0 ? null : zoomVB(cur, sh.extent || base, +v > 0 ? 1 / 1.4 : 1.4, cur[0] + cur[2] / 2, cur[1] + cur[3] / 2); break; }
+    case 'if-on': if (!v || ui.ifOn[el.dataset.k] === v) delete ui.ifOn[el.dataset.k]; else ui.ifOn[el.dataset.k] = v; break;
+    case 'if-add': { const nf = ui.newIf; if (!nf.cid || !(nf.val || '').trim()) { toast('Pick a condition and a value.'); return; } a.ifs.push({ cond: { condition_id: nf.cid, value: nf.val.trim() }, over: {} }); ui.newIf = {}; save(); startIf(a, a.ifs.length - 1); break; }
+    case 'if-edit': startIf(a, +v); break;
+    case 'if-done': finishIf(); break;
+    case 'if-skip': { const x = findAct(ui.ifEdit.a).ifs[ui.ifEdit.i]; x.skip = !x.skip; save(); break; }
+    case 'if-del': a.ifs.splice(+v, 1); save(); break;
+    case 'bar-add': if (!ui.newBar.text.trim()) { toast('Write the barrier first.'); return; } a.barriers.push({ field: ui.newBar.field, text: ui.newBar.text.trim(), source: 'EX' }); ui.newBar.text = ''; save(); break;
+    case 'bar-del': a.barriers.splice(+v, 1); save(); break;
+    case 'pick-site': ui.newSite = v; break;
+    case 'start': { if (!ui.newSite) return; const sid = sessionId(ui.newSite); S.sessions.push({ session_id: sid, site: ui.newSite, started_at: iso(), source: O.source, n: 0, t: 0, slices: [] }); S.cur = sid; ui.view = 'record'; ui.sid = ''; ui.newSite = ''; save(); break; }
+    case 'sample': await loadSample(); return;
+    case 'open-s': S.cur = v; ui.sid = ''; ui.view = 'record'; ui.ifOn = {}; ui.on = {}; ui.vp = null; ui.dp = null; ui.dup = null; save(); break;
+    case 'del-s': if (!(await confirmDlg('Delete session ' + v + ' from this device? This cannot be undone.', 'Delete', true))) return; S.sessions = S.sessions.filter(x => x.session_id !== v); if (S.cur === v) S.cur = null; save(); break;
+    case 'export': await exportSession(s); return;
+    case 'import': pickFile('session'); return;
+    case 'import-dia': pickFile('dia'); return;
+    default: return;
+  }
+  render();
+}
+
+/* ---------- MOCK sample (basic piece: arrival → triage → CT → exam at the CT door) ---------- */
+async function loadSample() {
+  const site = 'LMH', sid = 'LMH-MOCK-01', SH = 'G';
+  try { const r = await fetch(DIA_URL, { cache: 'no-store' }); if (r.ok) loadDiagrams(await r.json(), 'site_diagrams.json'); } catch (e) { /* offline */ }
+  if (!sheetsOf(site).some(x => x.id === SH && x.floor)) { toast('Load the latest site diagrams first (Session tab).'); return; }
+  S.sessions = S.sessions.filter(x => x.session_id !== sid); ui.sheet[site] = SH; ui.ifOn = {};
+  const P = (fl, key) => { const id = 'LMH-' + fl + '-' + key, p = S.diagrams[site].points.find(q => q.id === id); if (!p) throw new Error('no place ' + id); return p; };
+  const at = (fl, key) => { const p = P(fl, key); return { kind: 'physical', id: p.id, label: p.label, sheet: fl, x: Math.round(p.x), y: Math.round(p.y) }; };
+  const w = (fl, key, x, y, f) => { const p = P(fl, key); return { point_id: p.id, sheet: fl, x, y, label: p.label, ...(f ? { f: 1 } : {}) }; };
+  const TRI = at('G', 'triage'), CTDOOR = at('G', 'ct'), CTRL = at('G', 'ct-tech'), BAY = at('G', 'rooms-w'), WSP = at('G', 'ws-s'), OFF = at('5', 'neuro');
+  // G · ED: west corridor, central corridor, badge door between the central and east corridors, central elevators
+  const toCtFromElev = [w('G', 'elev-c', 840, 1080), w('G', 'cor-e', 775, 1080, 1), w('G', 'cor-e', 775, 1015, 1), w('G', 'badge', 706, 1015, 1), w('G', 'cor-c', 520, 1015, 1), w('G', 'cor-w', 322, 1015, 1), w('G', 'ct', 215, 1040)];
+  const rEmsTri = [w('G', 'ems', 350, 1700), w('G', 'cor-w', 322, 1600, 1), w('G', 'cor-w', 322, 1420, 1), w('G', 'triage', 450, 1412)];
+  const rWalkTri = [w('G', 'walkin', 580, 1720), w('G', 'waiting', 470, 1550, 1), w('G', 'triage', 450, 1412)];
+  const rTriCt = [w('G', 'triage', 450, 1412), w('G', 'cor-w', 322, 1390, 1), w('G', 'cor-w', 322, 1040, 1), w('G', 'ct', 215, 1040)];
+  const rNeuro = [w('5', 'neuro', 485, 307), w('5', 'cor-n', 485, 378, 1), w('5', 'cor-n', 870, 378, 1), w('5', 'cor-e', 915, 378, 1), w('5', 'cor-e', 915, 1000, 1), w('5', 'elev-c', 845, 1080), ...toCtFromElev];
+  const rNeuroED = [w('G', 'rooms-e', 725, 1200), w('G', 'cor-e', 775, 1200, 1), w('G', 'cor-e', 775, 1015, 1), w('G', 'badge', 706, 1015, 1), w('G', 'cor-c', 520, 1015, 1), w('G', 'cor-w', 322, 1015, 1), w('G', 'ct', 215, 1040)];
+  const rNeuroWard = [w('4', 'pr-n', 535, 1150), w('4', 'cor-wn', 535, 1220, 1), w('4', 'cor-wn', 870, 1220, 1), w('4', 'elev-c', 845, 1080), ...toCtFromElev];
+  const rTable = [w('G', 'ct', 230, 1040), w('G', 'ct', 160, 1040)];
+  const rCtBay = [w('G', 'ct', 215, 1040), w('G', 'cor-w', 322, 1015, 1), w('G', 'cor-c', 482, 1015, 1), w('G', 'rooms-w', 482, 900)];
+  const rWsOff = [w('G', 'ws-s', 615, 1100), w('G', 'cor-c', 615, 1015, 1), w('G', 'badge', 706, 1015, 1), w('G', 'cor-e', 775, 1015, 1), w('G', 'elev-c', 840, 1080), w('5', 'elev-c', 845, 1080), w('5', 'cor-e', 915, 1000, 1), w('5', 'cor-e', 915, 378, 1), w('5', 'cor-n', 485, 378, 1), w('5', 'neuro', 485, 307)];
+  let n = 0; const act = o => ({ id: 'A' + (++n), who: [], to: [], verb: '', noun: '', tools: [], tech: [], where: null, route: [], min: null, min_hi: null, src: 'Est', cont: false, inputs: [], outputs: [], barriers: [], note: '', ...o });
+  // main path (weekday · day): a slice ends when its actions are done — the latest one; "keeps going" actions run on
+  const S1 = [act({ who: ['R03', 'R01'], verb: 'Move', noun: 'patient', tools: ['TL06'], route: rEmsTri, min: 2, note: 'to triage; stroke alert pre-notified (MOCK)' })];
+  const S2 = [act({ who: ['R03', 'R04'], to: ['R04'], verb: 'Hand off', noun: 'report', tech: ['TC01'], where: TRI, min: 3 })];
+  const S3 = [act({ who: ['R14', 'R01', 'R07'], verb: 'Move', noun: 'patient', tools: ['TL06'], route: rTriCt, min: 1.3, src: 'Sim', note: 'to the CT room door (MOCK)' }),
+    act({ who: ['R08'], verb: 'Go', noun: 'to the CT room door', route: rNeuro, min: 2.3, barriers: [{ field: 'where', text: 'badge door between the east and central corridors (MOCK)', source: 'EX' }] }),
+    act({ who: ['R11'], verb: 'Prepare', noun: 'scanner', tools: ['TL10'], where: CTRL, min: 4.8, cont: true, note: 'stroke protocol (MOCK)' })];
+  const S4 = [act({ who: ['R14', 'R01', 'R07', 'R08'], verb: 'Move', noun: 'patient', tools: ['TL06', 'TL21'], route: rTable, min: 2.5, cont: true, note: 'stretcher to CT table; Neuro helps (MOCK)' }),
+    act({ who: ['R08', 'R01'], verb: 'Examine', noun: 'symptoms & history', tools: ['TL20', 'TL21'], tech: ['TC01'], where: CTDOOR, min: 0.75 })];
+  const S5 = [act({ who: ['R08', 'R07'], verb: 'Talk about', noun: 'LKW, NIHSS, meds', tech: ['TC01'], where: CTDOOR, min: 0.75 }),
+    act({ who: ['R08'], verb: 'Decide', noun: 'suspected for', tech: ['TC01'], where: CTDOOR, min: 0.5, note: 'from the exam and the talk; how long: to confirm (MOCK)' })];
+  // B1 · walk-in (from the start, rejoins S3)
+  const W1 = [act({ who: ['R01'], verb: 'Walk', noun: 'to triage', route: rWalkTri, min: 1, min_hi: 3, note: 'walks in or is brought; no alert yet (MOCK)' })];
+  const W2 = [act({ who: ['R04', 'R01'], verb: 'Assess', noun: 'stroke signs → stroke alert', tools: ['TL21'], tech: ['TC01'], where: TRI, min: 3, min_hi: 8, note: 'triage recognises it and triggers the alert (MOCK)' })];
+  // B2 / B3 · where Neuro is when the alert comes (after S2, rejoin S4): only Neuro's trip changes
+  const copyS3 = (route, min, note) => S3.map(x => ({ ...clone(x), id: 'A' + (++n), ...(x.verb === 'Go' ? { route, min, note, barriers: [] } : {}) }));
+  const E3 = copyS3(rNeuroED, 0.8, 'from the ED treatment area, seeing another patient (MOCK)'), F3 = copyS3(rNeuroWard, 4, 'from a floor-4 patient room, down by the central elevators (MOCK)');
+  // B4 · ◆ Suspected for → None (after S5): imaging, bay, talks, office, images; the last slice is Neuro's decision
+  const N1 = [act({ who: ['R11', 'R01'], verb: 'Scan', noun: 'plain CT', tools: ['TL10'], where: CTRL, min: 3 })];
+  const N2 = [act({ who: ['R14', 'R01', 'R07', 'R08'], verb: 'Move', noun: 'patient', tools: ['TL06'], route: rCtBay, min: 3, note: 'CT to a bay (MOCK)' })];
+  const N3 = [act({ who: ['R08', 'R01', 'R07'], verb: 'Talk about', noun: 'symptoms & next steps', tech: ['TC01'], where: BAY, min: 3, note: 'at the bedside (MOCK)' })];
+  const N4 = [act({ who: ['R08', 'R05'], verb: 'Talk about', noun: 'the case', tech: ['TC01'], where: WSP, min: 2, note: 'at the workstation next to the bay (MOCK)' })];
+  const N5 = [act({ who: ['R08'], verb: 'Go', noun: 'back to the office', route: rWsOff, min: 3 }), act({ who: ['R05'], verb: 'Document', noun: 'note', tools: ['TL07'], tech: ['TC08'], where: WSP, min: 8, cont: true, note: 'between caring for the patient (MOCK)' })];
+  const N6 = [act({ who: ['R08'], verb: 'Review', noun: 'imaging result', tools: ['TL07'], tech: ['TC09'], where: OFF, min: 5 })];
+  const N7 = [act({ who: ['R08', 'R05'], to: ['R05'], verb: 'Hand off', noun: 'decision: not a stroke', tools: ['TL01'], tech: ['TC02', 'TC08'], where: OFF, min: 2, note: 'phones the EM and writes the EHR note (MOCK)' })];
+  let k = 0; const mk = (acts, extra) => ({ id: sid + '-S' + pad(++k, 2), ts_mode: 'auto', acts, ...(extra || {}) });
+  const V = (id, conds, acts) => ({ id, conds, acts });
+  const ED = { condition_id: 'C99', value: 'Neuro is in the ED' }, WARD = { condition_id: 'C99', value: 'Neuro is on the 4C ward' }, WALK = { condition_id: 'C99', value: 'Walk-in' };
+  const m = [mk(S1, { variants: [V('V1', [WALK], W1)] }), mk(S2, { variants: [V('V1', [WALK], W2)] }), mk(S3, { variants: [V('V1', [ED], E3), V('V2', [WARD], F3)] }), mk(S4), mk(S5)];
+  const nb = [N1, N2, N3, N4, N5, N6, N7].map(x => mk(x, { path: 'P1' }));
+  S.sessions.push({ session_id: sid, site, started_at: iso(), source: O.source, mock: true, n: k, t: n, slices: [...m, ...nb], scenario: 'Weekday · day (main)', conds: [WALK, ED, WARD],
+    decisions: [{ id: 'D1', after: m[4].id, act: S5[1].id, question: 'Suspected for', main: 'Minor stroke (not walked through yet)', outcomes: [{ id: 'P1', outcome: 'None', rejoin: '' }] }] });
+  S.cur = sid; ui.sid = m[0].id; ui.view = 'record'; ui.open = ''; ui.on = {}; ui.vp = null; ui.dp = null; ui.dup = null; save(); render(); toast('Sample loaded (MOCK, LMH): main line, versions if Walk-in (F1–F2) / Neuro location (F3), ◆ Suspected for → None.');
+}
+
+/* ---------- export / import ---------- */
+const csvq = v => { const t = v == null ? '' : String(v); return /[",\n\r]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+const spotOf = (site, a) => (!a.where || a.where.kind === 'digital' || a.where.kind === 'text' || (a.route || []).length ? null : a.where.x != null ? { sheet: a.where.sheet, x: a.where.x, y: a.where.y } : spaceCenter(site, a.where.id));
+/* one map per frame (each floor it touches): spots, routes, who — vector SVG in one HTML file */
+function mapsDoc(s, order, T, scenTxt) {
+  const keep = { sheet: ui.sheet[s.site], open: ui.open, map: ui.map, vb: ui.vb }; ui.open = ''; ui.map = 'view'; ui.vb = {}; ui._exp = true;
+  const parts = order.map(x => {
+    const acts = timeActs(x), fl = [...new Set(acts.flatMap(a => [...(a.route || []).map(r => r.sheet), ...(c => (c ? [c.sheet] : []))(spotOf(s.site, a))]))];
+    if (!fl.length) return '';
+    const t = T.sl[x.id], svgs = fl.map(f => { ui.sheet[s.site] = f; const h = mapHtml(s.site, x), m = h.match(/<svg[\s\S]*?<\/svg>/); const nm = (sheetsOf(s.site).find(q => q.id === f) || {}).name || f; return m ? `<figure><figcaption>${esc(nm)}</figcaption>${m[0]}</figure>` : ''; }).join('');
+    return `<section><h2>${esc(title(x))} <span>🕒 ${t && t.ts ? rText(t.ts.lo, t.ts.hi) : '?'}</span></h2><ol>${acts.map(a => `<li>${esc(sentenceText(a))}${a.barriers.length ? ' <i>⚠ ' + esc(a.barriers.map(b => b.text).join('; ')) + '</i>' : ''}</li>`).join('')}</ol><div class="maps">${svgs}</div></section>`;
+  }).join('');
+  Object.assign(ui, { open: keep.open, map: keep.map, vb: keep.vb, _exp: false }); ui.sheet[s.site] = keep.sheet;
+  return `<!doctype html><html><head><meta charset="utf-8"><title>${esc(s.session_id)} maps</title><style>body{font:13px/1.4 Inter,system-ui,sans-serif;color:#1d2329;margin:24px}h1{font-size:20px}h2{font-size:16px;margin:22px 0 4px;border-top:2px solid #1d2329;padding-top:8px}h2 span{font-weight:400;color:#6b7680}.maps{display:flex;flex-wrap:wrap;gap:14px}figure{margin:0;border:1px solid #ccd3d9;border-radius:8px;padding:6px}figcaption{font-weight:600;font-size:12px;margin-bottom:4px}svg{width:420px;height:auto;display:block}ol{margin:4px 0 8px 18px;padding:0}i{color:#a3461b}@media print{section{break-inside:avoid}}</style></head><body>
+<h1>${esc(s.session_id)}${s.mock ? ' · MOCK' : ''} — frame maps</h1><p>Site ${esc(s.site)} · scenario: ${esc(scenTxt)} · exported ${esc(iso())}. Maps are traced from hand drawings, not to scale; routes are described / simulated, not checked on site.</p>${parts}</body></html>`;
+}
+const csv = rows => rows.map(r => r.map(csvq).join(',')).join('\r\n') + '\r\n';
+async function download(name, text, type) { const x = document.createElement('a'); x.href = URL.createObjectURL(new Blob([text], { type })); x.download = name; document.body.appendChild(x); x.click(); setTimeout(() => { URL.revokeObjectURL(x.href); x.remove(); }, 1000); toast('Downloaded ' + name); await new Promise(r => setTimeout(r, 300)); }
+async function exportSession(s) {
+  if (!slices().length) { toast('No frames yet.'); return; }
+  const T = timeline(), scen = activeConds(), scenTxt = (s.scenario || 'Weekday · day (main)') + (scen.length ? ' · version if ' + condsText(scen) : ' · usual');
+  const p = { format: 'walkthrough-timeslice/v12', time_unit: 'min', mock: !!s.mock, option_sets: O.source, exported_at: iso(), scenario_at_export: scenTxt, session: { session_id: s.session_id, site: s.site, started_at: s.started_at, scenario: s.scenario || 'Weekday · day (main)', based_on: s.based_on || '' }, condition_footprints: allConds().map(c => ({ condition: c.value, frames: rangeText(footprint(c)) })), places_added: placesOf(s.site), base_frames: s.base_frames || [], conditions: clone(s.conds || []), decisions: clone(s.decisions || []), frames: clone(s.slices) };
+  const order = [...mainsAll(), ...decisions().flatMap(d => (d.outcomes || []).flatMap(o => pathAll(o.id)))];
+  const where = x => (x.path ? (outOf(x.path) || {}).o.outcome : 'main');
+  const fr = [['session_id', 'frame', 'path', 'only_if', 'versions', 'time (' + scenTxt + ')', 'time_min', 'time_max', 'time_mode', 'how_derived', 'actions (' + scenTxt + ')', 'still_going', 'vs_copied_from']].concat(order.map(x => { const t = T.sl[x.id] || {}; return [s.session_id, title(x), where(x), condsText(x.only_if), (x.variants || []).map(v => 'if ' + condsText(v.conds)).join('; '), t.ts ? rText(t.ts.lo, t.ts.hi) : '', t.ts ? t.ts.lo : '', t.ts ? t.ts.hi : '', t.mode || '', t.why || '', timeActs(x).map(sentenceText).join('; '), visible(x) ? ongoing(x).map(o => shortText(o.a)).join('; ') : '', s.based_on ? frameStatus(x) || 'same' : '']; }));
+  const ac = [['session_id', 'frame', 'path', 'version', 'action_id', 'copied_from', 'who', 'from', 'to', 'verb', 'noun', 'tools', 'technology', 'where_kind', 'where_id', 'where_label', 'where_floor', 'where_x', 'where_y', 'route_labels', 'route_floors', 'route_points (floor:x,y | …)', 'time_min_total', 'time_max_total', 'time_source', 'ended_before', 'barriers', 'note', 'external_involved']]
+    .concat(order.flatMap(x => [['usual', x.acts], ...(x.variants || []).map(v => ['if ' + condsText(v.conds), v.acts])].flatMap(([vn, acts]) => acts.map(a => { const to = a.to.filter(k => a.who.includes(k)); return [s.session_id, title(x), where(x), vn, a.id, a.copied_from || '', a.who.map(roleLabel).join('; '), to.length ? a.who.filter(k => !to.includes(k)).map(roleLabel).join('; ') : '', to.map(roleLabel).join('; '), a.verb, a.noun, a.tools.map(valLabel).join('; '), a.tech.map(valLabel).join('; '), a.route.length ? 'route' : a.where ? a.where.kind : '', a.where ? a.where.id : '', a.where ? a.where.label : '', ...(c => [c ? c.sheet : '', c ? c.x : '', c ? c.y : ''])(spotOf(s.site, a)), routeText(a), [...new Set(a.route.map(r => r.sheet))].join(' → '), a.route.map(r => r.sheet + ':' + r.x + ',' + r.y + (r.f ? '' : '*')).join(' | '), a.min ?? '', a.min == null ? '' : a.min_hi ?? a.min, a.src, (a.ended_in || []).map(id => { const f = findSl(id); return f ? title(f) : ''; }).filter(Boolean).join(' '), a.barriers.map(b => b.field + ': ' + b.text).join('; '), a.note, a.who.some(k => TEAM[rid(k)] === 'External') ? 'Y' : '']; }))));
+  const dc = [['session_id', 'decision', 'after_frame', 'decided_by_action', 'decided_by', 'question', 'main_outcome', 'outcome', 'frames', 'rejoins', 'end_or_rejoin_time', 'main_time_at_rejoin', 'difference']].concat(decisions().flatMap(d => (d.outcomes || []).map(o => { const j = T.join[o.id] || {}, to = o.rejoin ? findSl(o.rejoin) : null; const da = d.act ? findAct(d.act) : null; return [s.session_id, d.id, title(findSl(d.after) || {}), d.act || '', da ? sentenceText(da) : '', d.question, d.main, o.outcome, pathAll(o.id).map(title).join(';'), to ? title(to) : '', j.at ? rText(j.at.lo, j.at.hi) : '', j.usual ? rText(j.usual.lo, j.usual.hi) : '', joinDelta(j)]; })));
+  const pre = s.session_id + (s.mock ? '_MOCK' : '');
+  for (const [nm, t, ty] of [[pre + '_timeslices.json', JSON.stringify(p, null, 1), 'application/json'], [pre + '_frames.csv', csv(fr), 'text/csv'], [pre + '_actions.csv', csv(ac), 'text/csv'], [pre + '_decisions.csv', csv(dc), 'text/csv'], [pre + '_maps.html', mapsDoc(s, order, T, scenTxt), 'text/html']]) await download(nm, t, ty);
+  s.exported_at = iso(); save(); render();
+}
+function loadDiagrams(j, name) { if (j.format !== 'site-diagrams/v1' || !j.sites) throw new Error('not a site-diagrams file'); Object.entries(j.sites).forEach(([site, d]) => { S.diagrams[site] = { name, sheets: d.sheets, points: d.points.filter(p => !p.provisional) }; }); }
+let pickMode = '';
+function pickFile(mode) { pickMode = mode; const f = document.getElementById('file-json'); f.value = ''; f.click(); }
+document.getElementById('file-json').addEventListener('change', async ev => {
+  const f = ev.target.files[0]; if (!f) return;
+  try {
+    const j = JSON.parse(await f.text());
+    if (pickMode === 'dia') { loadDiagrams(j, f.name); toast('Site diagrams loaded.'); }
+    else if (/^walkthrough-timeslice\/v(9|11|12)$/.test(j.format)) {
+      const sid = j.session.session_id;
+      if (S.sessions.some(q => q.session_id === sid) && !(await confirmDlg(`Session ${sid} already exists. Replace it?`, 'Replace', true))) return;
+      S.sessions = S.sessions.filter(q => q.session_id !== sid);
+      S.sessions.push({ ...j.session, base_frames: j.base_frames, mock: j.mock, source: j.option_sets, n: (j.frames || j.slices).length, t: Math.max(0, ...(j.frames || j.slices).flatMap(x => [x.acts, ...(x.variants || []).map(v => v.acts)].flat().map(a => +a.id.slice(1) || 0))), slices: j.frames || j.slices, branches: j.branches || [], decisions: j.decisions || [], conds: j.conditions || [], exported_at: j.exported_at });
+      (j.places_added || []).forEach(p => { const L = placesOf(j.session.site); if (!L.some(q => q.id === p.id)) L.push(p); });
+      S.cur = sid; ui.sid = ''; ui.view = 'record'; toast('Session ' + sid + ' imported.');
+    } else throw new Error('not a time-slice v9 file');
+    save(); render();
+  } catch (err) { toast('Could not read this file: ' + err.message); }
+});
+
+/* ---------- events ---------- */
+document.addEventListener('click', ev => {
+  const tm = ev.target.closest('[data-tm]'); if (tm) { if (!tm.disabled) timerAct(tm.dataset.tm); return; }
+  const svg = ev.target.closest('.dia svg'); if (svg) { if (ui.noClick && Date.now() - ui.noClick < 450) { ui.noClick = 0; return; } tapMap(svg, ev); return; }
+  const b = ev.target.closest('[data-act]'); if (!b || b.disabled || b.closest('.dlg')) return;
+  onAct(b.dataset.act, b.dataset.v, b);
+});
+document.addEventListener('input', ev => {
+  const t = ev.target, k = t.dataset.in; if (!k) return;
+  if (k === 'dp' && ui.dp) { ui.dp[t.dataset.k] = t.value; return; }
+  if (k === 'dp-new') return;
+  if (k === 'rejoin') { const r = outOf(t.dataset.v); if (r) { r.o.rejoin = t.value; save(); render(); } return; }
+  if (k === 'cond-new' || k === 'vp-new') return;
+  if (k === 'dup-name' && ui.dup) { ui.dup.name = t.value; return; }
+  if (k === 'vp-to' && ui.vp) { ui.vp.to = t.value; render(); return; }
+  if (k === 'scen-name') { const s = sess(); if (s) { s.scenario = t.value.trim(); save(); } return; }
+  if (k === 'bp' && ui.bp) { ui.bp[t.dataset.k] = t.value; if (t.dataset.k === 'cid') { ui.bp.cval = ''; const dl = document.getElementById('bp-cv'), cd = byId[t.value]; if (dl) dl.innerHTML = ((cd || {}).values || []).map(y => `<option value="${esc(y)}">`).join(''); const iv = document.querySelector('[data-in=bp][data-k=cval]'); if (iv) iv.value = ''; } return; }
+  if (k === 'ifc') { ui.newIf = { cid: t.value, val: '' }; const dl = document.getElementById('if-cv'); if (dl) dl.innerHTML = ((byId[t.value] || {}).values || []).map(y => `<option value="${esc(y)}">`).join(''); const iv = document.querySelector('[data-in=ifv]'); if (iv) iv.value = ''; return; }
+  if (k === 'ifv') { ui.newIf.val = t.value; return; }
+  if (k === 'barf') { ui.newBar.field = t.value; return; }
+  if (k === 'bart') { ui.newBar.text = t.value; return; }
+  const sl = curSlice(); if (!sl) return;
+  if (k === 'ts') { const m = parseRange(t.value); if (m == null) sl.ts_mode = 'auto'; else { sl.ts_mode = 'manual'; sl.ts = m.lo; sl.ts_hi = m.hi; if (!sl.ts_src) sl.ts_src = 'Est'; } save(); return; }
+  const a = t.dataset.a && findAct(t.dataset.a); if (!a) return;
+  if (k === 'verb') a.verb = t.value;
+  if (k === 'noun') a.noun = t.value;
+  if (k === 'note') a.note = t.value;
+  if (k === 'amin') { const rg = parseRange(t.value); a.min = rg ? rg.lo : null; a.min_hi = rg ? rg.hi : null; if (!a.src) a.src = 'Est'; }
+  if (k === 'pk-more' && t.value) { const f = t.dataset.f, v = t.value; t.value = ''; if (f === 'verb' || f === 'noun') a[f] = v; else if (!a[f].includes(v)) a[f].push(v); save(); render(); return; }
+  if (k === 'art-more' && t.value) { const f = t.dataset.f; if (!a[f].some(x => x.id === t.value)) a[f].push({ id: t.value }); t.value = ''; save(); render(); return; }
+  if (k === 'online' && t.value) { const d = DIGITAL.find(x => x.id === t.value); a.where = { kind: 'digital', id: d.id, label: d.label }; a.route = []; save(); render(); return; }
+  if (['pk-text', 'where-text', 'art-text'].includes(k)) return;
+  if (k === 'role-sel' && t.value) { const f = t.dataset.f; let key = t.value; t.value = ''; if (OTHER(key)) { const txt = prompt('Which role?'); if (!txt) return; key = key + ':' + txt.trim(); } if (!a[f].includes(key)) a[f].push(key); save(); render(); return; }
+  if (k === 'art' && t.value) { const f = t.dataset.f; if (!a[f].some(x => x.id === t.value)) a[f].push({ id: t.value }); t.value = ''; save(); render(); return; }
+  save();
+});
+document.addEventListener('keydown', ev => {
+  const t = ev.target, k = t.dataset && t.dataset.in; if (ev.key !== 'Enter' || !k) return;
+  if (k === 'cond-new') { ev.preventDefault(); onAct('cond-add', '', t); return; }
+  if (k === 'vp-new') { ev.preventDefault(); onAct('vp-cadd', '', t); return; }
+  if (k === 'dup-name') { ev.preventDefault(); onAct('dup-save', '', t); return; }
+  if (k === 'dp-new') { ev.preventDefault(); onAct('dp-oadd', '', t); return; }
+  const map = { 'pk-text': 'pk-text', 'where-text': 'where-text', 'art-text': 'art-text', bart: 'bar-add' }; if (!map[k]) return;
+  ev.preventDefault(); const b = k === 'bart' ? document.querySelector('[data-act=bar-add]') : t.parentElement.querySelector('button'); if (b) onAct(map[k], b.dataset.v, b);
+});
+document.addEventListener('change', ev => { const k = ev.target.dataset.in; if (['ts', 'amin', 'verb', 'noun', 'note'].includes(k)) render(); });
+
+/* ---------- boot ---------- */
+(async () => {
+  const saved = await store.get(KEY);
+  if (saved && saved.v === 9) S = Object.assign(S, saved);
+  else { const old = await store.get(OLDKEY); if (old) { S.places = old.places || S.places; S.diagrams = old.diagrams || S.diagrams; } } // keep places / diagrams; old sessions stay under the old key
+  if (S.cur && !sess()) S.cur = null;
+  try { const r = await fetch(DIA_URL, { cache: 'no-store' }); if (r.ok) { loadDiagrams(await r.json(), 'site_diagrams.json'); save(); } } catch (e) { /* offline: keep what is on the device */ }
+  ui.view = sess() ? 'record' : 'session';
+  render();
+})();
+window.__ts = { S: () => S, ui, timeline, maps: () => mapsDoc(sess(), [...mainsAll(), ...decisions().flatMap(d => (d.outcomes || []).flatMap(o => pathAll(o.id)))], timeline(), 'preview'), spot: a => spotOf(sess().site, a), spaceAt: (site, sheet, x, y) => spaceAt(sheetsOf(site).find(q => q.id === sheet), x, y), mapSvg: (site, sheet) => { const k = ui.sheet[site]; ui.sheet[site] = sheet; const h = mapHtml(site, { acts: [] }); ui.sheet[site] = k; return (h.match(/<svg[\s\S]*?<\/svg>/) || [""])[0]; } };
+})();
+
+</script>
+</body>
+</html>
